@@ -1,4 +1,4 @@
-package chapter1;
+package nl.tudelft.rvh.chapter1;
 
 import java.util.function.Function;
 
@@ -10,7 +10,7 @@ public class Main {
 	}
 
 	public static void openLoop(Buffer b, int tm) {
-		Function<Integer, Double> target = (t) -> 5.0;
+		Function<Integer, Double> target = t -> 5.0;
 		
 		for (int time = 0; time < tm; time++) {
 			double units = target.apply(time);
@@ -19,7 +19,7 @@ public class Main {
 			System.out.println(time + " " + queueLength);
 		}
 	}
-
+	
 	public static void closedLoop(Controller c, Buffer b, int tm) {
 		Function<Integer, Integer> target = (t) -> t < 100 ? 0 : t < 300 ? 50 : 10;
 		

@@ -1,4 +1,4 @@
-package chapter1;
+package nl.tudelft.rvh.chapter1;
 
 public class Controller {
 
