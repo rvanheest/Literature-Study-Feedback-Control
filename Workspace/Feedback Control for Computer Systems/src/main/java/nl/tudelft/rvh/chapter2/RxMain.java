@@ -3,7 +3,7 @@ package nl.tudelft.rvh.chapter2;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
-import rx.subjects.ReplaySubject;
+import rx.subjects.PublishSubject;
 
 public class RxMain {
 
@@ -21,16 +21,20 @@ public class RxMain {
 						: size / 100;
 
 		return Observable.create((Subscriber<? super Double> subscriber) -> {
-			ReplaySubject<Double> hitrate = ReplaySubject.create();
-			hitrate.onNext(0.0);
+			PublishSubject<Double> hitrate = PublishSubject.create();
+			
 
 			Observable.zip(Observable.range(0, 200).map(setPoint), hitrate, (a, b) -> a - b)
+					.doOnNext(error -> System.out.print(error + "\t"))
 					.scan((e, cum) -> e + cum)
+					.doOnNext(cumError -> System.out.print(cumError + "\t"))
 					.map(cum -> k * cum)
+					.doOnNext(action -> System.out.print(action + "\t"))
 					.map(cache)
 					.subscribe(hitrate::onNext);
 
-			hitrate.skip(1).subscribe(subscriber);
+			hitrate.take(200).subscribe(subscriber);
+			hitrate.onNext(0.0);
 		});
-	}
+	}	
 }
