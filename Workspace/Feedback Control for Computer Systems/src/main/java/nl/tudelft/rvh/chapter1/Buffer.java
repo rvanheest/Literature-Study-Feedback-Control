@@ -27,7 +27,7 @@ public class Buffer {
 	 * queue and goes downstream.
 	 * 
 	 * @param u the amount of work done upstream
-	 * @return the length of the queue after processing 1 timeunit.
+	 * @return the length of the queue after processing 1 time unit.
 	 */
 	public int work(double u) {
 		return this.work(new Random(), u);
