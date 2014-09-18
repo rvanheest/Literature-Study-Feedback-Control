@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.chapter2.rx;
+package nl.tudelft.rvh.chapter2;
 
 import rx.Observable;
 import rx.Subscriber;

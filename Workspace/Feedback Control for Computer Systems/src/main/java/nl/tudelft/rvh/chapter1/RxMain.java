@@ -1,6 +1,5 @@
-package nl.tudelft.rvh.chapter1.rx;
+package nl.tudelft.rvh.chapter1;
 
-import nl.tudelft.rvh.chapter1.Buffer;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
