@@ -49,9 +49,9 @@
 
 		<!-- Reactive Programming -->
 		<dependency>
-			<groupId>com.netflix.rxjava</groupId>
-			<artifactId>rxjava-core</artifactId>
-			<version>0.19.6</version>
+			<groupId>io.reactivex</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 
