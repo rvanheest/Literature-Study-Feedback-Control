@@ -1,5 +1,9 @@
 package nl.tudelft.rvh;
 
+import nl.tudelft.rvh.chapter1.Chapter1ClosedSimulation;
+import nl.tudelft.rvh.chapter1.Chapter1OpenSimulation;
+import nl.tudelft.rvh.chapter2.Chapter2CumulativeSimulation;
+import nl.tudelft.rvh.chapter2.Chapter2NonCumulativeSimulation;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.TabPane;
@@ -12,8 +16,10 @@ public class Main extends Application {
 	public void start(Stage stage) {
 		TabPane tabPane = new TabPane();
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
-		tabPane.getTabs().add(new ExampleTab());
-		
+		tabPane.getTabs().addAll(new ExampleTab(),
+				new Chapter1ClosedSimulation(), new Chapter1OpenSimulation(),
+				new Chapter2CumulativeSimulation(), new Chapter2NonCumulativeSimulation());
+
 		stage.setScene(new Scene(tabPane, 800, 600));
 		stage.setTitle("Feedback Control Systems");
 		stage.show();
