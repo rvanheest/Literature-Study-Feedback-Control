@@ -4,6 +4,7 @@ import nl.tudelft.rvh.chapter1.Chapter1ClosedSimulation;
 import nl.tudelft.rvh.chapter1.Chapter1OpenSimulation;
 import nl.tudelft.rvh.chapter2.Chapter2CumulativeSimulation;
 import nl.tudelft.rvh.chapter2.Chapter2NonCumulativeSimulation;
+import nl.tudelft.rvh.scala.ScalaExampleTab;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.TabPane;
@@ -18,7 +19,8 @@ public class Main extends Application {
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
 		tabPane.getTabs().addAll(new ExampleTab(),
 				new Chapter1ClosedSimulation(), new Chapter1OpenSimulation(),
-				new Chapter2CumulativeSimulation(), new Chapter2NonCumulativeSimulation());
+				new Chapter2CumulativeSimulation(), new Chapter2NonCumulativeSimulation(),
+				new ScalaExampleTab());
 
 		stage.setScene(new Scene(tabPane, 800, 600));
 		stage.setTitle("Feedback Control Systems");
