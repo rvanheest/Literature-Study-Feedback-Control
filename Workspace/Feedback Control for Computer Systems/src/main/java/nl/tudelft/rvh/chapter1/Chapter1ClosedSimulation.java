@@ -1,11 +1,13 @@
 package nl.tudelft.rvh.chapter1;
 
-import javafx.scene.chart.XYChart.Data;
+import java.util.concurrent.TimeUnit;
+
 import nl.tudelft.rvh.ChartTab;
+import nl.tudelft.rvh.Tuple;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
-import rx.subjects.ReplaySubject;
+import rx.subjects.PublishSubject;
 
 public class Chapter1ClosedSimulation extends ChartTab {
 
@@ -20,27 +22,29 @@ public class Chapter1ClosedSimulation extends ChartTab {
 	}
 
 	@Override
-	public Observable<Data<Number, Number>> runSimulation() {
-		Observable<Integer> time = Observable.range(0, 5000);
-		Func1<Integer, Integer> target = t -> t < 100 ? 0
+	public Observable<Tuple<Number, Number>> runSimulation() {
+		Observable<Long> time = Observable.interval(1L, TimeUnit.MILLISECONDS)
+				.take(5000);
+		Buffer b = new Buffer(10, 10);
+		Func1<Long, Integer> target = t -> t < 100 ? 0
 				: t < 300 ? 50
 						: 10;
 		Func2<Integer, Integer, Double> control = (e, c) -> 1.25 * e + 0.01 * c;
-		Buffer b = new Buffer(10, 10);
 
-		return Observable.create(subscriber -> {
-			ReplaySubject<Integer> queueLength = ReplaySubject.create();
-			queueLength.onNext(0);
+		Observable<Integer> feedbackLoop = Observable.create(subscriber -> {
+			PublishSubject<Integer> queueLength = PublishSubject.create();
 
-			Observable<Integer> error = Observable.zip(time.map(target),
-					queueLength, (tar, q) -> tar - q);
-			Observable.zip(error, error.scan((e, cum) -> e + cum), control)
+			Observable<Integer> error = time.map(target).zipWith(queueLength, Math::subtractExact);
+
+			error.scan(new Tuple<>(0, 0), (c, e) -> new Tuple<>(e, e + c.getY()))
+					.map(t -> control.call(t.getX(), t.getY()))
 					.map(b::work)
 					.subscribe(queueLength::onNext);
 
-			Observable<Data<Number, Number>> data = time.zipWith(queueLength.skip(1),
-					Data<Number, Number>::new);
-			data.subscribe(subscriber);
+			queueLength.subscribe(subscriber);
+			queueLength.onNext(0);
 		});
+		return time.zipWith(feedbackLoop.onBackpressureBuffer().skip(1),
+				Tuple<Number, Number>::new);
 	}
 }

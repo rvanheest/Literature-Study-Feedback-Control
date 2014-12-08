@@ -1,17 +1,39 @@
 package nl.tudelft.rvh.chapter2;
 
-import javafx.scene.chart.XYChart.Data;
+import java.util.concurrent.TimeUnit;
+
+import javafx.event.ActionEvent;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import nl.tudelft.rvh.ChartTab;
+import nl.tudelft.rvh.Tuple;
+import nl.tudelft.rvh.rxjavafx.Observables;
 import rx.Observable;
-import rx.Subscriber;
 import rx.functions.Func1;
 import rx.subjects.PublishSubject;
-import nl.tudelft.rvh.ChartTab;
 
 public class Chapter2NonCumulativeSimulation extends ChartTab {
 
+	private float k;
+
 	public Chapter2NonCumulativeSimulation() {
-		super("Chapter 2 - NonCumulative", "NonCumulative simulation",
-				"time", "cache size");
+		super("Chapter 2 - NonCumulative", "NonCumulative simulation", "time", "cache size");
+	}
+
+	@Override
+	public HBox bottomBox() {
+		this.k = 160;
+		
+		HBox box = super.bottomBox();
+		TextField tf = new TextField(String.valueOf(this.k));
+		box.getChildren().add(tf);
+		
+		Observables.fromNodeEvents(tf, ActionEvent.ACTION)
+				.map(event -> tf.getText())
+				.map(Integer::parseInt)
+				.subscribe(i -> this.k = i, e -> {});
+		
+		return box;
 	}
 
 	@Override
@@ -20,10 +42,10 @@ public class Chapter2NonCumulativeSimulation extends ChartTab {
 	}
 
 	@Override
-	public Observable<Data<Number, Number>> runSimulation() {
-		Observable<Integer> time = Observable.range(0, 200);
-		float k = 160;
-		Func1<Integer, Double> setPoint = t -> t < 50 ? 0.6
+	public Observable<Tuple<Number, Number>> runSimulation() {
+		Observable<Long> time = Observable.interval(50L, TimeUnit.MILLISECONDS).take(200);
+
+		Func1<Long, Double> setPoint = t -> t < 50 ? 0.6
 				: t < 100 ? 0.8
 						: t < 150 ? 0.1
 								: 0.9;
@@ -31,16 +53,18 @@ public class Chapter2NonCumulativeSimulation extends ChartTab {
 				: size > 100 ? 1
 						: size / 100;
 
-		return time.zipWith(Observable.create((Subscriber<? super Double> subscriber) -> {
+		Observable<Double> feedbackLoop = Observable.create(subscriber -> {
 			PublishSubject<Double> hitrate = PublishSubject.create();
 
-			Observable.zip(Observable.range(0, 200).map(setPoint), hitrate, (a, b) -> a - b)
-					.map(e -> k * e)
+			time.map(setPoint)
+					.zipWith(hitrate, (a, b) -> a - b)
+					.map(e -> this.k * e)
 					.map(cache)
 					.subscribe(hitrate::onNext);
 
-			hitrate.take(200).subscribe(subscriber);
+			hitrate.subscribe(subscriber);
 			hitrate.onNext(0.0);
-		}), Data<Number, Number>::new);
+		});
+		return time.zipWith(feedbackLoop, Tuple<Number, Number>::new);
 	}
 }
