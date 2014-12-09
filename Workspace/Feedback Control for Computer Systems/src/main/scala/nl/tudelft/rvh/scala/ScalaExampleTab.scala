@@ -1,7 +1,7 @@
 package nl.tudelft.rvh.scala
 
-import rx.lang.scala.JavaConversions
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
+
 import rx.lang.scala.Observable
 
 class ScalaExampleTab extends ScalaChartTab("ScalaExample", "Foobar", "Foo", "Bar") {
