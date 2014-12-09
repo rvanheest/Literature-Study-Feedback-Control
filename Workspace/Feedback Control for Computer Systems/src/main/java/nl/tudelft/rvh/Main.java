@@ -9,6 +9,7 @@ import nl.tudelft.rvh.chapter1.BufferClosed;
 import nl.tudelft.rvh.chapter1.BufferOpen;
 import nl.tudelft.rvh.chapter2.CacheCumulative;
 import nl.tudelft.rvh.chapter2.CacheNonCumulative;
+import nl.tudelft.rvh.scala.chapter2.CacheSmallCumulative;
 
 public class Main extends Application {
 
@@ -16,7 +17,8 @@ public class Main extends Application {
 	public void start(Stage stage) {
 		TabPane tabPane = new TabPane();
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
-		tabPane.getTabs().addAll(new CacheCumulative(), new CacheNonCumulative(),	// chapter 2
+		tabPane.getTabs().addAll(new CacheSmallCumulative(),
+				new CacheCumulative(), new CacheNonCumulative(),	// chapter 2
 				new BufferClosed(), new BufferOpen());	// chapter 1
 
 		stage.setScene(new Scene(tabPane, 800, 600));
