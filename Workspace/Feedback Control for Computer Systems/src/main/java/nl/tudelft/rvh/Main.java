@@ -1,9 +1,9 @@
 package nl.tudelft.rvh;
 
-import nl.tudelft.rvh.chapter1.Chapter1ClosedSimulation;
-import nl.tudelft.rvh.chapter1.Chapter1OpenSimulation;
-import nl.tudelft.rvh.chapter2.Chapter2CumulativeSimulation;
-import nl.tudelft.rvh.chapter2.Chapter2NonCumulativeSimulation;
+import nl.tudelft.rvh.chapter1.BufferClosed;
+import nl.tudelft.rvh.chapter1.BufferOpen;
+import nl.tudelft.rvh.chapter2.CacheCumulative;
+import nl.tudelft.rvh.chapter2.CacheNonCumulative;
 import nl.tudelft.rvh.scala.ScalaExampleTab;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -18,8 +18,8 @@ public class Main extends Application {
 		TabPane tabPane = new TabPane();
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
 		tabPane.getTabs().addAll(new ExampleTab(),
-				new Chapter1ClosedSimulation(), new Chapter1OpenSimulation(),
-				new Chapter2CumulativeSimulation(), new Chapter2NonCumulativeSimulation(),
+				new BufferClosed(), new BufferOpen(),
+				new CacheCumulative(), new CacheNonCumulative(),
 				new ScalaExampleTab());
 
 		stage.setScene(new Scene(tabPane, 800, 600));
