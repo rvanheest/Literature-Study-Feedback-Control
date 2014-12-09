@@ -38,7 +38,7 @@ public class CacheNonCumulative extends ChartTab {
 
 	@Override
 	public String seriesName() {
-		return "noncumulative simulation";
+		return "k = " + this.k;
 	}
 
 	@Override

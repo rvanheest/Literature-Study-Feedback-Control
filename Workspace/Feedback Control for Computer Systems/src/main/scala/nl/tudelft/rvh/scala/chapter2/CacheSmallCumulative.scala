@@ -31,7 +31,7 @@ class CacheSmallCumulative() extends ScalaChartTab("Chapter 2 - Small cumulative
 		box
 	}
 
-	def seriesName(): String = "cumulative simulation"
+	def seriesName(): String = s"k = $k"
 
 	def simulation(): Observable[(Number, Number)] = {
 		val time = Observable.interval(50 milliseconds).take(20)

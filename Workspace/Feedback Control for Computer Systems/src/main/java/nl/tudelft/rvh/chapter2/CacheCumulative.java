@@ -38,7 +38,7 @@ public class CacheCumulative extends ChartTab {
 	
 	@Override
 	public String seriesName() {
-		return "cumulative simulation";
+		return "k = " + this.k;
 	}
 
 	@Override

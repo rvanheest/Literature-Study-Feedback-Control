@@ -25,9 +25,10 @@ import rx.Observable;
 
 public abstract class ChartTab extends Tab {
 	
-	private final Button button = new Button("Start simulation");
+	private final Button simulate = new Button("Start simulation");
 	private final Button print = new Button("Print data");
 	private final Button save = new Button("Save chart");
+	private final Button clear = new Button("Clear chart");
 
 	public ChartTab(String tabName, String chartTitle, String xName, String yName) {
 		super(tabName);
@@ -38,13 +39,13 @@ public abstract class ChartTab extends Tab {
 		this.print.setDisable(true);
 		this.save.setDisable(true);
 
-		Observables.fromNodeEvents(this.button, ActionEvent.ACTION)
+		Observables.fromNodeEvents(this.simulate, ActionEvent.ACTION)
 				.doOnNext(event -> {
-					this.button.setDisable(true);
+					this.simulate.setDisable(true);
+					this.clear.setDisable(true);
 					this.print.setDisable(true);
 					this.save.setDisable(true);
 				})
-				.doOnNext(event -> chart.getData().clear())
 				.map(event -> new Series<Number, Number>())
 				.doOnNext(series -> series.setName(this.seriesName()))
 				.doOnNext(chart.getData()::add)
@@ -53,32 +54,37 @@ public abstract class ChartTab extends Tab {
 						.map(dp -> new Data<>(dp.getX(), dp.getY()))
 						.doOnNext(series.getData()::add)
 						.doOnCompleted(() -> {
-							this.button.setDisable(false);
+							this.simulate.setDisable(false);
+							this.clear.setDisable(false);
 							this.print.setDisable(false);
 							this.save.setDisable(false);
 						}))
 				.subscribe(t -> {},
 						e -> e.printStackTrace(),
 						() -> {});
+		
+		Observables.fromNodeEvents(this.clear, ActionEvent.ACTION)
+				.subscribe(event -> chart.getData().clear());
 
 		Observables.fromNodeEvents(this.print, ActionEvent.ACTION)
 				.flatMap(event -> Observable.from(chart.getData()))
-				.map(series -> Observable.from(series.getData()))
-				.flatMap(obsData -> obsData.map(data -> data.getXValue() + "," + data.getYValue())
-						.reduce("Data:", (sum, current) -> sum + "\n" + current))
+				.map(series -> series.getData().stream()
+						.map(data -> data.getXValue() + "," + data.getYValue())
+						.reduce(series.getName() + ":", (sum, current) -> sum + "\n" + current))
 				.subscribe(System.out::println);
 
 		Observables.fromNodeEvents(this.save, ActionEvent.ACTION)
 				.map(event -> chart.snapshot(new SnapshotParameters(), null))
 				.map(img -> SwingFXUtils.fromFXImage(img, null))
-				.flatMap(img -> this.getFile().<Boolean>flatMap(f -> Observable.create(subscriber -> {
-					try {
-						subscriber.onNext(ImageIO.write(img, "png", f));
-					}
-					catch (IOException e) {
-						subscriber.onError(e);
-					}
-				}))).subscribe();
+				.flatMap(img -> this.getFile()
+						.<Boolean> flatMap(f -> Observable.create(subscriber -> {
+							try {
+								subscriber.onNext(ImageIO.write(img, "png", f));
+							}
+							catch (IOException e) {
+								subscriber.onError(e);
+							}
+						}))).subscribe();
 
 		this.setContent(new VBox(chart, this.bottomBox()));
 	}
@@ -109,7 +115,7 @@ public abstract class ChartTab extends Tab {
 	}
 
 	public HBox bottomBox() {
-		return new HBox(this.button, this.print, this.save);
+		return new HBox(this.simulate, this.clear, this.print, this.save);
 	}
 
 	public abstract String seriesName();
