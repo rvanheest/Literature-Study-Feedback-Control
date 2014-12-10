@@ -50,8 +50,8 @@ public abstract class ChartTab extends Tab {
 				.doOnNext(series -> series.setName(this.seriesName()))
 				.doOnNext(chart.getData()::add)
 				.flatMap(series -> this.runSimulation()
-						.observeOn(JavaFxScheduler.getInstance())
 						.map(dp -> new Data<>(dp.getX(), dp.getY()))
+						.observeOn(JavaFxScheduler.getInstance())
 						.doOnNext(series.getData()::add)
 						.doOnCompleted(() -> {
 							this.simulate.setDisable(false);
