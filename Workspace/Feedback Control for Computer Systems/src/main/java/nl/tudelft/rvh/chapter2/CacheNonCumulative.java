@@ -43,12 +43,12 @@ public class CacheNonCumulative extends ChartTab {
 
 	@Override
 	public Observable<Tuple<Number, Number>> runSimulation() {
-		Observable<Long> time = Observable.interval(50L, TimeUnit.MILLISECONDS).take(200);
+		Observable<Long> time = Observable.interval(50L, TimeUnit.MILLISECONDS).take(120);
 
-		Func1<Long, Double> setPoint = t -> t < 50 ? 0.6
-				: t < 100 ? 0.8
-						: t < 150 ? 0.1
-								: 0.9;
+		Func1<Long, Double> setPoint = t -> t < 30 ? 0.6
+				: t < 60 ? 0.8
+						: t < 90 ? 0.1
+								: 0.4;
 		Func1<Double, Double> cache = size -> size < 0 ? 0
 				: size > 100 ? 1
 						: size / 100;
