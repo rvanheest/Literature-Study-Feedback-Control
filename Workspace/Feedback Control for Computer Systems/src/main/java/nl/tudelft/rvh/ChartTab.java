@@ -35,6 +35,7 @@ public abstract class ChartTab extends Tab {
 
 		LineChart<Number, Number> chart = this.initChart(chartTitle, xName, yName);
 		chart.setAnimated(false);
+		chart.setCreateSymbols(false);
 
 		this.print.setDisable(true);
 		this.save.setDisable(true);
