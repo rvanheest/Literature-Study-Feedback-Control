@@ -1,15 +1,15 @@
 package nl.tudelft.rvh.scala.chapter2
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
+
 import javafx.event.ActionEvent
-import javafx.event.Event
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
+import nl.tudelft.rvh.rxscalafx.Observables
 import nl.tudelft.rvh.scala.ScalaChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.PublishSubject
-import nl.tudelft.rvh.rxscalafx.Observables
 
 class CacheSmallCumulative() extends ScalaChartTab("Chapter 2 - Small cumulative", "Cumulative simulation", "time", "cache size") {
 
@@ -41,12 +41,12 @@ class CacheSmallCumulative() extends ScalaChartTab("Chapter 2 - Small cumulative
 		val feedbackLoop = Observable((subscriber: Subscriber[Double]) => {
 			val hitrate = PublishSubject[Double]
 
-			time.map { setPoint }
+			time.map(setPoint)
 				.zipWith(hitrate)(_ - _)
 				.scan((cum: Double, e: Double) => cum + e)
 				.map { this.k * _ }
-				.map { cache }
-				.subscribe { hitrate.onNext(_) }
+				.map(cache)
+				.subscribe(hitrate)
 
 			hitrate.subscribe(subscriber)
 			hitrate.onNext(0.0)
@@ -62,11 +62,11 @@ class CacheSmallCumulative() extends ScalaChartTab("Chapter 2 - Small cumulative
 			val hitrate = PublishSubject[Double]
 
 			Observable.from(0 until 30)
-				.map { setPoint }
+				.map(setPoint)
 				.zipWith(hitrate)(_ - _)
 				.scan((cum: Double, e: Double) => cum + e)
 				.map { this.k * _ }
-				.map { cache }
+				.map(cache)
 				.subscribe(hitrate)
 
 			hitrate.subscribe(subscriber)

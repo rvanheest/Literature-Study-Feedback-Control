@@ -7,8 +7,8 @@ import javafx.scene.control.TabPane.TabClosingPolicy;
 import javafx.stage.Stage;
 import nl.tudelft.rvh.chapter1.BufferClosed;
 import nl.tudelft.rvh.chapter1.BufferOpen;
-import nl.tudelft.rvh.chapter2.CacheCumulative;
-import nl.tudelft.rvh.chapter2.CacheNonCumulative;
+import nl.tudelft.rvh.scala.chapter2.CacheCumulative;
+import nl.tudelft.rvh.scala.chapter2.CacheNonCumulative;
 import nl.tudelft.rvh.scala.chapter2.CacheSmallCumulative;
 import nl.tudelft.rvh.scala.chapter2.CacheSmallNonCumulative;
 

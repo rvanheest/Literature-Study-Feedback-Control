@@ -1,17 +1,17 @@
 package nl.tudelft.rvh.scala.chapter2
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
+
 import javafx.event.ActionEvent
-import javafx.event.Event
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
+import nl.tudelft.rvh.rxscalafx.Observables
 import nl.tudelft.rvh.scala.ScalaChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.PublishSubject
-import nl.tudelft.rvh.rxscalafx.Observables
 
-class CacheSmallNonCumulative() extends ScalaChartTab("Chapter 2 - Small noncumulative", "Noncumulative simulation", "time", "cache size") {
+class CacheNonCumulative extends ScalaChartTab("Chapter 2 - Noncumulative", "Noncumulative simulation", "time", "cache size") {
 
 	private var k: Float = 160
 
@@ -35,7 +35,7 @@ class CacheSmallNonCumulative() extends ScalaChartTab("Chapter 2 - Small noncumu
 
 	def simulation(): Observable[(Number, Number)] = {
 		val time = Observable.interval(50 milliseconds).take(30)
-		def setPoint(time: Long) = 0.6
+		def setPoint(time: Long): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
 		val feedbackLoop = Observable((subscriber: Subscriber[Double]) => {
@@ -54,7 +54,7 @@ class CacheSmallNonCumulative() extends ScalaChartTab("Chapter 2 - Small noncumu
 	}
 
 	def simulationForGitHub(): Observable[Double] = {
-		def setPoint(time: Int): Double = 0.6
+		def setPoint(time: Int): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
 		Observable((subscriber: Subscriber[Double]) => {
