@@ -11,6 +11,8 @@ import nl.tudelft.rvh.scala.chapter2.CacheCumulative;
 import nl.tudelft.rvh.scala.chapter2.CacheNonCumulative;
 import nl.tudelft.rvh.scala.chapter2.CacheSmallCumulative;
 import nl.tudelft.rvh.scala.chapter2.CacheSmallNonCumulative;
+import nl.tudelft.rvh.scala.chapter3.CacheDelay;
+import nl.tudelft.rvh.scala.chapter3.ExampleWithDelay;
 
 public class Main extends Application {
 
@@ -18,7 +20,8 @@ public class Main extends Application {
 	public void start(Stage stage) {
 		TabPane tabPane = new TabPane();
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
-		tabPane.getTabs().addAll(new CacheSmallCumulative(), new CacheSmallNonCumulative(),
+		tabPane.getTabs().addAll(new CacheDelay(), new ExampleWithDelay(),	// chapter 3
+				new CacheSmallCumulative(), new CacheSmallNonCumulative(),
 				new CacheCumulative(), new CacheNonCumulative(),	// chapter 2
 				new BufferClosed(), new BufferOpen());	// chapter 1
 
