@@ -29,6 +29,11 @@ class PIController extends ScalaChartTab("Chapter 4 - PI controller", "Cruise co
 		}
 	}
 
+	class PI(val prop: Double = 0, val integral: Double = 0) {
+		def work(error: Double): PI = new PI(error, integral + error)
+		def controlAction = prop * kp + integral * ki
+	}
+
 	override def bottomBox(): HBox = {
 		this.kp = 0.5
 		this.ki = 0.001
@@ -65,9 +70,9 @@ class PIController extends ScalaChartTab("Chapter 4 - PI controller", "Cruise co
 			
 			time.map(setPoint)
 				.zipWith(speed)(_ - _)
-				.scan((0.0, 0.0))((c, e) => (e, e + c._2))
+				.scan(new PI)(_ work _)
 				.drop(1)
-				.map { t => t._1 * kp + t._2 * ki }
+				.map(_.controlAction)
 				.map(cc.interact)
 				.subscribe(speed)
 		})
@@ -85,8 +90,9 @@ class PIController extends ScalaChartTab("Chapter 4 - PI controller", "Cruise co
 			Observable.from(0 until 60)
 				.map(setPoint)
 				.zipWith(speed)(_ - _)
-				.scan((0.0, 0.0))((c, e) => (e, e + c._2))
-				.map { t => t._1 * this.kp + t._2 * this.ki }
+				.scan(new PI)(_ work _)
+				.drop(1)
+				.map(_.controlAction)
 				.map(cc.interact)
 				.subscribe(speed)
 		})
