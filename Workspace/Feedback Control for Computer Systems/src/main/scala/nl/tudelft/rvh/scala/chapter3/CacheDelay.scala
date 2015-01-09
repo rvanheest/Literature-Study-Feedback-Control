@@ -2,11 +2,11 @@ package nl.tudelft.rvh.scala.chapter3
 
 import scala.concurrent.duration.DurationInt
 
-import ObsExtensions.extendObservable
 import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
 import nl.tudelft.rvh.rxscalafx.Observables
+import nl.tudelft.rvh.scala.Extensions.ObsExtensions.extendObservable
 import nl.tudelft.rvh.scala.ScalaChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber

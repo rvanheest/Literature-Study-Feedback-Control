@@ -1,12 +1,10 @@
 package nl.tudelft.rvh.scala.chapter4
 
 import scala.concurrent.duration.DurationInt
-
 import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
 import nl.tudelft.rvh.rxscalafx.Observables
-import nl.tudelft.rvh.scala.RoundingExtensions.extendDouble
 import nl.tudelft.rvh.scala.ScalaChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
@@ -15,19 +13,6 @@ class ProportionalController extends ScalaChartTab("Chapter 4 - Proportional con
 
 	private var k: Double = 0.5
 	
-	class SpeedSystem(var speed: Double = 10) {
-		def interact(power: Double) = {
-			if (power <= 0) {
-				speed = (0.90 * speed) roundAt 1
-			}
-			else {
-				speed = (speed + power) roundAt 1
-			}
-			
-			speed
-		}
-	}
-
 	override def bottomBox(): HBox = {
 		this.k = 0.5
 		
