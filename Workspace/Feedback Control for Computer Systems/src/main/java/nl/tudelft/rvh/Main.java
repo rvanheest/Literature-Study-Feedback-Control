@@ -15,6 +15,7 @@ import nl.tudelft.rvh.scala.chapter3.CacheDelay;
 import nl.tudelft.rvh.scala.chapter3.ExampleWithDelay;
 import nl.tudelft.rvh.scala.chapter4.OnOffController;
 import nl.tudelft.rvh.scala.chapter4.PIController;
+import nl.tudelft.rvh.scala.chapter4.PIDController;
 import nl.tudelft.rvh.scala.chapter4.ProportionalController;
 
 public class Main extends Application {
@@ -23,7 +24,7 @@ public class Main extends Application {
 	public void start(Stage stage) {
 		TabPane tabPane = new TabPane();
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
-		tabPane.getTabs().addAll(new PIController(), new ProportionalController(), new OnOffController(),	// chapter 4
+		tabPane.getTabs().addAll(new PIDController(), new PIController(), new ProportionalController(), new OnOffController(),	// chapter 4
 				new CacheDelay(), new ExampleWithDelay(),	// chapter 3
 				new CacheSmallCumulative(), new CacheSmallNonCumulative(),
 				new CacheCumulative(), new CacheNonCumulative(),	// chapter 2
