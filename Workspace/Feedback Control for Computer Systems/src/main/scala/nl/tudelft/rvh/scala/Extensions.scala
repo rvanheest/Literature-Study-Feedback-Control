@@ -1,5 +1,8 @@
 package nl.tudelft.rvh.scala
 
+import nl.tudelft.rvh.scala.simulation.Component
+import rx.lang.scala.Observable
+
 object Extensions {
 
 	object RoundingExtensions {
@@ -14,14 +17,23 @@ object Extensions {
 	}
 
 	object ObsExtensions {
-		import rx.lang.scala.Observable
-
 		class ExtendedObservable[T](obs: Observable[T]) {
+			def delay(steps: Int, initVal: T) = {
+				val start = Observable.from(List.fill(steps)(initVal))
 
-			def delay(steps: Int, initVal: T) = (Observable.from(List.fill(steps)(initVal)) ++ obs)
-				.slidingBuffer(steps, 1).map(_.head)
+				(start ++ obs).slidingBuffer(steps, 1).map(_.head)
+			}
+		}
+
+		class ExtendedDoubleObservable(obs: Observable[Double]) {
+			def interactWith(initVal: Component) = {
+				obs.scan(initVal)((r, t) => r.update(t))
+					.drop(1)
+					.map(comp => comp.action)
+			}
 		}
 
 		implicit def extendObservable[T](obs: Observable[T]) = new ExtendedObservable(obs)
+		implicit def extendDoubleObservable(obs: Observable[Double]) = new ExtendedDoubleObservable(obs)
 	}
 }
