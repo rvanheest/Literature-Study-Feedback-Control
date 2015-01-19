@@ -10,20 +10,20 @@ import rx.lang.scala.subjects.BehaviorSubject
 
 object Loops {
 
-	def stepResponse(time: Observable[Int], setPoint: Int => Int, plant: Plant) = {
+	def stepResponse(time: Observable[Int], setPoint: Int => Double, plant: Plant) = {
 		time.map(setPoint)
 			.map(_ toDouble)
 			.interactWith(plant)
 	}
 
-	def openLoop(time: Observable[Int], setPoint: Int => Int, controller: Controller, plant: Plant) = {
+	def openLoop(time: Observable[Int], setPoint: Int => Double, controller: Controller, plant: Plant) = {
 		time.map(setPoint)
 			.map(_ toDouble)
 			.interactWith(controller)
 			.interactWith(plant)
 	}
 
-	def closedLoop(time: Observable[Int], setPoint: Int => Int, controller: Controller, plant: Plant,
+	def closedLoop(time: Observable[Int], setPoint: Int => Double, controller: Controller, plant: Plant,
 		inverted: Boolean = false, actuator: Filter = new Identity, filter: Filter = new Identity) = {
 		Observable[Double](subscriber => {
 			val y = BehaviorSubject(0.0)
