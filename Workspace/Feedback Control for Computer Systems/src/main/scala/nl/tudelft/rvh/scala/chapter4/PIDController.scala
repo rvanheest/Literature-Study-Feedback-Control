@@ -6,11 +6,11 @@ import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
 import nl.tudelft.rvh.rxscalafx.Observables
-import nl.tudelft.rvh.scala.ScalaChartTab
+import nl.tudelft.rvh.scala.ChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
 
-class PIDController extends ScalaChartTab("Chapter 4 - PID controller", "Cruise control", "time", "speed") {
+class PIDController extends ChartTab("Chapter 4 - PID controller", "Cruise control", "time", "speed") {
 
 	private var kp: Double = 0.5
 	private var ki: Double = 0.001
@@ -21,7 +21,7 @@ class PIDController extends ScalaChartTab("Chapter 4 - PID controller", "Cruise 
 		this.ki = 0.001
 		this.kd = 0.1
 
-		val box = super.bottomBox()
+		val box = super.bottomBox
 		val kpTF = new TextField(this.kp.toString)
 		val kiTF = new TextField(this.ki.toString)
 		val kdTF = new TextField(this.kd.toString)
@@ -47,17 +47,19 @@ class PIDController extends ScalaChartTab("Chapter 4 - PID controller", "Cruise 
 	}
 
 	def seriesName(): String = s"kp = $kp; ki = $ki; kd = $kd"
+	
+	override def time = super.time take 60
+	
+	def setpoint(time: Long) = if (time < 20) 15 else if (time < 40) 5 else 20
 
 	def simulation(): Observable[(Number, Number)] = {
-		val time = Observable.interval(50 milliseconds).take(60)
-		def setPoint(time: Long): Int = if (time < 20) 15 else if (time < 40) 5 else 20
 		val cc = new SpeedSystem
 
 		val feedbackLoop = Observable[Double](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
 			speed.subscribe(subscriber)
 
-			time.map(setPoint)
+			time.map(setpoint)
 				.zipWith(speed)(_ - _)
 				.scan(new PID)(_ work _)
 				.drop(1)

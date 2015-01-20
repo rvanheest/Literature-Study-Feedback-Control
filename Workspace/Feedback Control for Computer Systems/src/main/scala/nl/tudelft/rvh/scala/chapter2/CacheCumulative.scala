@@ -6,19 +6,19 @@ import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
 import nl.tudelft.rvh.rxscalafx.Observables
-import nl.tudelft.rvh.scala.ScalaChartTab
+import nl.tudelft.rvh.scala.ChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.PublishSubject
 
-class CacheCumulative extends ScalaChartTab("Chapter 2 - Cumulative", "Cumulative simulation", "time", "cache size") {
+class CacheCumulative extends ChartTab("Chapter 2 - Cumulative", "Cumulative simulation", "time", "cache size") {
 
 	private var k: Float = 160
 
 	override def bottomBox(): HBox = {
 		this.k = 160
 
-		val box = super.bottomBox()
+		val box = super.bottomBox
 		val tf = new TextField(this.k.toString)
 		box.getChildren.add(tf)
 
@@ -33,15 +33,17 @@ class CacheCumulative extends ScalaChartTab("Chapter 2 - Cumulative", "Cumulativ
 
 	def seriesName(): String = s"k = $k"
 
+	override def time = super.time take 120
+	
+	def setpoint(time: Long): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
+
 	def simulation(): Observable[(Number, Number)] = {
-		val time = Observable.interval(50 milliseconds).take(120)
-		def setPoint(time: Long): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
 		val feedbackLoop = Observable((subscriber: Subscriber[Double]) => {
 			val hitrate = PublishSubject[Double]
 
-			time.map(setPoint)
+			time.map(setpoint)
 				.zipWith(hitrate)(_ - _)
 				.scan((cum: Double, e: Double) => cum + e)
 				.map { this.k * _ }

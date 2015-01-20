@@ -2,24 +2,26 @@ package nl.tudelft.rvh.scala.chapter4
 
 import scala.concurrent.duration.DurationInt
 
-import nl.tudelft.rvh.scala.ScalaChartTab
+import nl.tudelft.rvh.scala.ChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
 
-class OnOffController extends ScalaChartTab("Chapter 4 - On/Off controller", "Cruise control", "time", "speed") {
+class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise control", "time", "speed") {
 
 	def seriesName(): String = "Cruise control with on/off controller"
+
+	override def time = super.time take 60
+	
+	def setpoint(time: Long) = if (time < 20) 15 else if (time < 40) 5 else 20
 	
 	def simulation(): Observable[(Number, Number)] = {
-		val time = Observable.interval(50 milliseconds).take(60)
-		def setPoint(time: Long): Int = if (time < 20) 15 else if (time < 40) 5 else 20
 		val cc = new OnOffSpeedSystem
 		
 		val feedbackLoop = Observable[Int](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
 			speed.subscribe(subscriber)
 			
-			time.map(setPoint)
+			time.map(setpoint)
 				.zipWith(speed)(_ - _)
 				.map { x => if (x > 0) true else false }
 				.map(cc.interact)
