@@ -60,7 +60,7 @@ class CacheDelay extends ChartTab("Chapter 3 - Cache with delay", "Delay simulat
 				.delay(this.delay, 0.0)
 				.subscribe(hitrate)
 
-			hitrate.subscribe(subscriber)
+			hitrate.drop(1).subscribe(subscriber)
 		})
 		time.zipWith(feedbackLoop)((_, _))
 	}
@@ -81,7 +81,7 @@ class CacheDelay extends ChartTab("Chapter 3 - Cache with delay", "Delay simulat
 				.delay(this.delay, 0.0)
 				.subscribe(hitrate)
 
-			hitrate.subscribe(subscriber)
+			hitrate.drop(1).subscribe(subscriber)
 		})
 	}
 }

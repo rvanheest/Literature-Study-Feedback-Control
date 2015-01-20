@@ -41,7 +41,7 @@ class ProportionalController extends ChartTab("Chapter 4 - Proportional controll
 		
 		val feedbackLoop = Observable[Double](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
-			speed.subscribe(subscriber)
+			speed.drop(1).subscribe(subscriber)
 			
 			time.map(setpoint)
 				.zipWith(speed)(_ - _)
@@ -58,7 +58,7 @@ class ProportionalController extends ChartTab("Chapter 4 - Proportional controll
 		
 		Observable(subscriber => {
 			val speed = BehaviorSubject(cc.speed)
-			speed.subscribe(subscriber)
+			speed.drop(1).subscribe(subscriber)
 			
 			Observable.from(0 until 60)
 				.map(setPoint)

@@ -1,10 +1,11 @@
 package nl.tudelft.rvh.simulation
 
 import scala.concurrent.duration.DurationDouble
+
+import nl.tudelft.rvh.ChartTab
 import nl.tudelft.rvh.simulation.controller.PIDController
 import nl.tudelft.rvh.simulation.plant.Boiler
 import rx.lang.scala.Observable
-import nl.tudelft.rvh.ChartTab
 
 class BoilerSim(implicit DT: Double = 1.0) extends ChartTab("Boiler", "Boiler simulation", "time", "temperature") {
 

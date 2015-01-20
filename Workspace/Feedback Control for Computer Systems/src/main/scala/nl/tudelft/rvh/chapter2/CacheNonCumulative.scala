@@ -49,7 +49,7 @@ class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumul
 				.map(cache)
 				.subscribe(hitrate)
 
-			hitrate.subscribe(subscriber)
+			hitrate.drop(1).subscribe(subscriber)
 			hitrate.onNext(0.0)
 		})
 		time.zipWith(feedbackLoop)((_, _))
@@ -69,7 +69,7 @@ class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumul
 				.map(cache)
 				.subscribe(hitrate)
 
-			hitrate.subscribe(subscriber)
+			hitrate.drop(1).subscribe(subscriber)
 			hitrate.onNext(0.0)
 		})
 	}

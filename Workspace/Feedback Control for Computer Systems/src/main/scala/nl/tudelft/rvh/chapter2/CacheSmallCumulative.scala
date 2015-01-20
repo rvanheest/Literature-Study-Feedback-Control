@@ -50,7 +50,7 @@ class CacheSmallCumulative() extends ChartTab("Chapter 2 - Small cumulative", "C
 				.map(cache)
 				.subscribe(hitrate)
 
-			hitrate.subscribe(subscriber)
+			hitrate.drop(1).subscribe(subscriber)
 			hitrate.onNext(0.0)
 		})
 		time.zipWith(feedbackLoop)((_, _))
@@ -71,7 +71,7 @@ class CacheSmallCumulative() extends ChartTab("Chapter 2 - Small cumulative", "C
 				.map(cache)
 				.subscribe(hitrate)
 
-			hitrate.subscribe(subscriber)
+			hitrate.drop(1).subscribe(subscriber)
 			hitrate.onNext(0.0)
 		})
 	}
