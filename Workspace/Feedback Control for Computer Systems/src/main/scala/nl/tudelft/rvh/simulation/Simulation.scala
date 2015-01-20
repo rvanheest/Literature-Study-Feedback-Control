@@ -15,7 +15,7 @@ class Simulation extends Application {
 	def start(stage: Stage) = {
 		val tabPane = new TabPane
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
-		tabPane.getTabs addAll(new BufferClosed, new BufferOpen)
+		tabPane.getTabs addAll(new BoilerSim)
 		
 		stage setScene new Scene(tabPane, 800, 600)
 		stage setTitle "Feedback Control Systems - Simulation framework"
