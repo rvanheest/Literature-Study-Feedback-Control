@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.chapter3
+package nl.tudelft.rvh.chapter3
 
 import scala.concurrent.duration.DurationInt
 
@@ -6,8 +6,8 @@ import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
 import nl.tudelft.rvh.rxscalafx.Observables
-import nl.tudelft.rvh.scala.ChartTab
-import nl.tudelft.rvh.scala.Extensions.ObsExtensions.extendObservable
+import nl.tudelft.rvh.ChartTab
+import nl.tudelft.rvh.Extensions.ObsExtensions.extendObservable
 import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.BehaviorSubject

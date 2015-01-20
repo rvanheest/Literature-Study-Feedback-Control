@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
 // reproduces the input
 class Identity(value: Double = 0) extends Filter {

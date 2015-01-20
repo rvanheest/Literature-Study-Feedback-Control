@@ -1,10 +1,10 @@
-package nl.tudelft.rvh.scala.simulation
+package nl.tudelft.rvh.simulation
 
 import scala.concurrent.duration.DurationDouble
 import scala.io.StdIn
 
-import nl.tudelft.rvh.scala.simulation.controller.PIDController
-import nl.tudelft.rvh.scala.simulation.plant.Boiler
+import nl.tudelft.rvh.simulation.controller.PIDController
+import nl.tudelft.rvh.simulation.plant.Boiler
 import rx.lang.scala.Observable
 
 object Test extends App {

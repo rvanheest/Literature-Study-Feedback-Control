@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
 // maintains a cumulative sum of all inputs
 class Integrator(data: Double = 0)(implicit DT: Double) extends Filter {

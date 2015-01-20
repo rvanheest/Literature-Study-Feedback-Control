@@ -1,6 +1,6 @@
-package nl.tudelft.rvh.scala
+package nl.tudelft.rvh
 
-import nl.tudelft.rvh.scala.simulation.Component
+import nl.tudelft.rvh.simulation.Component
 import rx.lang.scala.Observable
 
 object Extensions {

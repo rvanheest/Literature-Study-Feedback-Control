@@ -1,6 +1,6 @@
-package nl.tudelft.rvh.scala.chapter4
+package nl.tudelft.rvh.chapter4
 
-import nl.tudelft.rvh.scala.Extensions.RoundingExtensions.extendDouble
+import nl.tudelft.rvh.Extensions.RoundingExtensions.extendDouble
 
 class SpeedSystem(var speed: Double = 10) {
 	def interact(power: Double) = {

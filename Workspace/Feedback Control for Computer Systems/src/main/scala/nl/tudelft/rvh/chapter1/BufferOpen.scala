@@ -1,7 +1,7 @@
-package nl.tudelft.rvh.scala.chapter1
+package nl.tudelft.rvh.chapter1
 
 import scala.concurrent.duration.DurationInt
-import nl.tudelft.rvh.scala.ChartTab
+import nl.tudelft.rvh.ChartTab
 import rx.lang.scala.Observable
 
 class BufferOpen extends ChartTab("Chapter 1 - open", "Open simulation of random buffer simulation", "time", "queue size") {

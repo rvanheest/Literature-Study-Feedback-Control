@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.chapter4
+package nl.tudelft.rvh.chapter4
 
 class PI(val prop: Double = 0, val integral: Double = 0) {
 	def work(error: Double): PI = {

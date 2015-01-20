@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
 // calculates the unweighted average over its last n inputs
 class FixedFilter(n: Int, data: List[Double] = List()) extends Filter {

@@ -1,6 +1,6 @@
-package nl.tudelft.rvh.scala.simulation.controller
+package nl.tudelft.rvh.simulation.controller
 
-import nl.tudelft.rvh.scala.simulation.Component
+import nl.tudelft.rvh.simulation.Component
 
 trait Controller extends Component {
 	override def update(error: Double): Controller 

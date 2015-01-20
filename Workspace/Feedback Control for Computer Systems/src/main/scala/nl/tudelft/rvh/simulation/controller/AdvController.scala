@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.controller
+package nl.tudelft.rvh.simulation.controller
 
 class AdvController(kp: Double, ki: Double, kd: Double = 0,
 		clamp: (Double, Double) = (-1e10, 1e10), smooth: Double = 1,

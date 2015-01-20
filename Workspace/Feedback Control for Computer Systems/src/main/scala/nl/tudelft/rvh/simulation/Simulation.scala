@@ -1,10 +1,12 @@
-package nl.tudelft.rvh.scala.simulation
+package nl.tudelft.rvh.simulation
 
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.control.TabPane
 import javafx.scene.control.TabPane.TabClosingPolicy
 import javafx.stage.Stage
+import nl.tudelft.rvh.chapter1.BufferClosed
+import nl.tudelft.rvh.chapter1.BufferOpen
 import nl.tudelft.rvh.chapter1.BufferClosed
 import nl.tudelft.rvh.chapter1.BufferOpen
 

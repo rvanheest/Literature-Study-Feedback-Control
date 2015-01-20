@@ -1,6 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.controller
-
-import nl.tudelft.rvh.scala.simulation.Component
+package nl.tudelft.rvh.simulation.controller
 
 class PIDController(kp: Double, ki: Double, kd: Double = 0.0,
 		integral: Double = 0, deriv: Double = 0, prev: Double = 0)

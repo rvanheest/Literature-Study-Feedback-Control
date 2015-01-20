@@ -1,10 +1,10 @@
-package nl.tudelft.rvh.scala.simulation
+package nl.tudelft.rvh.simulation
 
-import nl.tudelft.rvh.scala.Extensions.ObsExtensions.extendDoubleObservable
-import nl.tudelft.rvh.scala.simulation.controller.Controller
-import nl.tudelft.rvh.scala.simulation.filters.Filter
-import nl.tudelft.rvh.scala.simulation.filters.Identity
-import nl.tudelft.rvh.scala.simulation.plant.Plant
+import nl.tudelft.rvh.Extensions.ObsExtensions.extendDoubleObservable
+import nl.tudelft.rvh.simulation.controller.Controller
+import nl.tudelft.rvh.simulation.filters.Filter
+import nl.tudelft.rvh.simulation.filters.Identity
+import nl.tudelft.rvh.simulation.plant.Plant
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
 

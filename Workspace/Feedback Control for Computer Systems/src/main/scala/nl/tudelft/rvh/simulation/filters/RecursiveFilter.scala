@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
 // implementation of the exponential smoothing algorithm s(t) = a*x(t) + (1-a)*s(t-1)
 class RecursiveFilter(alpha: Double, y: Double = 0) extends Filter {

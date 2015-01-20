@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation
+package nl.tudelft.rvh.simulation
 
 object Setpoint {
 

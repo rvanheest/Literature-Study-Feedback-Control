@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.chapter1
+package nl.tudelft.rvh.chapter1
 
 import scala.util.Random
 

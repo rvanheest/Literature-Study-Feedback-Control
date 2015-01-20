@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
 class Limiter(lo: Double, hi: Double, res: Double = 0) extends Filter {
 

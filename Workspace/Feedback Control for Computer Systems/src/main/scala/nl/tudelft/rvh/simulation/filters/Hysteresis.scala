@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
 class Hysteresis(threshold: Double, prev: Double = 0, res: Double = 0) extends Filter {
 

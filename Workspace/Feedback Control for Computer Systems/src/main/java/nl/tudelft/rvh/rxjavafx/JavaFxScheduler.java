@@ -1,5 +1,9 @@
 package nl.tudelft.rvh.rxjavafx;
 
+import static java.lang.Math.max;
+
+import java.util.concurrent.TimeUnit;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -10,10 +14,6 @@ import rx.functions.Action0;
 import rx.subscriptions.BooleanSubscription;
 import rx.subscriptions.CompositeSubscription;
 import rx.subscriptions.Subscriptions;
-
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.Math.max;
 
 public final class JavaFxScheduler extends Scheduler {
 

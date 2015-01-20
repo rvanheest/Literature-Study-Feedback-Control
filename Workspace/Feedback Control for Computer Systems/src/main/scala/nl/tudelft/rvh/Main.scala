@@ -1,22 +1,22 @@
-package nl.tudelft.rvh.scala
+package nl.tudelft.rvh
 
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.control.TabPane
 import javafx.scene.control.TabPane.TabClosingPolicy
 import javafx.stage.Stage
-import nl.tudelft.rvh.scala.chapter1.BufferClosed
-import nl.tudelft.rvh.scala.chapter1.BufferOpen
-import nl.tudelft.rvh.scala.chapter2.CacheCumulative
-import nl.tudelft.rvh.scala.chapter2.CacheNonCumulative
-import nl.tudelft.rvh.scala.chapter2.CacheSmallCumulative
-import nl.tudelft.rvh.scala.chapter2.CacheSmallNonCumulative
-import nl.tudelft.rvh.scala.chapter3.CacheDelay
-import nl.tudelft.rvh.scala.chapter3.ExampleWithDelay
-import nl.tudelft.rvh.scala.chapter4.OnOffController
-import nl.tudelft.rvh.scala.chapter4.PIController
-import nl.tudelft.rvh.scala.chapter4.PIDController
-import nl.tudelft.rvh.scala.chapter4.ProportionalController
+import nl.tudelft.rvh.chapter1.BufferClosed
+import nl.tudelft.rvh.chapter1.BufferOpen
+import nl.tudelft.rvh.chapter2.CacheCumulative
+import nl.tudelft.rvh.chapter2.CacheNonCumulative
+import nl.tudelft.rvh.chapter2.CacheSmallCumulative
+import nl.tudelft.rvh.chapter2.CacheSmallNonCumulative
+import nl.tudelft.rvh.chapter3.CacheDelay
+import nl.tudelft.rvh.chapter3.ExampleWithDelay
+import nl.tudelft.rvh.chapter4.OnOffController
+import nl.tudelft.rvh.chapter4.PIController
+import nl.tudelft.rvh.chapter4.PIDController
+import nl.tudelft.rvh.chapter4.ProportionalController
 
 class Main extends Application {
 

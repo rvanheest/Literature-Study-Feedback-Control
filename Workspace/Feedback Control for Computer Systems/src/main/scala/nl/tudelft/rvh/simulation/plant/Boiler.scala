@@ -1,6 +1,6 @@
-package nl.tudelft.rvh.scala.simulation.plant
+package nl.tudelft.rvh.simulation.plant
 
-import nl.tudelft.rvh.scala.simulation.Component
+import nl.tudelft.rvh.simulation.Component
 
 class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Plant {
 

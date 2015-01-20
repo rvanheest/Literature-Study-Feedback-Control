@@ -1,6 +1,6 @@
-package nl.tudelft.rvh.scala.simulation.filters
+package nl.tudelft.rvh.simulation.filters
 
-import nl.tudelft.rvh.scala.simulation.Component
+import nl.tudelft.rvh.simulation.Component
 
 trait Filter extends Component {
 	override def update(u: Double): Filter

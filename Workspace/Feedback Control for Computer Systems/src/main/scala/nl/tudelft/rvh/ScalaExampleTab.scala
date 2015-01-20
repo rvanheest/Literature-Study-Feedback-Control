@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala
+package nl.tudelft.rvh
 
 import scala.concurrent.duration.DurationInt
 

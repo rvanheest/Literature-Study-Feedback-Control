@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.controller
+package nl.tudelft.rvh.simulation.controller
 
 class DeadbandController(zone: Double, res: Double = 0) extends Controller {
 

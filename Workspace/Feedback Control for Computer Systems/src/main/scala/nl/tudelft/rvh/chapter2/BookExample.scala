@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.chapter2
+package nl.tudelft.rvh.chapter2
 
 object BookExample extends App {
 

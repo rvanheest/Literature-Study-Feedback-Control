@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala
+package nl.tudelft.rvh
 
 import java.io.File
 import scala.collection.JavaConverters.asScalaBufferConverter

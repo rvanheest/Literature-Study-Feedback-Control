@@ -1,4 +1,4 @@
-package nl.tudelft.rvh.scala.simulation.controller
+package nl.tudelft.rvh.simulation.controller
 
 class HysteresisRelayController(zone: Double, prev: Double = 0, res: Double = 0) extends Controller {
 
