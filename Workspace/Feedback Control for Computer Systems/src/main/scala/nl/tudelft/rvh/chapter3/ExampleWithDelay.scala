@@ -49,7 +49,7 @@ class ExampleWithDelay extends ChartTab("Chapter 3 - Example with delay", "Examp
 				.delay(this.delay, 0.0)
 				.subscribe(hitrate)
 
-			hitrate.drop(1).subscribe(subscriber)
+			hitrate.subscribe(subscriber)
 		})
 		time.zipWith(feedbackLoop)((_, _))
 	}
@@ -67,7 +67,7 @@ class ExampleWithDelay extends ChartTab("Chapter 3 - Example with delay", "Examp
 				.delay(this.delay, 0.0)
 				.subscribe(hitrate)
 
-			hitrate.drop(1).subscribe(subscriber)
+			hitrate.subscribe(subscriber)
 		})
 	}
 }

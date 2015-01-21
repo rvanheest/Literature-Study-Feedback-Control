@@ -19,7 +19,7 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 		
 		val feedbackLoop = Observable[Int](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
-			speed.drop(1).subscribe(subscriber)
+			speed.subscribe(subscriber)
 			
 			time.map(setpoint)
 				.zipWith(speed)(_ - _)
@@ -36,7 +36,7 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 		
 		Observable(subscriber => {
 			val speed = BehaviorSubject(cc.speed)
-			speed.drop(1).subscribe(subscriber)
+			speed.subscribe(subscriber)
 			
 			Observable.from(0 until 40)
 				.map(setPoint)

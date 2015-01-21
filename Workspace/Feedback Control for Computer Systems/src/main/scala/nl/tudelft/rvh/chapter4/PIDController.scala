@@ -57,7 +57,7 @@ class PIDController extends ChartTab("Chapter 4 - PID controller", "Cruise contr
 
 		val feedbackLoop = Observable[Double](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
-			speed.drop(1).subscribe(subscriber)
+			speed.subscribe(subscriber)
 
 			time.map(setpoint)
 				.zipWith(speed)(_ - _)
@@ -76,7 +76,7 @@ class PIDController extends ChartTab("Chapter 4 - PID controller", "Cruise contr
 
 		Observable(subscriber => {
 			val speed = BehaviorSubject(cc.speed)
-			speed.drop(1).subscribe(subscriber)
+			speed.subscribe(subscriber)
 
 			Observable.from(0 until 60)
 				.map(setPoint)
