@@ -21,6 +21,7 @@ import nl.tudelft.rvh.rxscalafx.Observables
 import rx.lang.scala.Observable
 import rx.lang.scala.JavaConversions
 import nl.tudelft.rvh.rxjavafx.JavaFxScheduler
+import javafx.geometry.Pos
 
 abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yName: String) extends Tab(tabName) {
 
@@ -71,7 +72,7 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 			.foldLeft(series.getName + ":")((sum, current) => sum + "\n" + current))
 		.subscribe(println(_))
 
-	Observables.fromNodeEvents(print, ActionEvent.ACTION)
+	Observables.fromNodeEvents(save, ActionEvent.ACTION)
 		.map(_ => chart.snapshot(new SnapshotParameters, null))
 		.map(SwingFXUtils.fromFXImage(_, null))
 		.flatMap(img => getFile.map(f => ImageIO.write(img, "png", f)))
@@ -102,7 +103,7 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		print setDisable true
 		save setDisable true
 
-		val data: Observable[(Number, Number)] = this.time.map(t => (t, setpoint(t)))
+		val data: Observable[(Number, Number)] = time.map(t => (t, setpoint(t)))
 		
 		data.onBackpressureBuffer
 			.map(tuple => new Data(tuple _1, tuple _2))
