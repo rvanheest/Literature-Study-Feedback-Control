@@ -55,13 +55,10 @@ class BoilerSim(dt: Double = 1.0) extends ChartTab("Boiler", "Boiler simulation"
 	
 	def setpoint(t: Long): Double = 10 * Setpoint.doubleStep(t, 10, 60)
 	
-	def simulation(): Observable[(Number, Number)] = {
+	def simulation(): Observable[Double] = {
 		val p = new Boiler
 		val c = new PIDController(kp, ki)
 
-		val res = Loops.closedLoop(time map (_ toInt), setpoint, c, p)
-		time.map(dt *).zipWith(res)((_, _))
-			.onBackpressureBuffer
-			.asInstanceOf[Observable[(Number, Number)]]
+		Loops.closedLoop(time map (_ toInt), setpoint, c, p)
 	}
 }

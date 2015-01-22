@@ -37,10 +37,10 @@ class ExampleWithDelay extends ChartTab("Chapter 3 - Example with delay", "Examp
 	
 	def setpoint(time: Long): Double = 1
 
-	def simulation(): Observable[(Number, Number)] = {
+	def simulation() = {
 		val gain = 0.8
 
-		val feedbackLoop = Observable((subscriber: Subscriber[Double]) => {
+		Observable((subscriber: Subscriber[Double]) => {
 			val hitrate = BehaviorSubject[Double]
 
 			time.map(setpoint)
@@ -51,7 +51,6 @@ class ExampleWithDelay extends ChartTab("Chapter 3 - Example with delay", "Examp
 
 			hitrate.subscribe(subscriber)
 		})
-		time.zipWith(feedbackLoop)((_, _))
 	}
 
 	def simulationForGitHub(): Observable[Double] = {

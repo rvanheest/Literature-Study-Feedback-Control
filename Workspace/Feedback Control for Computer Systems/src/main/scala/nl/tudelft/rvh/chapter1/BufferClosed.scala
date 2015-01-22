@@ -17,7 +17,7 @@ class BufferClosed extends ChartTab("Chapter 1 - closed", "Closed simulation of 
 		val buffer = new Buffer(10, 10)
 		def control(e: Double, c: Double) = 1.25 * e + 0.01 * c
 		
-		val feedbackLoop = Observable[Int](subscriber => {
+		Observable[Int](subscriber => {
 			val queueLength = BehaviorSubject(0)
 			queueLength subscribe subscriber
 			
@@ -27,8 +27,6 @@ class BufferClosed extends ChartTab("Chapter 1 - closed", "Closed simulation of 
 				.map(t => control(t._1, t._2))
 				.map(buffer.work(_))
 				.subscribe(queueLength)
-		})
-		
-		time.zipWith(feedbackLoop.onBackpressureBuffer drop 1)((_, _))
+		}).onBackpressureBuffer drop 1
 	}
 }

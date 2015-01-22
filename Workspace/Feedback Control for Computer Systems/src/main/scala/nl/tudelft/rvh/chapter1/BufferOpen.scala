@@ -14,8 +14,6 @@ class BufferOpen extends ChartTab("Chapter 1 - open", "Open simulation of random
 
 	def simulation = {
 		val buffer = new Buffer(10, 10)
-		
-		val work = time.map(setpoint).map(buffer.work(_))
-		time.zipWith(work)((_, _))
+		time.map(setpoint).map(buffer.work(_))
 	}
 }

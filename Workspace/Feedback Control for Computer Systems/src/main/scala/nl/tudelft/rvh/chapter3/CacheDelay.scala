@@ -46,10 +46,10 @@ class CacheDelay extends ChartTab("Chapter 3 - Cache with delay", "Delay simulat
 	
 	def setpoint(time: Long) = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
 
-	def simulation(): Observable[(Number, Number)] = {
+	def simulation() = {
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
-		val feedbackLoop = Observable((subscriber: Subscriber[Double]) => {
+		Observable((subscriber: Subscriber[Double]) => {
 			val hitrate = BehaviorSubject[Double]
 
 			time.map(setpoint)
@@ -62,7 +62,6 @@ class CacheDelay extends ChartTab("Chapter 3 - Cache with delay", "Delay simulat
 
 			hitrate.subscribe(subscriber)
 		})
-		time.zipWith(feedbackLoop)((_, _))
 	}
 
 	def simulationForGitHub(): Observable[Double] = {

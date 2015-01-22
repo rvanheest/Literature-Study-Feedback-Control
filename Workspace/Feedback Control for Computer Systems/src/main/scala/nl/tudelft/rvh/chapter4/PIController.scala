@@ -44,10 +44,10 @@ class PIController extends ChartTab("Chapter 4 - PI controller", "Cruise control
 	
 	def setpoint(time: Long) = if (time < 20) 15 else if (time < 40) 5 else 20
 	
-	def simulation(): Observable[(Number, Number)] = {
+	def simulation() = {
 		val cc = new SpeedSystem
 		
-		val feedbackLoop = Observable[Double](subscriber => {
+		Observable[Double](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
 			speed.subscribe(subscriber)
 			
@@ -59,7 +59,6 @@ class PIController extends ChartTab("Chapter 4 - PI controller", "Cruise control
 				.map(cc.interact)
 				.subscribe(speed)
 		})
-		time.zipWith(feedbackLoop)((_, _))
 	}
 
 	def simulationForGitHub(): Observable[Double] = {

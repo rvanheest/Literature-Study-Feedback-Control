@@ -50,7 +50,7 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		.map(_ => new Series[Number, Number])
 		.doOnNext(_.setName(this.seriesName))
 		.doOnNext(chart.getData add _)
-		.flatMap(series => this.simulation
+		.flatMap(series => this.runSimulation
 			.map(tuple => new Data(tuple._1, tuple._2))
 			.observeOn(JavaConversions.javaSchedulerToScalaScheduler(JavaFxScheduler.getInstance))
 			.doOnNext(series.getData add _)
@@ -102,7 +102,7 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		clear setDisable true
 		print setDisable true
 		save setDisable true
-
+		
 		val data: Observable[(Number, Number)] = time map (t => (t * DT, setpoint(t)))
 		
 		data.onBackpressureBuffer
@@ -137,5 +137,11 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 
 	def setpoint(time: Long): Double
 
-	def simulation: Observable[(Number, Number)]
+	def runSimulation: Observable[(Number, Number)] = {
+		time.map(DT *).zipWith(simulation)((_, _))
+			.onBackpressureBuffer
+			.asInstanceOf[Observable[(Number, Number)]]
+	}
+
+	def simulation: Observable[_ <: AnyVal]
 }

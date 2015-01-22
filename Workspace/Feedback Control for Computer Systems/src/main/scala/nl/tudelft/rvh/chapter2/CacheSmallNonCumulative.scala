@@ -37,10 +37,10 @@ class CacheSmallNonCumulative() extends ChartTab("Chapter 2 - Small noncumulativ
 	
 	def setpoint(time: Long) = 0.6
 
-	def simulation(): Observable[(Number, Number)] = {
+	def simulation() = {
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
-		val feedbackLoop = Observable((subscriber: Subscriber[Double]) => {
+		Observable((subscriber: Subscriber[Double]) => {
 			val hitrate = PublishSubject[Double]
 
 			time.map(setpoint)
@@ -52,7 +52,6 @@ class CacheSmallNonCumulative() extends ChartTab("Chapter 2 - Small noncumulativ
 			hitrate.subscribe(subscriber)
 			hitrate.onNext(0.0)
 		})
-		time.zipWith(feedbackLoop)((_, _))
 	}
 
 	def simulationForGitHub(): Observable[Double] = {

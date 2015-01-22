@@ -14,10 +14,10 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 	
 	def setpoint(time: Long) = if (time < 20) 15 else if (time < 40) 5 else 20
 	
-	def simulation(): Observable[(Number, Number)] = {
+	def simulation() = {
 		val cc = new OnOffSpeedSystem
 		
-		val feedbackLoop = Observable[Int](subscriber => {
+		Observable[Int](subscriber => {
 			val speed = BehaviorSubject(cc.speed)
 			speed.subscribe(subscriber)
 			
@@ -27,7 +27,6 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 				.map(cc.interact)
 				.subscribe(speed)
 		})
-		time.zipWith(feedbackLoop)((_, _))
 	}
 
 	def simulationForGitHub(): Observable[Int] = {
