@@ -1,8 +1,10 @@
 package nl.tudelft.rvh
 
 import java.io.File
+
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.duration.DurationInt
+
 import javafx.embed.swing.SwingFXUtils
 import javafx.event.ActionEvent
 import javafx.scene.SnapshotParameters
@@ -17,13 +19,12 @@ import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.FileChooser.ExtensionFilter
 import javax.imageio.ImageIO
-import nl.tudelft.rvh.rxscalafx.Observables
-import rx.lang.scala.Observable
-import rx.lang.scala.JavaConversions
 import nl.tudelft.rvh.rxjavafx.JavaFxScheduler
-import javafx.geometry.Pos
+import nl.tudelft.rvh.rxscalafx.Observables
+import rx.lang.scala.JavaConversions
+import rx.lang.scala.Observable
 
-abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yName: String) extends Tab(tabName) {
+abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yName: String)(implicit DT: Double = 1.0) extends Tab(tabName) {
 
 	private val simulate = new Button("Start simulation")
 	private val print = new Button("Print data")
@@ -31,13 +32,13 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 	private val clear = new Button("Clear chart")
 
 	val chart = initChart(chartTitle, xName, yName)
-	chart.setAnimated(false)
-	chart.setCreateSymbols(false)
+	chart setAnimated false
+	chart setCreateSymbols false
 
 	initSetpointSeries()
 
-	print.setDisable(true)
-	save.setDisable(true)
+	print setDisable true
+	save setDisable true
 
 	Observables.fromNodeEvents(simulate, ActionEvent.ACTION)
 		.doOnNext(event => {
@@ -67,7 +68,7 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		.subscribe(_ => initSetpointSeries)
 
 	Observables.fromNodeEvents(print, ActionEvent.ACTION)
-		.flatMap(_ => Observable.from(chart.getData.asScala))
+		.flatMap(_ => Observable.from(chart.getData asScala))
 		.map(series => series.getData.asScala.map(data => data.getXValue + ", " + data.getYValue)
 			.foldLeft(series.getName + ":")((sum, current) => sum + "\n" + current))
 		.subscribe(println(_))
@@ -78,32 +79,31 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		.flatMap(img => getFile.map(f => ImageIO.write(img, "png", f)))
 		.subscribe
 
-	this.setContent(new VBox(chart, bottomBox))
+	this setContent new VBox(chart, bottomBox)
 
 	def initChart(title: String, xName: String, yName: String) = {
 		val xAxis = new NumberAxis
 		val yAxis = new NumberAxis
-
-		xAxis.setLabel(xName)
-		yAxis.setLabel(yName)
-
 		val chart = new LineChart(xAxis, yAxis)
-		chart.setTitle(title)
+
+		xAxis setLabel xName
+		yAxis setLabel yName
+		chart setTitle title
 
 		chart
 	}
 
 	def initSetpointSeries() = {
 		val series = new Series[Number, Number]
-		series.setName("Setpoint")
-		chart.getData.add(series)
+		series setName "Setpoint"
+		chart.getData add series
 
 		simulate setDisable true
 		clear setDisable true
 		print setDisable true
 		save setDisable true
 
-		val data: Observable[(Number, Number)] = time.map(t => (t, setpoint(t)))
+		val data: Observable[(Number, Number)] = time map (t => (t * DT, setpoint(t)))
 		
 		data.onBackpressureBuffer
 			.map(tuple => new Data(tuple _1, tuple _2))
@@ -120,11 +120,11 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 	def getFile: Observable[File] = {
 		Observable(subscriber => {
 			val fileChooser = new FileChooser
-			fileChooser.setTitle("Save image")
+			fileChooser setTitle "Save image"
 			fileChooser.getExtensionFilters add new ExtensionFilter("PNG files (*.png)", "*.png")
 
-			val x = Option(fileChooser.showSaveDialog(null))
-				.map(f => if (!f.getPath.endsWith(".png")) new File(f.getPath + ".png") else f)
+			val x = Option(fileChooser showSaveDialog null)
+				.map(f => if (f.getPath endsWith ".png") f else new File(f.getPath + ".png"))
 				.foreach(subscriber onNext _)
 		})
 	}

@@ -12,7 +12,7 @@ import javafx.event.ActionEvent
 import javafx.scene.layout.VBox
 import rx.lang.scala.schedulers.ComputationScheduler
 
-class BoilerSim(dt: Double = 1.0) extends ChartTab("Boiler", "Boiler simulation", "time", "temperature") {
+class BoilerSim(dt: Double = 1.0) extends ChartTab("Boiler", "Boiler simulation", "time", "temperature")(dt) {
 	
 	implicit val DT = dt
 	var kp: Double = 0.45
@@ -51,16 +51,16 @@ class BoilerSim(dt: Double = 1.0) extends ChartTab("Boiler", "Boiler simulation"
 
 	def seriesName = "Boiler simulation"
 	
-	override def time: Observable[Long] = Observable interval (1 milliseconds) take (150.0 / dt).toInt
+	override def time: Observable[Long] = super.time take 150
 	
-	def setpoint(t: Long): Double = 10 * Setpoint.doubleStep(t, math.round(10.0 / dt), math.round(60.0 / dt))
+	def setpoint(t: Long): Double = 10 * Setpoint.doubleStep(t, 10, 60)
 	
 	def simulation(): Observable[(Number, Number)] = {
 		val p = new Boiler
 		val c = new PIDController(kp, ki)
 
 		val res = Loops.closedLoop(time map (_ toInt), setpoint, c, p)
-		time.zipWith(res)((_, _))
+		time.map(dt *).zipWith(res)((_, _))
 			.onBackpressureBuffer
 			.asInstanceOf[Observable[(Number, Number)]]
 	}
