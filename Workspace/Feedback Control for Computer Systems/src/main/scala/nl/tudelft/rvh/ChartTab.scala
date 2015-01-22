@@ -1,10 +1,8 @@
 package nl.tudelft.rvh
 
 import java.io.File
-
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.duration.DurationInt
-
 import javafx.embed.swing.SwingFXUtils
 import javafx.event.ActionEvent
 import javafx.scene.SnapshotParameters
@@ -23,6 +21,7 @@ import nl.tudelft.rvh.rxjavafx.JavaFxScheduler
 import nl.tudelft.rvh.rxscalafx.Observables
 import rx.lang.scala.JavaConversions
 import rx.lang.scala.Observable
+import rx.lang.scala.schedulers.ComputationScheduler
 
 abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yName: String)(implicit DT: Double = 1.0) extends Tab(tabName) {
 
@@ -133,7 +132,7 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 
 	def seriesName: String
 
-	def time = Observable interval (50 milliseconds)
+	def time = Observable interval (50 milliseconds, ComputationScheduler())
 
 	def setpoint(time: Long): Double
 

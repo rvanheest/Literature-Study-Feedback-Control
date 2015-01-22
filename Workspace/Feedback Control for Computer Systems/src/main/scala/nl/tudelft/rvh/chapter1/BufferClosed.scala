@@ -1,15 +1,17 @@
 package nl.tudelft.rvh.chapter1
 
 import scala.concurrent.duration.DurationInt
+
 import nl.tudelft.rvh.ChartTab
 import rx.lang.scala.Observable
+import rx.lang.scala.schedulers.ComputationScheduler
 import rx.lang.scala.subjects.BehaviorSubject
 
 class BufferClosed extends ChartTab("Chapter 1 - closed", "Closed simulation of random buffer simulation", "time", "queue size") {
 
 	def seriesName = "closed simulation"
 
-	override def time = Observable interval (1 millisecond) take 5000
+	override def time = Observable interval (1 millisecond, ComputationScheduler()) take 5000
 	
 	def setpoint(t: Long) = if (t < 100) 0 else if (t < 300) 50 else 10
 	
