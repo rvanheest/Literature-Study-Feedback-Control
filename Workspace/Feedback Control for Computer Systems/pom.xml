@@ -48,12 +48,7 @@
 		</dependency>
 
 		<!-- Reactive Programming -->
-		<dependency>
-			<groupId>io.reactivex</groupId>
-			<artifactId>rxjava</artifactId>
-			<version>1.0.1</version>
-		</dependency>
-
+		<!-- implicit download of RxJava by RxScala -->
 		<dependency>
 			<groupId>io.reactivex</groupId>
 			<artifactId>rxscala_2.11</artifactId>
