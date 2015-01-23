@@ -6,9 +6,26 @@ import nl.tudelft.rvh.simulation.filters.Filter
 import nl.tudelft.rvh.simulation.filters.Identity
 import nl.tudelft.rvh.simulation.plant.Plant
 import rx.lang.scala.Observable
+import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.subjects.BehaviorSubject
 
 object Loops {
+
+	def staticTest(initPlant: Plant, umax: Int, stepMax: Int, repeatMax: Int, tMax: Int): Observable[Double] = {
+		val steps = (0 until stepMax).toObservable
+		val repeats = (0 until repeatMax).toObservable
+		val ts = (0 until tMax).toObservable
+		staticTest(initPlant, umax, steps, repeats, ts)
+	}
+
+	def staticTest(initPlant: Plant, umax: Int, steps: Observable[Int], repeats: Observable[Int], ts: Observable[Int]) = {
+		for {
+			i <- steps
+			u <- steps.size.single map { i.toDouble * umax / _ }
+			plant <- repeats map { r => initPlant }
+			y <- ts map (_ => u) interactWith plant last
+		} yield y
+	}
 
 	def stepResponse(time: Observable[Long], setPoint: Long => Double, plant: Plant) = {
 		time.map(setPoint)
