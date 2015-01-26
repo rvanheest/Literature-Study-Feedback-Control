@@ -2,8 +2,6 @@ package nl.tudelft.rvh.simulation
 
 import scala.concurrent.duration.DurationDouble
 import scala.io.StdIn
-import nl.tudelft.rvh.simulation.controller.PIDController
-import nl.tudelft.rvh.simulation.plant.Boiler
 import rx.lang.scala.Observable
 import rx.lang.scala.schedulers.ComputationScheduler
 
