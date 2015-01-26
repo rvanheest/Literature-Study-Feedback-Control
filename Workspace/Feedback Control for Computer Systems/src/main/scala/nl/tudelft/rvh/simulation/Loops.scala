@@ -33,8 +33,7 @@ object Loops {
 	def openLoop(time: Observable[Long], setPoint: Long => Double, controller: Component, plant: Component) = {
 		time.map(setPoint)
 			.map(_ toDouble)
-			.interactWith(controller)
-			.interactWith(plant)
+			.interactWith(controller ++ plant)
 	}
 
 	def closedLoop(time: Observable[Long], setPoint: Long => Double, controller: Component, plant: Component,
@@ -46,10 +45,7 @@ object Loops {
 			time.map(setPoint)
 				.zipWith(y)(_ - _)
 				.map { e => if (inverted) -e else e }
-				.interactWith(controller)
-				.interactWith(actuator)
-				.interactWith(plant)
-				.interactWith(filter)
+				.interactWith(controller ++ actuator ++ plant ++ filter)
 				.subscribe(y)
 		})
 	}
