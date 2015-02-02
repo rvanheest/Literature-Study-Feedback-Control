@@ -137,8 +137,8 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 	def setpoint(time: Long): Double
 
 	def runSimulation: Observable[(Number, Number)] = {
-		time.map(DT *).zipWith(simulation)((_, _))
-			.onBackpressureBuffer
+		time.map(DT *).onBackpressureBuffer
+			.zipWith(simulation)((_, _))
 			.asInstanceOf[Observable[(Number, Number)]]
 	}
 

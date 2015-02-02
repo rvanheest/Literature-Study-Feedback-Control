@@ -1,5 +1,7 @@
 package nl.tudelft.rvh.simulation
 
+import scala.util.Random
+
 import nl.tudelft.rvh.Extensions.ObsExtensions.extendDoubleObservable
 import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
@@ -7,6 +9,8 @@ import rx.lang.scala.schedulers.ComputationScheduler
 import rx.lang.scala.subjects.BehaviorSubject
 
 object Loops {
+
+	def gaussian(mean: Double, stdDev: Double) = new Random().nextGaussian() * stdDev + mean
 
 	def staticTest(initPlant: Component, umax: Int, stepMax: Int, repeatMax: Int, tMax: Int): Observable[(Double, Double)] = {
 		val steps = (0 until stepMax).toObservable.observeOn(ComputationScheduler())
@@ -24,11 +28,7 @@ object Loops {
 		} yield (u, y)
 	}
 
-	def stepResponse(time: Observable[Long], setPoint: Long => Double, plant: Component) = {
-		time.map(setPoint)
-			.map(_ toDouble)
-			.interactWith(plant)
-	}
+	def stepResponse(time: Observable[Long], setPoint: Long => Double, plant: Component) = time.map(setPoint).interactWith(plant)
 
 	def openLoop(time: Observable[Long], setPoint: Long => Double, controller: Component, plant: Component) = {
 		time.map(setPoint)

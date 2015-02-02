@@ -5,14 +5,20 @@ import javafx.scene.Scene
 import javafx.scene.control.TabPane
 import javafx.scene.control.TabPane.TabClosingPolicy
 import javafx.stage.Stage
-import nl.tudelft.rvh.simulation.CacheSimulation._
+import nl.tudelft.rvh.simulation.AdDelivery.AdStaticTest
+import nl.tudelft.rvh.simulation.AdDelivery.AdStepResponse
+import nl.tudelft.rvh.simulation.CacheSimulation.CacheClosedLoop
+import nl.tudelft.rvh.simulation.CacheSimulation.CacheClosedLoopJumps
+import nl.tudelft.rvh.simulation.CacheSimulation.CacheStaticTest
+import nl.tudelft.rvh.simulation.CacheSimulation.CacheStepResponse
 
 class Simulation extends Application {
 
 	def start(stage: Stage) = {
 		val tabPane = new TabPane
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
-		tabPane.getTabs addAll(new CacheClosedLoopJumps, new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
+		tabPane.getTabs addAll(new AdStepResponse, new AdStaticTest,
+				new CacheClosedLoopJumps, new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
 				new BoilerSim)
 		
 		stage setScene new Scene(tabPane, 800, 600)

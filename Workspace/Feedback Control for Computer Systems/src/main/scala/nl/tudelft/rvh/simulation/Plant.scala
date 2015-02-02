@@ -50,3 +50,19 @@ class Cache(val size: Int, val demand: Long => Int, val internalTime: Long = 0, 
 		if (res) 1.0 else 0.0
 	}
 }
+
+class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Double = 0.0) extends Component {
+	
+	def update(u: Double): AdPublisher = new AdPublisher(scale, minPrice, relWidth, u)
+
+	def action: Double = {
+		if (value <= minPrice) {
+			0
+		}
+		else {
+			val mean = scale * math.log(value / minPrice)
+			val demand = math.floor(Loops.gaussian(mean, relWidth * mean))
+			math.max(0, demand)
+		}
+	}
+}
