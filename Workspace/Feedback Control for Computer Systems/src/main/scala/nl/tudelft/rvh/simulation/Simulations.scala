@@ -255,4 +255,40 @@ object ServerScaling {
 			Loops.closedLoop(time, setpoint, c, p)
 		}
 	}
+
+	class ServerClosedLoop2(dt: Double = 1.0) extends ChartTab("Server Pool Loop 2", "Server Pool Loop 2", "time", "completion rate")(dt) {
+		
+		implicit val DT = dt
+		
+		def seriesName = "Completion rate"
+		
+		override def time: Observable[Long] = super.time take 700
+		
+		def setpoint(time: Long): Double = if (time < 50) time / 50.0 else 0.9995
+		
+		def simulation(): Observable[Double] = {
+			val p = new ServerPool(0, server = consume_queue, load = load_queue)
+			val c = new AsymmController(10, 200)
+			
+			Loops.closedLoop(time, setpoint, c, p)
+		}
+	}
+
+	class ServerClosedLoop3(dt: Double = 1.0) extends ChartTab("Server Pool Loop 3", "Server Pool Loop 3", "time", "completion rate")(dt) {
+		
+		implicit val DT = dt
+		
+		def seriesName = "Completion rate"
+		
+		override def time: Observable[Long] = super.time take 1200
+		
+		def setpoint(time: Long): Double = 1.0
+		
+		def simulation(): Observable[Double] = {
+			val p = new ServerPool(0, server = consume_queue, load = load_queue)
+			val c = new SpecialController(100, 10)
+			
+			Loops.closedLoop(time, setpoint, c, p, actuator = new Integrator)
+		}
+	}
 }

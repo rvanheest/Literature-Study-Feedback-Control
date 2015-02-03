@@ -80,3 +80,32 @@ class DeadbandRelayController(zone: Double, res: Double = 0) extends Component {
 
 	def action: Double = res
 }
+
+class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component {
+	
+	def update(error: Double): AsymmController = {
+		var e = error
+		if (e > 0) e /= 20.0
+		
+		val i = integral + DT * e
+		val d = (prev - e) / DT
+		
+		new AsymmController(kp, ki, kd, i, d, e)
+	}
+
+	def action = prev * kp + integral * ki + deriv * kd
+}
+
+class SpecialController(period1: Int, period2: Int, t: Int = 0, res: Int = 0) extends Component {
+	
+	def update(error: Double): SpecialController = {
+		if (error > 0)
+			new SpecialController(period1, period2, period1, 1)
+		else if (t - 1 == 0)
+			new SpecialController(period1, period2, period2, -1)
+		else
+			new SpecialController(period1, period2, t - 1, 0)
+	}
+	
+	def action = res
+}
