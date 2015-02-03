@@ -10,8 +10,6 @@ import rx.lang.scala.subjects.BehaviorSubject
 
 object Loops {
 
-	def gaussian(mean: Double, stdDev: Double) = new Random().nextGaussian() * stdDev + mean
-
 	def staticTest(initPlant: Component, umax: Int, stepMax: Int, repeatMax: Int, tMax: Int): Observable[(Double, Double)] = {
 		val steps = (0 until stepMax).toObservable.observeOn(ComputationScheduler())
 		val repeats = (0 until repeatMax).toObservable

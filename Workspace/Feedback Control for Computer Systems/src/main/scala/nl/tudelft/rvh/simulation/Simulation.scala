@@ -11,13 +11,16 @@ import nl.tudelft.rvh.simulation.CacheSimulation.CacheClosedLoop
 import nl.tudelft.rvh.simulation.CacheSimulation.CacheClosedLoopJumps
 import nl.tudelft.rvh.simulation.CacheSimulation.CacheStaticTest
 import nl.tudelft.rvh.simulation.CacheSimulation.CacheStepResponse
+import nl.tudelft.rvh.simulation.ServerScaling.ServerClosedLoop1
+import nl.tudelft.rvh.simulation.ServerScaling.ServerStaticTest
 
 class Simulation extends Application {
 
 	def start(stage: Stage) = {
 		val tabPane = new TabPane
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
-		tabPane.getTabs addAll(new AdStepResponse, new AdStaticTest,
+		tabPane.getTabs addAll(new ServerClosedLoop1, new ServerStaticTest,
+				new AdStepResponse, new AdStaticTest,
 				new CacheClosedLoopJumps, new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
 				new BoilerSim)
 		

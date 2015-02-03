@@ -101,7 +101,7 @@ object CacheSimulation {
 		def seriesName = s"Demand width = $demandWidth"
 
 		def simulation(): Observable[(Double, Double)] = {
-			def demand(t: Long) = math floor Loops.gaussian(0, demandWidth) toInt
+			def demand(t: Long) = math floor Randomizers.gaussian(0, demandWidth) toInt
 
 			val p = new Cache(0, demand) ++ new FixedFilter(100)
 			Loops.staticTest(p, 150, 100, 5, 3000)
@@ -115,7 +115,7 @@ object CacheSimulation {
 		override def time = super.time take 500
 
 		def simulation: Observable[Double] = {
-			def demand(t: Long) = math floor Loops.gaussian(0, 15) toInt
+			def demand(t: Long) = math floor Randomizers.gaussian(0, 15) toInt
 			def setpoint(time: Long): Double = 40
 
 			val p = new Cache(0, demand) ++ new FixedFilter(100)
@@ -134,7 +134,7 @@ object CacheSimulation {
 		def setpoint(t: Long): Double = if (t > 5000) 0.5 else 0.7
 
 		def simulation(): Observable[Double] = {
-			def demand(t: Long) = math floor Loops.gaussian(0, 15) toInt
+			def demand(t: Long) = math floor Randomizers.gaussian(0, 15) toInt
 
 			val p = new Cache(0, demand) ++ new FixedFilter(100)
 			val c = new PIDController(100, 2.50)
@@ -154,7 +154,7 @@ object CacheSimulation {
 		def setpoint(t: Long): Double = 0.7
 
 		def simulation(): Observable[Double] = {
-			def gaus2(tuple: (Int, Int)) = math floor Loops.gaussian(tuple._1, tuple._2) toInt
+			def gaus2(tuple: (Int, Int)) = math floor Randomizers.gaussian(tuple._1, tuple._2) toInt
 			def demand(t: Long) = gaus2(if (t < 3000) (0, 15) else if (t < 5000) (0, 35) else (100, 15))
 
 			val p = new Cache(0, demand) ++ new FixedFilter(100)
@@ -187,6 +187,72 @@ object AdDelivery {
 			val f = new RecursiveFilter(0.05)
 			
 			Loops.stepResponse(time, _ => 5.50, p ++ f)
+		}
+	}
+}
+
+object ServerScaling {
+	
+	var global_time = 0
+	
+	def load_queue() = {
+		global_time += 1
+		
+		if (global_time > 2500) Randomizers.gaussian(1200, 5)
+		else if (global_time > 2200) Randomizers.gaussian(800, 5)
+		else Randomizers.gaussian(1000, 5)
+	}
+	
+	def consume_queue() = 100 * Randomizers.betavariate(20, 2)
+	
+	class ServerStaticTest extends StaticTestTab("Server Pool Static Test", "Server Pool Static Test", "Server instances", "Completion Rate") {
+		var traffic = 1000
+		
+		override def bottomBox(): HBox = {
+			this.traffic = 1000
+
+			val box = super.bottomBox
+			val kpTF = new TextField(this.traffic.toString)
+
+			box.getChildren.addAll(kpTF)
+
+			Observables.fromNodeEvents(kpTF, ActionEvent.ACTION)
+				.map { _ => kpTF.getText }
+				.map { _ toInt }
+				.subscribe(this.traffic = _)
+
+			box
+		}
+		
+		def loadqueue() = Randomizers.gaussian(traffic, traffic / 200.0)
+		
+		def seriesName: String = s"Traffic Intensity $traffic"
+		
+		def simulation(): Observable[(Double, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = loadqueue), 20, 20, 5, 1000)
+	}
+	
+	class ServerClosedLoop1(dt: Double = 1.0) extends ChartTab("Server Pool Loop 1", "Server Pool Loop 1", "time", "completion rate")(dt) {
+		
+		implicit val DT = dt
+		
+		def loadqueue() = {
+			global_time += 1
+			
+			if (global_time > 2100) Randomizers.gaussian(1200, 5)
+			else Randomizers.gaussian(1000, 5)
+		}
+		
+		def seriesName = "Completion rate"
+		
+		override def time: Observable[Long] = super.time take 300
+		
+		def setpoint(time: Long): Double = if (time > 100) 0.6 else 0.8
+		
+		def simulation(): Observable[Double] = {
+			val p = new ServerPool(8, server = consume_queue, load = loadqueue)
+			val c = new PIDController(1, 5)
+			
+			Loops.closedLoop(time, setpoint, c, p)
 		}
 	}
 }
