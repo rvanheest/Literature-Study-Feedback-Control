@@ -1,13 +1,13 @@
 package nl.tudelft.rvh.simulation
 
-class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component {
+class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(u: Double) = new Boiler(g, y + DT * (u - g * y))
 
 	def action = y
 }
 
-class Spring(x: Double = 0, v: Double = 0, m: Double = 0.1, k: Double = 1, g: Double = 0.05)(implicit DT: Double) extends Component {
+class Spring(x: Double = 0, v: Double = 0, m: Double = 0.1, k: Double = 1, g: Double = 0.05)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(u: Double) = {
 		val a = u - k * x - g * v
@@ -20,7 +20,7 @@ class Spring(x: Double = 0, v: Double = 0, m: Double = 0.1, k: Double = 1, g: Do
 	def action = x
 }
 
-class Cache(val size: Int, val demand: Long => Int, val internalTime: Long = 0, val cache: Map[Int, Long] = Map(), val res: Boolean = false) extends Component {
+class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[Int, Long] = Map(), res: Boolean = false) extends Component[Double, Boolean] {
 
 	def update(u: Double): Cache = {
 		val time = internalTime + 1
@@ -46,12 +46,10 @@ class Cache(val size: Int, val demand: Long => Int, val internalTime: Long = 0, 
 		}
 	}
 
-	def action: Double = {
-		if (res) 1.0 else 0.0
-	}
+	def action: Boolean = res
 }
 
-class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Double = 0.0) extends Component {
+class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Double = 0.0) extends Component[Double, Double] {
 	
 	def update(u: Double): AdPublisher = new AdPublisher(scale, minPrice, relWidth, u)
 
@@ -67,7 +65,7 @@ class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Doub
 	}
 }
 
-class ServerPool(n: Int, queue: Double = 0, server: () => Double, load: () => Double, res: Double = 0.0) extends Component {
+class ServerPool(n: Int, queue: Double = 0, server: () => Double, load: () => Double, res: Double = 0.0) extends Component[Double, Double] {
 	
 	def update(u: Double): ServerPool = {
 		val l = load()

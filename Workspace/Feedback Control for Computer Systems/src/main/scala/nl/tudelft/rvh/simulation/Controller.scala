@@ -1,6 +1,6 @@
 package nl.tudelft.rvh.simulation
 
-class PIDController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component {
+class PIDController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(error: Double): PIDController = {
 		val i = integral + DT * error
@@ -13,7 +13,7 @@ class PIDController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double =
 }
 
 class AdvController(kp: Double, ki: Double, kd: Double = 0, clamp: (Double, Double) = (-1e10, 1e10), smooth: Double = 1,
-		integral: Double = 0, deriv: Double = 0, prev: Double = 0, unclamped: Boolean = true)(implicit DT: Double) extends Component {
+		integral: Double = 0, deriv: Double = 0, prev: Double = 0, unclamped: Boolean = true)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(error: Double): AdvController = {
 		val i = if (unclamped) integral + DT * error else integral
@@ -28,7 +28,7 @@ class AdvController(kp: Double, ki: Double, kd: Double = 0, clamp: (Double, Doub
 	def action = prev * kp + integral * ki + deriv * kd
 }
 
-class RelayController(err: Double = 0) extends Component {
+class RelayController(err: Double = 0) extends Component[Double, Double] {
 
 	def update(error: Double): RelayController = {
 		if (error == 0)
@@ -40,7 +40,7 @@ class RelayController(err: Double = 0) extends Component {
 	def action: Double = err
 }
 
-class HysteresisRelayController(zone: Double, prev: Double = 0, res: Double = 0) extends Component {
+class HysteresisRelayController(zone: Double, prev: Double = 0, res: Double = 0) extends Component[Double, Double] {
 
 	def update(error: Double): HysteresisRelayController = {
 		val u = if (error > prev)
@@ -53,7 +53,7 @@ class HysteresisRelayController(zone: Double, prev: Double = 0, res: Double = 0)
 	def action: Double = res
 }
 
-class DeadbandController(zone: Double, res: Double = 0) extends Component {
+class DeadbandController(zone: Double, res: Double = 0) extends Component[Double, Double] {
 
 	def update(error: Double): DeadbandController = {
 		if (error > zone)
@@ -67,7 +67,7 @@ class DeadbandController(zone: Double, res: Double = 0) extends Component {
 	def action: Double = res
 }
 
-class DeadbandRelayController(zone: Double, res: Double = 0) extends Component {
+class DeadbandRelayController(zone: Double, res: Double = 0) extends Component[Double, Double] {
 
 	def update(error: Double): DeadbandRelayController = {
 		if (error > zone)
@@ -81,7 +81,7 @@ class DeadbandRelayController(zone: Double, res: Double = 0) extends Component {
 	def action: Double = res
 }
 
-class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component {
+class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 	
 	def update(error: Double): AsymmController = {
 		var e = error
@@ -96,7 +96,7 @@ class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double
 	def action = prev * kp + integral * ki + deriv * kd
 }
 
-class SpecialController(period1: Int, period2: Int, t: Int = 0, res: Int = 0) extends Component {
+class SpecialController(period1: Int, period2: Int, t: Int = 0, res: Int = 0) extends Component[Double, Double] {
 	
 	def update(error: Double): SpecialController = {
 		if (error > 0)

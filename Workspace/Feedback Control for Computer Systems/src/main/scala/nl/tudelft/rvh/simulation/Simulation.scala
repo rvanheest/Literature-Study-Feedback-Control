@@ -5,13 +5,17 @@ import javafx.scene.Scene
 import javafx.scene.control.TabPane
 import javafx.scene.control.TabPane.TabClosingPolicy
 import javafx.stage.Stage
-import nl.tudelft.rvh.simulation.AdDelivery.AdStaticTest
-import nl.tudelft.rvh.simulation.AdDelivery.AdStepResponse
-import nl.tudelft.rvh.simulation.CacheSimulation.CacheClosedLoop
-import nl.tudelft.rvh.simulation.CacheSimulation.CacheClosedLoopJumps
-import nl.tudelft.rvh.simulation.CacheSimulation.CacheStaticTest
-import nl.tudelft.rvh.simulation.CacheSimulation.CacheStepResponse
-import nl.tudelft.rvh.simulation.ServerScaling._
+import nl.tudelft.rvh.simulation.simulations.AdDeliverySimulation.AdStaticTest
+import nl.tudelft.rvh.simulation.simulations.AdDeliverySimulation.AdStepResponse
+import nl.tudelft.rvh.simulation.simulations.BoilerSimulation
+import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheClosedLoop
+import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheClosedLoopJumps
+import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheStaticTest
+import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheStepResponse
+import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.ServerClosedLoop1
+import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.ServerClosedLoop2
+import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.ServerClosedLoop3
+import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.ServerStaticTest
 
 class Simulation extends Application {
 
@@ -21,7 +25,7 @@ class Simulation extends Application {
 		tabPane.getTabs addAll(new ServerClosedLoop3, new ServerClosedLoop2, new ServerClosedLoop1, new ServerStaticTest,
 				new AdStepResponse, new AdStaticTest,
 				new CacheClosedLoopJumps, new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
-				new BoilerSim)
+				new BoilerSimulation)
 		
 		stage setScene new Scene(tabPane, 800, 600)
 		stage setTitle "Feedback Control Systems - Simulation framework"

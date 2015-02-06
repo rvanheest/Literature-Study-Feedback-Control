@@ -2,6 +2,7 @@ package nl.tudelft.rvh
 
 import nl.tudelft.rvh.simulation.Component
 import rx.lang.scala.Observable
+import rx.lang.scala.ObservableExtensions
 
 object Extensions {
 
@@ -18,22 +19,13 @@ object Extensions {
 
 	object ObsExtensions {
 		class ExtendedObservable[T](obs: Observable[T]) {
-			def delay(steps: Int, initVal: T) = {
-				val start = Observable.from(List.fill(steps)(initVal))
-
-				(start ++ obs).slidingBuffer(steps, 1).map(_.head)
-			}
-		}
-
-		class ExtendedDoubleObservable(obs: Observable[Double]) {
-			def interactWith(initVal: Component) = {
-				obs.scan(initVal)((r, t) => r.update(t))
-					.drop(1)
-					.map(comp => comp.action)
+			def delay(steps: Int, initVal: T) = (List.fill(steps)(initVal).toObservable ++ obs) slidingBuffer (steps, 1) map (_ head)
+			
+			def interactWith[S](initVal: Component[T, S]): Observable[S] = {
+				obs.scan(initVal)(_ update _) drop 1 map (_ action)
 			}
 		}
 
 		implicit def extendObservable[T](obs: Observable[T]) = new ExtendedObservable(obs)
-		implicit def extendDoubleObservable(obs: Observable[Double]) = new ExtendedDoubleObservable(obs)
 	}
 }

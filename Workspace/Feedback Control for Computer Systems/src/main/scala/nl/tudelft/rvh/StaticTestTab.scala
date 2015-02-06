@@ -6,6 +6,7 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 
 import javafx.embed.swing.SwingFXUtils
 import javafx.event.ActionEvent
+import javafx.geometry.Insets
 import javafx.scene.SnapshotParameters
 import javafx.scene.chart.NumberAxis
 import javafx.scene.chart.ScatterChart
@@ -14,6 +15,7 @@ import javafx.scene.chart.XYChart.Series
 import javafx.scene.control.Button
 import javafx.scene.control.Tab
 import javafx.scene.layout.HBox
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.FileChooser.ExtensionFilter
@@ -35,7 +37,13 @@ abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String,
 
 	print setDisable true
 	save setDisable true
-
+	
+	val box = new VBox(chart, bottomBox)
+	box.setPadding(new Insets(5, 5, 15, 5))
+	VBox.setVgrow(chart, Priority.ALWAYS)
+	
+	this setContent box
+	
 	Observables.fromNodeEvents(simulate, ActionEvent.ACTION)
 		.doOnNext(event => {
 			simulate setDisable true
@@ -73,8 +81,6 @@ abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String,
 		.map(SwingFXUtils.fromFXImage(_, null))
 		.flatMap(img => getFile.map(f => ImageIO.write(img, "png", f)))
 		.subscribe
-
-	this setContent new VBox(chart, bottomBox)
 
 	def initChart(title: String, xName: String, yName: String) = {
 		val xAxis = new NumberAxis

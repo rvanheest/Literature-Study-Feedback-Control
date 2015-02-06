@@ -1,10 +1,13 @@
 package nl.tudelft.rvh
 
 import java.io.File
+
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.duration.DurationInt
+
 import javafx.embed.swing.SwingFXUtils
 import javafx.event.ActionEvent
+import javafx.geometry.Insets
 import javafx.scene.SnapshotParameters
 import javafx.scene.chart.LineChart
 import javafx.scene.chart.NumberAxis
@@ -13,6 +16,7 @@ import javafx.scene.chart.XYChart.Series
 import javafx.scene.control.Button
 import javafx.scene.control.Tab
 import javafx.scene.layout.HBox
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.FileChooser.ExtensionFilter
@@ -38,6 +42,12 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 
 	print setDisable true
 	save setDisable true
+
+	val box = new VBox(chart, bottomBox)
+	box.setPadding(new Insets(5, 5, 15, 5))
+	VBox.setVgrow(chart, Priority.ALWAYS)
+
+	this setContent box
 
 	Observables.fromNodeEvents(simulate, ActionEvent.ACTION)
 		.doOnNext(event => {
@@ -78,8 +88,6 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		.flatMap(img => getFile.map(f => ImageIO.write(img, "png", f)))
 		.subscribe
 
-	this setContent new VBox(chart, bottomBox)
-
 	def initChart(title: String, xName: String, yName: String) = {
 		val xAxis = new NumberAxis
 		val yAxis = new NumberAxis
@@ -101,9 +109,9 @@ abstract class ChartTab(tabName: String, chartTitle: String, xName: String, yNam
 		clear setDisable true
 		print setDisable true
 		save setDisable true
-		
+
 		val data: Observable[(Number, Number)] = time map (t => (t * DT, setpoint(t)))
-		
+
 		data.onBackpressureBuffer
 			.map(tuple => new Data(tuple _1, tuple _2))
 			.observeOn(JavaConversions.javaSchedulerToScalaScheduler(JavaFxScheduler.getInstance))
