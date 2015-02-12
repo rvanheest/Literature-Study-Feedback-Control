@@ -38,12 +38,10 @@ object Loops {
 			y drop 1 subscribe subscriber
 			
 			time.map(setPoint)
-				.onBackpressureBuffer
 				.zipWith(y)(_ - _)
-				.onBackpressureBuffer
-				.map { e => if (inverted) -e else e }
+				.map { error => if (inverted) -error else error }
 				.interactWith(components)
 				.subscribe(y)
-		})
+		}).onBackpressureBuffer
 	}
 }
