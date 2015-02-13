@@ -28,16 +28,4 @@ trait Component[I, O] {
 			def action: Y = f(self.action)
 		}
 	}
-
-	def flatMap[Y](f: O => Component[I, Y]): Component[I, Y] = {
-		val self = this
-		new Component[I, Y] {
-			def update(u: I): Component[I, Y] = {
-				val thisComp = self.update(u)
-				thisComp.flatMap(f)
-			}
-			
-			def action: Y = f(self.action).action
-		}
-	}
 }
