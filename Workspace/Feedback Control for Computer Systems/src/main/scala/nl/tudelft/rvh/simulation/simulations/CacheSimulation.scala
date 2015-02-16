@@ -1,22 +1,21 @@
 package nl.tudelft.rvh.simulation.simulations
 
 import scala.concurrent.duration.DurationDouble
-import scala.util.Random
+
 import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
 import nl.tudelft.rvh.ChartTab
 import nl.tudelft.rvh.StaticTestTab
 import nl.tudelft.rvh.StepTestTab
 import nl.tudelft.rvh.rxscalafx.Observables
-import rx.lang.scala.Observable
-import rx.lang.scala.schedulers.ComputationScheduler
-import nl.tudelft.rvh.simulation.Randomizers
+import nl.tudelft.rvh.simulation.Cache
 import nl.tudelft.rvh.simulation.FixedFilter
 import nl.tudelft.rvh.simulation.Loops
-import nl.tudelft.rvh.simulation.Cache
 import nl.tudelft.rvh.simulation.PIDController
+import nl.tudelft.rvh.simulation.Randomizers
+import rx.lang.scala.Observable
+import rx.lang.scala.schedulers.ComputationScheduler
 
 object CacheSimulation {
 
@@ -51,9 +50,9 @@ object CacheSimulation {
 		}
 	}
 
-	class CacheStepResponse extends StepTestTab("Cache Step Response", "Cache Step Response", "time", "hitrate") {
+	class CacheStepResponse extends StepTestTab("Cache Dynamic Response", "Cache Dynamic Response", "time", "hitrate") {
 
-		def seriesName: String = "Cache step response"
+		def seriesName: String = "Cache dynamic response"
 
 		override def time = super.time take 500
 
