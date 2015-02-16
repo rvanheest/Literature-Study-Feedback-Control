@@ -20,10 +20,6 @@ object Extensions {
 	object ObsExtensions {
 		class ExtendedObservable[T](obs: Observable[T]) {
 			def delay(steps: Int, initVal: T) = (List.fill(steps)(initVal).toObservable ++ obs) slidingBuffer (steps, 1) map (_ head)
-			
-			def interactWith[S](initVal: Component[T, S]): Observable[S] = {
-				obs.scan(initVal)(_ update _) drop 1 map (_ action)
-			}
 		}
 
 		implicit def extendObservable[T](obs: Observable[T]) = new ExtendedObservable(obs)

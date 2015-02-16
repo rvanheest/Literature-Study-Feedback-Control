@@ -3,13 +3,14 @@ package nl.tudelft.rvh
 import java.io.File
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.concurrent.duration.DurationInt
 
 import javafx.embed.swing.SwingFXUtils
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.SnapshotParameters
+import javafx.scene.chart.LineChart
 import javafx.scene.chart.NumberAxis
-import javafx.scene.chart.ScatterChart
 import javafx.scene.chart.XYChart.Data
 import javafx.scene.chart.XYChart.Series
 import javafx.scene.control.Button
@@ -24,24 +25,30 @@ import nl.tudelft.rvh.rxjavafx.JavaFxScheduler
 import nl.tudelft.rvh.rxscalafx.Observables
 import rx.lang.scala.JavaConversions
 import rx.lang.scala.Observable
+import rx.lang.scala.ObservableExtensions
+import rx.lang.scala.schedulers.ComputationScheduler
 
-abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String, yName: String)(implicit DT: Double = 1.0) extends Tab(tabName) {
+abstract class SimulationTab(tabName: String, chartTitle: String, xName: String, yName: String)(implicit DT: Double = 1.0) extends Tab(tabName) {
 
 	private val simulate = new Button("Start simulation")
 	private val print = new Button("Print data")
 	private val save = new Button("Save chart")
 	private val clear = new Button("Clear chart")
+	private var series = Map[String, Series[Number, Number]]()
 
 	val chart = initChart(chartTitle, xName, yName)
 	chart setAnimated false
+	chart setCreateSymbols false
+
+	initSetpointSeries()
 
 	print setDisable true
 	save setDisable true
-	
+
 	val box = new VBox(chart, bottomBox)
 	box.setPadding(new Insets(5, 5, 15, 5))
 	VBox.setVgrow(chart, Priority.ALWAYS)
-	
+
 	this setContent box
 	
 	Observables.fromNodeEvents(simulate, ActionEvent.ACTION)
@@ -51,13 +58,18 @@ abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String,
 			print setDisable true
 			save setDisable true
 		})
-		.map(_ => new Series[Number, Number])
-		.doOnNext(_.setName(this.seriesName))
-		.doOnNext(chart.getData add _)
-		.flatMap(series => this.runSimulation
-			.map(tuple => new Data(tuple._1, tuple._2))
+		.flatMap(_ => this.runSimulation
 			.observeOn(JavaConversions.javaSchedulerToScalaScheduler(JavaFxScheduler.getInstance))
-			.doOnNext(series.getData add _)
+			.doOnNext {
+				case (_, (name, _)) => if (!series.contains(name)) {
+					val serie = new Series[Number, Number]
+					serie setName name
+					chart.getData add serie
+					
+					series += (name -> serie)
+				}
+			}
+			.doOnNext { case (time, (name, value)) => series(name).getData add new Data(time, value) }
 			.doOnCompleted({
 				simulate setDisable false
 				clear setDisable false
@@ -68,7 +80,8 @@ abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String,
 		.subscribe
 
 	Observables.fromNodeEvents(clear, ActionEvent.ACTION)
-		.subscribe(_ => chart.getData.clear)
+		.doOnNext(_ => chart.getData.clear)
+		.subscribe(_ => initSetpointSeries)
 
 	Observables.fromNodeEvents(print, ActionEvent.ACTION)
 		.flatMap(_ => Observable.from(chart.getData asScala))
@@ -85,7 +98,7 @@ abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String,
 	def initChart(title: String, xName: String, yName: String) = {
 		val xAxis = new NumberAxis
 		val yAxis = new NumberAxis
-		val chart = new ScatterChart(xAxis, yAxis)
+		val chart = new LineChart(xAxis, yAxis)
 
 		xAxis setLabel xName
 		yAxis setLabel yName
@@ -94,23 +107,53 @@ abstract class StaticTestTab(tabName: String, chartTitle: String, xName: String,
 		chart
 	}
 
-	def getFile: Observable[File] = {
-		Observable(subscriber => {
-			val fileChooser = new FileChooser
-			fileChooser setTitle "Save image"
-			fileChooser.getExtensionFilters add new ExtensionFilter("PNG files (*.png)", "*.png")
+	def initSetpointSeries() = {
+		val serie = new Series[Number, Number]
+		val name = "Setpoint"
+		serie setName name
+		chart.getData add serie
+		
+		series += (name -> serie)
 
-			Option(fileChooser showSaveDialog null)
-				.map(f => if (f.getPath endsWith ".png") f else new File(f.getPath + ".png"))
-				.foreach(subscriber onNext _)
-		})
+		simulate setDisable true
+		clear setDisable true
+		print setDisable true
+		save setDisable true
+
+		time.map(t => (t * DT, setpoint(t)))
+			.onBackpressureBuffer
+			.map { case (time, setpoint) => new Data[Number, Number](time, setpoint) }
+			.observeOn(JavaConversions.javaSchedulerToScalaScheduler(JavaFxScheduler.getInstance))
+			.doOnCompleted({
+				simulate setDisable false
+				clear setDisable false
+				print setDisable false
+				save setDisable false
+			})
+			.subscribe(serie.getData add _)
 	}
+
+	def getFile: Observable[File] = Observable(subscriber => {
+		val fileChooser = new FileChooser
+		fileChooser setTitle "Save image"
+		fileChooser.getExtensionFilters add new ExtensionFilter("PNG files (*.png)", "*.png")
+
+		val x = Option(fileChooser showSaveDialog null)
+			.map(f => if (f.getPath endsWith ".png") f else new File(f.getPath + ".png"))
+			.foreach(subscriber onNext _)
+	})
 
 	def bottomBox = new HBox(simulate, clear, print, save)
 
-	def seriesName: String
+	def time = Observable interval (50 milliseconds, ComputationScheduler())
 
-	def runSimulation: Observable[(Number, Number)] = simulation.onBackpressureBuffer.asInstanceOf[Observable[(Number, Number)]]
+	def setpoint(time: Long): Double
 
-	def simulation: Observable[(_ <: AnyVal, _ <: AnyVal)]
+	def runSimulation: Observable[(Number, (String, Number))] = {
+		time.map(DT *).onBackpressureBuffer.zip(simulation)
+			.flatMap { case (t, map) => map.toObservable map ((t, _)) }
+			.asInstanceOf[Observable[(Number, (String, Number))]]
+	}
+
+	def simulation: Observable[Map[String, AnyVal]]
 }

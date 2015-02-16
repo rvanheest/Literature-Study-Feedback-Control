@@ -5,6 +5,8 @@ class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Compo
 	def update(u: Double) = new Boiler(g, y + DT * (u - g * y))
 
 	def action = y
+
+	def monitor = Map("Boiler" -> action)
 }
 
 class Spring(x: Double = 0, v: Double = 0, m: Double = 0.1, k: Double = 1, g: Double = 0.05)(implicit DT: Double) extends Component[Double, Double] {
@@ -13,11 +15,13 @@ class Spring(x: Double = 0, v: Double = 0, m: Double = 0.1, k: Double = 1, g: Do
 		val a = u - k * x - g * v
 		val vv = v + DT * a
 		val xx = x + DT * vv
-		
+
 		new Spring(xx, vv, m, k, g)
 	}
 
 	def action = x
+
+	def monitor = Map("Spring" -> action)
 }
 
 class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[Int, Long] = Map(), res: Boolean = false) extends Component[Double, Boolean] {
@@ -47,38 +51,46 @@ class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[I
 	}
 
 	def action: Boolean = res
+
+	def monitor = Map("Cache hit rate" -> action, "Cache size" -> cache.size)
 }
 
-class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Double = 0.0) extends Component[Double, Double] {
-	
-	def update(u: Double): AdPublisher = new AdPublisher(scale, minPrice, relWidth, u)
+class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Int = 0, price: Double = 0.0) extends Component[Double, Int] {
 
-	def action: Double = {
-		if (value <= minPrice) {
-			0
+	def update(price: Double): AdPublisher = {
+		if (price <= minPrice) {
+			new AdPublisher(scale, minPrice, relWidth, 0, price)
 		}
 		else {
-			val mean = scale * math.log(value / minPrice)
-			val demand = math.floor(Randomizers.gaussian(mean, relWidth * mean))
-			math.max(0, demand)
+			val mean = scale * math.log(price / minPrice)
+			val demand = math.floor(Randomizers.gaussian(mean, relWidth * mean)).toInt
+			new AdPublisher(scale, minPrice, relWidth, math.max(0, demand), price)
 		}
 	}
+
+	def action: Int = {
+		value
+	}
+
+	def monitor = Map("Impressions" -> value, "Price" -> price)
 }
 
 class ServerPool(n: Int, queue: Double = 0, server: () => Double, load: () => Double, res: Double = 0.0) extends Component[Double, Double] {
-	
+
 	def update(u: Double): ServerPool = {
 		val l = load()
-		
+
 		if (l == 0) {
-			new ServerPool(n , l, server, load, 1)
+			new ServerPool(n, l, server, load, 1)
 		}
 		else {
 			val nNew = math.max(0, math.round(u).toInt)
 			val completed = math.min((0 until nNew).map { _ => server() }.sum, l)
-			new ServerPool(nNew, queue - completed, server, load, completed/l)
+			new ServerPool(nNew, queue - completed, server, load, completed / l)
 		}
 	}
-	
+
 	def action: Double = res
+
+	def monitor = Map("Completion rate" -> res, "Servers" -> n)
 }

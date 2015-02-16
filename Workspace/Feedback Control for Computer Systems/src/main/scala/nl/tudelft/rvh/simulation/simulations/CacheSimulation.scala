@@ -1,7 +1,7 @@
 package nl.tudelft.rvh.simulation.simulations
 
-import scala.concurrent.duration.DurationDouble
 
+import scala.concurrent.duration.DurationDouble
 import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
@@ -16,6 +16,7 @@ import nl.tudelft.rvh.simulation.PIDController
 import nl.tudelft.rvh.simulation.Randomizers
 import rx.lang.scala.Observable
 import rx.lang.scala.schedulers.ComputationScheduler
+import nl.tudelft.rvh.SimulationTab
 
 object CacheSimulation {
 
@@ -66,7 +67,7 @@ object CacheSimulation {
 		}
 	}
 
-	class CacheClosedLoop(dt: Double = 1.0) extends ChartTab("Cache Closed Loop", "Cache simulation", "time", "hitrate")(dt) {
+	class CacheClosedLoop(dt: Double = 1.0) extends SimulationTab("Cache Closed Loop", "Cache simulation", "time", "hitrate")(dt) {
 
 		implicit val DT = dt
 
@@ -76,28 +77,27 @@ object CacheSimulation {
 
 		def setpoint(t: Long): Double = if (t > 5000) 0.5 else 0.7
 
-		def simulation(): Observable[Double] = {
+		def simulation(): Observable[Map[String, AnyVal]] = {
 			def demand(t: Long) = math floor Randomizers.gaussian(0, 15) toInt
 
 			val c = new PIDController(100, 2.50)
 			val p = new Cache(0, demand) map(if (_) 1.0 else 0.0)
 			val f = new FixedFilter(100)
 			val plant = p ++ f
-			Loops.closedLoop(time, setpoint, 0.0, c ++ plant)
+			Loops.closedLoop1(time, setpoint, 0.0, c ++ plant)
+				.map(_ filter { case (name, _) => name == "Fixed filter" || name == "Cache size" })
 		}
 	}
 
-	class CacheClosedLoopJumps(dt: Double = 1.0) extends ChartTab("Cache Closed Loop Jumps", "Cache simulation", "time", "hitrate")(dt) {
+	class CacheClosedLoopJumps(dt: Double = 1.0) extends SimulationTab("Cache Closed Loop Jumps", "Cache simulation", "time", "hitrate")(dt) {
 
 		implicit val DT = dt
 
-		def seriesName = "Cache simulation"
-
-		override def time: Observable[Long] = Observable interval (2 milliseconds, ComputationScheduler()) take 10000
+		override def time: Observable[Long] = Observable interval (1 milliseconds, ComputationScheduler()) take 10000
 
 		def setpoint(t: Long): Double = 0.7
 
-		def simulation(): Observable[Double] = {
+		def simulation(): Observable[Map[String, AnyVal]] = {
 			def gaus2(tuple: (Int, Int)) = math floor Randomizers.gaussian(tuple._1, tuple._2) toInt
 			def demand(t: Long) = gaus2(if (t < 3000) (0, 15) else if (t < 5000) (0, 35) else (100, 15))
 
@@ -109,7 +109,8 @@ object CacheSimulation {
 			val f = new FixedFilter(100)
 			val plant = p ++ f
 
-			Loops.closedLoop(time, setpoint, 0.0, c ++ plant)
+			Loops.closedLoop1(time, setpoint, 0.0, c ++ plant)
+				.map(_ filter { case (name, _) => name == "Fixed filter" || name == "Cache size" })
 		}
 	}
 }

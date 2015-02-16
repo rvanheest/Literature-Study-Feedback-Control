@@ -16,8 +16,9 @@ import nl.tudelft.rvh.simulation.Boiler
 import nl.tudelft.rvh.simulation.Loops
 import nl.tudelft.rvh.simulation.Setpoint
 import nl.tudelft.rvh.simulation.PIDController
+import nl.tudelft.rvh.SimulationTab
 
-class BoilerSimulation(dt: Double = 1.0) extends ChartTab("Boiler", "Boiler simulation", "time", "temperature")(dt) {
+class BoilerSimulation(dt: Double = 1.0) extends SimulationTab("Boiler", "Boiler simulation", "time", "temperature")(dt) {
 
 	implicit val DT = dt
 	var kp: Double = 0.45
@@ -54,17 +55,16 @@ class BoilerSimulation(dt: Double = 1.0) extends ChartTab("Boiler", "Boiler simu
 		box
 	}
 
-	def seriesName = "Boiler simulation"
-
 	override def time: Observable[Long] = super.time take 150
 
 	def setpoint(t: Long): Double = 10 * Setpoint.doubleStep(t, 10, 60)
 
-	def simulation(): Observable[Double] = {
+	def simulation(): Observable[Map[String, AnyVal]] = {
 		val p = new Boiler
 		val c = new PIDController(kp, ki)
 
-		Loops.closedLoop(time, setpoint(_), 0.0, c ++ p)
+		Loops.closedLoop1(time, setpoint(_), 0.0, c ++ p)
+			.map(_ filter { case (name, _) => name == "Boiler" })
 	}
 
 	def simulationForGithub(): Observable[Double] = {

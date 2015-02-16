@@ -22,8 +22,8 @@ class Simulation extends Application {
 	def start(stage: Stage) = {
 		val tabPane = new TabPane
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
-		tabPane.getTabs addAll(new ServerClosedLoop3, new ServerClosedLoop2, new ServerClosedLoop1, new ServerStaticTest,
-				new AdStepResponse, new AdStaticTest,
+		tabPane.getTabs addAll(/*new ServerClosedLoop3, new ServerClosedLoop2, new ServerClosedLoop1, new ServerStaticTest,
+				new AdStepResponse, new AdStaticTest,*/
 				new CacheClosedLoopJumps, new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
 				new BoilerSimulation)
 		

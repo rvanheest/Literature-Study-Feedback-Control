@@ -1,6 +1,5 @@
 package nl.tudelft.rvh.simulation
 
-import nl.tudelft.rvh.Extensions.ObsExtensions.extendObservable
 import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.schedulers.ComputationScheduler
@@ -20,15 +19,14 @@ object Loops {
 			i <- steps
 			u <- steps.size.single map { i.toDouble * umax / _ }
 			plant <- repeats map { r => initPlant }
-			y <- ts map (_ => u) interactWith plant last
+			y <- ts.map(_ => u).scan(plant)(_ update _).drop(1).map(_ action).last
 		} yield (u, y)
 	}
 
-	def stepResponse[A, B](time: Observable[Long], setPoint: Long => A, plant: Component[A, B]) = time.map(setPoint).interactWith(plant)
+	def stepResponse[A, B](time: Observable[Long], setPoint: Long => A, plant: Component[A, B]) = time.map(setPoint).scan(plant)(_ update _) drop 1 map (_ action)
 
 	def openLoop[A, B](time: Observable[Long], setPoint: Long => A, controller: Component[A, B], plant: Component[B, _]) = {
-		time.map(setPoint)
-			.interactWith(controller ++ plant)
+		time.map(setPoint).scan(controller ++ plant)(_ update _) drop 1 map (_ action)
 	}
 
 	def closedLoop[A](time: Observable[Long], setPoint: Long => A, seed: A, components: Component[A, A], inverted: Boolean = false)(implicit n: Numeric[A]) = {
@@ -40,7 +38,24 @@ object Loops {
 			time.map(setPoint)
 				.zipWith(y)(_ - _)
 				.map { error => if (inverted) -error else error }
-				.interactWith(components)
+				.scan(components)(_ update _)
+				.drop(1)
+				.map(_ action)
+				.subscribe(y)
+		}).onBackpressureBuffer
+	}
+	
+	def closedLoop1[A](time: Observable[Long], setPoint: Long => A, seed: A, components: Component[A, A], inverted: Boolean = false)(implicit n: Numeric[A]) = {
+		import n._
+		Observable[Map[String, AnyVal]](subscriber => {
+			val y = BehaviorSubject(seed)
+			
+			time.map(setPoint)
+				.zipWith(y)(_ - _)
+				.map { error => if (inverted) -error else error }
+				.scan(components)(_ update _).drop(1)
+				.doOnNext(comp => subscriber.onNext(comp.monitor))
+				.map(_ action)
 				.subscribe(y)
 		}).onBackpressureBuffer
 	}
