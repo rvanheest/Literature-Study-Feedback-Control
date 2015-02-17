@@ -19,11 +19,11 @@ object Loops {
 			i <- steps
 			u <- steps.size.single map { i.toDouble * umax / _ }
 			plant <- repeats map { r => initPlant }
-			y <- ts.map(_ => u).scan(plant)(_ update _).drop(1).map(_ action).last
+			y <- (ts map (_ => u) scan(plant))(_ update _) drop 1 map (_ action) last
 		} yield (u, y)
 	}
 
-	def stepResponse[A, B](time: Observable[Long], setPoint: Long => A, plant: Component[A, B]) = time.map(setPoint).scan(plant)(_ update _) drop 1 map (_ action)
+	def stepResponse[A, B](time: Observable[Long], setPoint: Long => A, plant: Component[A, B]) = (time map setPoint scan plant)(_ update _) drop 1 map (_ action)
 
 	def openLoop[A, B](time: Observable[Long], setPoint: Long => A, controller: Component[A, B], plant: Component[B, _]) = {
 		time.map(setPoint).scan(controller ++ plant)(_ update _) drop 1 map (_ action)
