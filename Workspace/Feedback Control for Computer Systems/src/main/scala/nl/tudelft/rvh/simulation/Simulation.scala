@@ -9,7 +9,6 @@ import nl.tudelft.rvh.simulation.simulations.AdDeliverySimulation.AdStaticTest
 import nl.tudelft.rvh.simulation.simulations.AdDeliverySimulation.AdStepResponse
 import nl.tudelft.rvh.simulation.simulations.BoilerSimulation
 import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheClosedLoop
-import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheClosedLoopJumps
 import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheStaticTest
 import nl.tudelft.rvh.simulation.simulations.CacheSimulation.CacheStepResponse
 import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.ServerClosedLoop1
@@ -24,7 +23,7 @@ class Simulation extends Application {
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
 		tabPane.getTabs addAll(/*new ServerClosedLoop3, new ServerClosedLoop2, new ServerClosedLoop1, new ServerStaticTest,
 				new AdStepResponse, new AdStaticTest,*/
-				new CacheClosedLoopJumps, new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
+				new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest,
 				new BoilerSimulation)
 		
 		stage setScene new Scene(tabPane, 800, 600)
