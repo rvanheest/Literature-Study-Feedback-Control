@@ -7,10 +7,12 @@ import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import nl.tudelft.rvh.ChartTab
+import nl.tudelft.rvh.SimulationTab
 import nl.tudelft.rvh.StaticTestTab
 import nl.tudelft.rvh.StepTestTab
 import nl.tudelft.rvh.rxscalafx.Observables
 import rx.lang.scala.Observable
+import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.schedulers.ComputationScheduler
 import nl.tudelft.rvh.simulation.SpecialController
 import nl.tudelft.rvh.simulation.Randomizers
@@ -57,10 +59,10 @@ object ServerScalingSimulation {
 
 		def seriesName: String = s"Traffic Intensity $traffic"
 
-		def simulation(): Observable[(Double, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = loadqueue), 20, 20, 5, 1000)
+		def simulation(): Observable[(Int, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = loadqueue), 20, 20, 5, 1000)(_ toInt)
 	}
 
-	class ServerClosedLoop1(dt: Double = 1.0) extends ChartTab("Server Pool Loop 1", "Server Pool Loop 1", "time", "completion rate")(dt) {
+	class ServerClosedLoop1(dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Server Pool Loop 1", "time", "completion rate")(dt) {
 
 		implicit val DT = dt
 
@@ -73,51 +75,53 @@ object ServerScalingSimulation {
 
 		def seriesName = "Completion rate"
 
-		override def time: Observable[Long] = super.time take 300
+		override def time: Observable[Long] = (0L until 5000L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = if (time > 100) 0.6 else 0.8
 
-		def simulation(): Observable[Double] = {
+		def simulation(): Observable[Map[String, AnyVal]] = {
 			val p = new ServerPool(8, server = consume_queue, load = loadqueue)
-			val c = new PIDController(1, 5)
+			val c = new PIDController(1, 5) map math.round map (_ toInt)
 
-			Loops.closedLoop(time, setpoint, 0.0, c ++ p)
+			Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
+				.map(_ filter { case (name, _) => name == "Completion rate" })
 		}
 	}
 
-	class ServerClosedLoop2(dt: Double = 1.0) extends ChartTab("Server Pool Loop 2", "Server Pool Loop 2", "time", "completion rate")(dt) {
+	class ServerClosedLoop2(dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Server Pool Loop 2", "time", "completion rate")(dt) {
 
 		implicit val DT = dt
 
 		def seriesName = "Completion rate"
 
-		override def time: Observable[Long] = super.time take 700
+		override def time: Observable[Long] = (0L until 5000L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = if (time < 50) time / 50.0 else 0.9995
 
-		def simulation(): Observable[Double] = {
+		def simulation(): Observable[Map[String, AnyVal]] = {
 			val p = new ServerPool(0, server = consume_queue, load = load_queue)
-			val c = new AsymmController(10, 200)
+			val c = new AsymmController(10, 200) map math.round map (_ toInt)
 
-			Loops.closedLoop(time, setpoint, 0.0, c ++ p)
+			Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
+				.map(_ filter { case (name, _) => name == "Completion rate" })
 		}
 	}
 
-	class ServerClosedLoop3(dt: Double = 1.0) extends ChartTab("Server Pool Loop 3", "Server Pool Loop 3", "time", "completion rate")(dt) {
+	class ServerClosedLoop3(dt: Double = 1.0) extends SimulationTab("Server Pool Loop 3", "Server Pool Loop 3", "time", "completion rate")(dt) {
 
 		implicit val DT = dt
 
-		def seriesName = "Completion rate"
-
-		override def time: Observable[Long] = super.time take 1200
+		override def time: Observable[Long] = (0L until 5000L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = 1.0
 
-		def simulation(): Observable[Double] = {
-			val p = new ServerPool(0, server = consume_queue, load = load_queue)
+		def simulation(): Observable[Map[String, AnyVal]] = {
 			val c = new SpecialController(100, 10)
+			val a = new Integrator map math.round map (_ toInt)
+			val p = new ServerPool(0, server = consume_queue, load = load_queue)
 
-			Loops.closedLoop(time, setpoint, 0.0, c ++ new Integrator ++ p)
+			Loops.closedLoop1(time, setpoint, 0.0, c ++ a ++ p)
+				.map(_ filter { case (name, _) => name == "Completion rate" || name == "Servers" })
 		}
 	}
 }

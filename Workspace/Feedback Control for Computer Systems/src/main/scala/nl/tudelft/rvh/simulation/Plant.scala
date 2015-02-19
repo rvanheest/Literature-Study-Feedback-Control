@@ -75,16 +75,16 @@ class AdPublisher(scale: Int, minPrice: Int, relWidth: Double = 0.1, value: Int 
 	def monitor = Map("Impressions" -> value, "Price" -> price)
 }
 
-class ServerPool(n: Int, queue: Double = 0, server: () => Double, load: () => Double, res: Double = 0.0) extends Component[Double, Double] {
+class ServerPool(n: Int, queue: Double = 0, server: () => Double, load: () => Double, res: Double = 0.0) extends Component[Int, Double] {
 
-	def update(u: Double): ServerPool = {
+	def update(u: Int): ServerPool = {
 		val l = load()
 
 		if (l == 0) {
 			new ServerPool(n, l, server, load, 1)
 		}
 		else {
-			val nNew = math.max(0, math.round(u).toInt)
+			val nNew = math.max(0, u)
 			val completed = math.min((0 until nNew).map { _ => server() }.sum, l)
 			new ServerPool(nNew, queue - completed, server, load, completed / l)
 		}

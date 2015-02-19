@@ -7,14 +7,14 @@ import rx.lang.scala.subjects.BehaviorSubject
 
 object Loops {
 
-	def staticTest[A](initPlant: Component[Double, A], umax: Int, stepMax: Int, repeatMax: Int, tMax: Int): Observable[(Double, A)] = {
+	def staticTest[A, B](initPlant: Component[A, B], umax: Int, stepMax: Int, repeatMax: Int, tMax: Int)(implicit f: Double => A): Observable[(A, B)] = {
 		val steps = (0 until stepMax).toObservable.observeOn(ComputationScheduler())
 		val repeats = (0 until repeatMax).toObservable
 		val ts = (0 until tMax).toObservable
 		staticTest(initPlant, umax, steps, repeats, ts)
 	}
 
-	def staticTest[A](initPlant: Component[Double, A], umax: Int, steps: Observable[Int], repeats: Observable[Int], ts: Observable[Int]): Observable[(Double, A)] = {
+	def staticTest[A, B](initPlant: Component[A, B], umax: Int, steps: Observable[Int], repeats: Observable[Int], ts: Observable[Int])(implicit f: Double => A): Observable[(A, B)] = {
 		for {
 			i <- steps
 			u <- steps.size.single map { i.toDouble * umax / _ }
