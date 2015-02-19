@@ -33,7 +33,6 @@ abstract class SimulationTab(tabName: String, chartTitle: String, xName: String,
 	private val simulate = new Button("Start simulation")
 	private val print = new Button("Print data")
 	private val save = new Button("Save chart")
-	private val clear = new Button("Clear chart")
 	private var series = Map[String, Series[Number, Number]]()
 
 	val chart = initChart(chartTitle, xName, yName)
@@ -54,7 +53,6 @@ abstract class SimulationTab(tabName: String, chartTitle: String, xName: String,
 	Observables.fromNodeEvents(simulate, ActionEvent.ACTION)
 		.doOnNext(event => {
 			simulate setDisable true
-			clear setDisable true
 			print setDisable true
 			save setDisable true
 		})
@@ -72,16 +70,11 @@ abstract class SimulationTab(tabName: String, chartTitle: String, xName: String,
 			.doOnNext { case (time, (name, value)) => series(name).getData add new Data(time, value) }
 			.doOnCompleted({
 				simulate setDisable false
-				clear setDisable false
 				print setDisable false
 				save setDisable false
 			}))
 		.doOnError(_ printStackTrace)
 		.subscribe
-
-	Observables.fromNodeEvents(clear, ActionEvent.ACTION)
-		.doOnNext(_ => chart.getData.clear)
-		.subscribe(_ => initSetpointSeries)
 
 	Observables.fromNodeEvents(print, ActionEvent.ACTION)
 		.flatMap(_ => Observable.from(chart.getData asScala))
@@ -116,7 +109,6 @@ abstract class SimulationTab(tabName: String, chartTitle: String, xName: String,
 		series += (name -> serie)
 
 		simulate setDisable true
-		clear setDisable true
 		print setDisable true
 		save setDisable true
 
@@ -126,7 +118,6 @@ abstract class SimulationTab(tabName: String, chartTitle: String, xName: String,
 			.observeOn(JavaConversions.javaSchedulerToScalaScheduler(JavaFxScheduler.getInstance))
 			.doOnCompleted({
 				simulate setDisable false
-				clear setDisable false
 				print setDisable false
 				save setDisable false
 			})
@@ -143,7 +134,7 @@ abstract class SimulationTab(tabName: String, chartTitle: String, xName: String,
 			.foreach(subscriber onNext _)
 	})
 
-	def bottomBox = new HBox(simulate, clear, print, save)
+	def bottomBox = new HBox(simulate, print, save)
 
 	def time = Observable interval (50 milliseconds, ComputationScheduler())
 
