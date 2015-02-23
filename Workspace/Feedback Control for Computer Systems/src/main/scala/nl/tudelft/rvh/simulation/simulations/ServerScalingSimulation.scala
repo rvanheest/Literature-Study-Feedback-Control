@@ -29,9 +29,9 @@ object ServerScalingSimulation {
 	def load_queue() = {
 		global_time += 1
 
-		if (global_time > 2500) Randomizers.gaussian(1200, 5)
-		else if (global_time > 2200) Randomizers.gaussian(800, 5)
-		else Randomizers.gaussian(1000, 5)
+		if (global_time < 200) Randomizers.gaussian(800, 5)
+		else if (global_time < 500) Randomizers.gaussian(100, 5)
+		else Randomizers.gaussian(1200, 5)
 	}
 
 	def consume_queue() = 100 * Randomizers.betavariate(20, 2)
@@ -69,15 +69,15 @@ object ServerScalingSimulation {
 		def loadqueue() = {
 			global_time += 1
 
-			if (global_time > 2100) Randomizers.gaussian(1200, 5)
-			else Randomizers.gaussian(1000, 5)
+			if (global_time < 200) Randomizers.gaussian(1000, 5)
+			else Randomizers.gaussian(1200, 5)
 		}
 
 		def seriesName = "Completion rate"
 
-		override def time: Observable[Long] = (0L until 5000L).toObservable observeOn ComputationScheduler()
+		override def time: Observable[Long] = (0L until 300L).toObservable observeOn ComputationScheduler()
 
-		def setpoint(time: Long): Double = if (time > 100) 0.6 else 0.8
+		def setpoint(time: Long): Double = if (time < 100) 0.8 else 0.6
 
 		def simulation(): Observable[Map[String, AnyVal]] = {
 			val p = new ServerPool(8, server = consume_queue, load = loadqueue)
@@ -94,9 +94,9 @@ object ServerScalingSimulation {
 
 		def seriesName = "Completion rate"
 
-		override def time: Observable[Long] = (0L until 5000L).toObservable observeOn ComputationScheduler()
+		override def time: Observable[Long] = (0L until 700L).toObservable observeOn ComputationScheduler()
 
-		def setpoint(time: Long): Double = if (time < 50) time / 50.0 else 0.9995
+		def setpoint(time: Long): Double = 0.9995
 
 		def simulation(): Observable[Map[String, AnyVal]] = {
 			val p = new ServerPool(0, server = consume_queue, load = load_queue)
@@ -111,7 +111,7 @@ object ServerScalingSimulation {
 
 		implicit val DT = dt
 
-		override def time: Observable[Long] = (0L until 5000L).toObservable observeOn ComputationScheduler()
+		override def time: Observable[Long] = (0L until 1200L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = 1.0
 
