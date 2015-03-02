@@ -62,9 +62,7 @@ object ServerScalingSimulation {
 		def simulation(): Observable[(Int, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = loadqueue), 20, 20, 5, 1000)(_ toInt)
 	}
 
-	class ServerClosedLoop1(dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Server Pool Loop 1", "time", "completion rate")(dt) {
-
-		implicit val DT = dt
+	class ServerClosedLoop1(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Completion rate") {
 
 		def loadqueue() = {
 			global_time += 1
@@ -75,22 +73,23 @@ object ServerScalingSimulation {
 
 		def seriesName = "Completion rate"
 
-		override def time: Observable[Long] = (0L until 300L).toObservable observeOn ComputationScheduler()
+		def time: Observable[Long] = (0L until 300L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = if (time < 100) 0.8 else 0.6
 
-		def simulation(): Observable[Map[String, AnyVal]] = {
-			val p = new ServerPool(8, server = consume_queue, load = loadqueue)
-			val c = new PIDController(1, 5) map math.round map (_ toInt)
-
-			Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
-				.map(_ filter { case (name, _) => name == "Completion rate" })
+		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+			def simul: Observable[Map[String, AnyVal]] = {
+				val p = new ServerPool(8, server = consume_queue, load = loadqueue)
+				val c = new PIDController(1, 5) map math.round map (_ toInt)
+	
+				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
+			}
+			
+			(simul map (_ filter { case (name, _) => name == "Completion rate" }) flatMap (_.values toObservable), Option.empty)
 		}
 	}
 
-	class ServerClosedLoop2(dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Server Pool Loop 2", "time", "completion rate")(dt) {
-
-		implicit val DT = dt
+	class ServerClosedLoop2(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Completion rate") {
 
 		def seriesName = "Completion rate"
 
@@ -98,30 +97,37 @@ object ServerScalingSimulation {
 
 		def setpoint(time: Long): Double = 0.9995
 
-		def simulation(): Observable[Map[String, AnyVal]] = {
-			val p = new ServerPool(0, server = consume_queue, load = load_queue)
-			val c = new AsymmController(10, 200) map math.round map (_ toInt)
-
-			Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
-				.map(_ filter { case (name, _) => name == "Completion rate" })
+		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+			def simul(): Observable[Map[String, AnyVal]] = {
+				val p = new ServerPool(0, server = consume_queue, load = load_queue)
+				val c = new AsymmController(10, 200) map math.round map (_ toInt)
+	
+				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
+			}
+			
+			(simul map (_ filter { case (name, _) => name == "Completion rate" }) flatMap (_.values toObservable), Option.empty)
 		}
 	}
 
-	class ServerClosedLoop3(dt: Double = 1.0) extends SimulationTab("Server Pool Loop 3", "Server Pool Loop 3", "time", "completion rate")(dt) {
-
-		implicit val DT = dt
+	class ServerClosedLoop3(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 3", "Completion rate", "Number of servers")(dt) {
 
 		override def time: Observable[Long] = (0L until 1200L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = 1.0
 
-		def simulation(): Observable[Map[String, AnyVal]] = {
-			val c = new SpecialController(100, 10)
-			val a = new Integrator map math.round map (_ toInt)
-			val p = new ServerPool(0, server = consume_queue, load = load_queue)
-
-			Loops.closedLoop1(time, setpoint, 0.0, c ++ a ++ p)
-				.map(_ filter { case (name, _) => name == "Completion rate" || name == "Servers" })
+		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+			def simul(): Observable[Map[String, AnyVal]] = {
+				val c = new SpecialController(100, 10)
+				val a = new Integrator map math.round map (_ toInt)
+				val p = new ServerPool(0, server = consume_queue, load = load_queue)
+	
+				Loops.closedLoop1(time, setpoint, 0.0, c ++ a ++ p)
+			}
+			
+			val sim = simul
+			
+			(sim map (_ filter { case (name, _) => name == "Completion rate"}) flatMap (_.values toObservable),
+					Option(sim map (_ filter { case (name, _) => name == "Servers"}) flatMap (_.values toObservable)))
 		}
 	}
 }
