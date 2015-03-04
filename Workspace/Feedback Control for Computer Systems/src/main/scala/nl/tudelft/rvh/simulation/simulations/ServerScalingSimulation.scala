@@ -72,7 +72,7 @@ object ServerScalingSimulation {
 
 		def simulation: ConnectableTuple[AnyVal] = {
 			def simul: Observable[Map[String, AnyVal]] = {
-				val p = new ServerPool(8, server = consume_queue, load = load_queue)
+				val p = new ServerPool(8, consume_queue, load_queue)
 				val c = new PIDController(1, 5) map math.round map (_ toInt)
 
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
@@ -86,15 +86,15 @@ object ServerScalingSimulation {
 			def time: Observable[Long] = (0L until 300L).toObservable observeOn ComputationScheduler()
 			def setpoint(t: Long): Double = if (t < 100) 0.8 else 0.6
 
-			def consume_queue() = 100 * Randomizers.betavariate(20, 2)
-			def loadqueue() = {
+			def consumeQueue() = 100 * Randomizers.betavariate(20, 2)
+			def loadQueue() = {
 				globalTime += 1
 
 				if (globalTime < 200) Randomizers.gaussian(1000, 5)
 				else Randomizers.gaussian(1200, 5)
 			}
 
-			val p = new ServerPool(8, server = consume_queue, load = loadqueue)
+			val p = new ServerPool(8, consumeQueue, loadQueue)
 			val c = new PIDController(1, 5) map math.round map (_ toInt)
 
 			Loops.closedLoop(time, setpoint, 0.0, c ++ p)
@@ -119,7 +119,7 @@ object ServerScalingSimulation {
 
 		def simulation: ConnectableTuple[AnyVal] = {
 			def simul(): Observable[Map[String, AnyVal]] = {
-				val p = new ServerPool(0, server = consume_queue, load = load_queue)
+				val p = new ServerPool(0, consume_queue, load_queue)
 				val c = new AsymmController(10, 200) map math.round map (_ toInt)
 
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
@@ -150,7 +150,7 @@ object ServerScalingSimulation {
 			def simul(): Observable[Map[String, AnyVal]] = {
 				val c = new SpecialController(100, 10)
 				val a = new Integrator map math.round map (_ toInt)
-				val p = new ServerPool(0, server = consume_queue, load = load_queue)
+				val p = new ServerPool(0, consume_queue, load_queue)
 
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ a ++ p)
 			}
