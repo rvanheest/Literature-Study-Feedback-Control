@@ -60,8 +60,6 @@ object ServerScalingSimulation {
 		def load_queue() = {
 			globalTime += 1
 			
-//			println(globalTime)
-
 			if (globalTime < 200) Randomizers.gaussian(1000, 5)
 			else Randomizers.gaussian(1200, 5)
 		}
