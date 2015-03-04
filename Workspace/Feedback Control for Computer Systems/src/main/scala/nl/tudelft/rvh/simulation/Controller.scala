@@ -95,8 +95,7 @@ class DeadbandRelayController(zone: Double, res: Double = 0) extends Component[D
 class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(error: Double): AsymmController = {
-		var e = error
-		if (e > 0) e /= 20.0
+		val e = if (error > 0) error / 20.0 else error
 
 		val i = integral + DT * e
 		val d = (prev - e) / DT
