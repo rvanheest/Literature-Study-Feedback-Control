@@ -85,7 +85,7 @@ class ServerPool(n: Int, queue: Double = 0, server: () => Double, load: () => Do
 		}
 		else {
 			val nNew = math.max(0, u)
-			val completed = math.min(l, (0 until nNew).map { _ => server() }.scan(0.0){ (_ + _) }.takeWhile { _ < l }.last)
+			val completed = math.min((0 until nNew).map { _ => server() }.sum, l)
 			new ServerPool(nNew, l - completed, server, load, completed / l)
 		}
 	}
