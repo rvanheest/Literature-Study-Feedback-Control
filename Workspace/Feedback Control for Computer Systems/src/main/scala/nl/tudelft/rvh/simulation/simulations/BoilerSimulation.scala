@@ -12,6 +12,7 @@ import nl.tudelft.rvh.simulation.PIDController
 import nl.tudelft.rvh.simulation.Setpoint
 import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
+import nl.tudelft.rvh.ConnectableTuple
 
 class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler", "Temperature") {
 
@@ -19,7 +20,7 @@ class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler"
 
 	def setpoint(t: Long): Double = 10 * Setpoint.doubleStep(t, 10, 60)
 
-	def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+	def simulation: ConnectableTuple[AnyVal] = {
 		def simul: Observable[Map[String, AnyVal]] = {
 			val p = new Boiler
 			val c = new PIDController(0.45, 0.01)
@@ -27,8 +28,9 @@ class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler"
 			Loops.closedLoop1(time, setpoint(_), 0.0, c ++ p)
 		}
 		
-		(simul map (_ filter { case (name, _) => name == "Boiler"}) flatMap (_.values toObservable),
-				Option.empty)
+		val sim = simul.publish
+		
+		new ConnectableTuple(sim map (_ ("Boiler")), Option.empty, () => sim.connect)
 	}
 
 	def simulationForGithub(): Observable[Double] = {
@@ -38,6 +40,6 @@ class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler"
 		val p = new Boiler
 		val c = new PIDController(0.45, 0.01)
 
-		Loops.closedLoop(time map (_ toLong), setpoint _, 0.0, c ++ p)
+		Loops.closedLoop(time map (_ toLong), setpoint, 0.0, c ++ p)
 	}
 }

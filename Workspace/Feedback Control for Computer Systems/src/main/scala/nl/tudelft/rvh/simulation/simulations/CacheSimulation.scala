@@ -15,6 +15,7 @@ import nl.tudelft.rvh.simulation.Randomizers
 import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.schedulers.ComputationScheduler
+import nl.tudelft.rvh.ConnectableTuple
 
 object CacheSimulation {
 
@@ -71,7 +72,7 @@ object CacheSimulation {
 
 		def setpoint(t: Long): Double = 0.7
 
-		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+		def simulation: ConnectableTuple[AnyVal] = {
 			def simul: Observable[Map[String, AnyVal]] = {
 				def gaus(tuple: (Int, Int)) = math floor Randomizers.gaussian(tuple._1, tuple._2) toInt
 				def demand(t: Long) = gaus(if (t < 3000) (0, 15) else if (t < 5000) (0, 35) else (100, 15))
@@ -87,10 +88,8 @@ object CacheSimulation {
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ plant)
 			}
 		
-			val sim = simul
-			
-			(sim map (_ filter { case (name, _) => name == "Fixed filter"}) flatMap (_.values toObservable),
-					Option(sim map (_ filter { case (name, _) => name == "Cache size"}) flatMap (_.values toObservable)))
+			val sim = simul.publish
+			new ConnectableTuple(sim map (_("Fixed filter")), Option(sim map (_("Cache size"))), () => sim.connect)
 		}
 
 		def simulationForGitHub(): Observable[Double] = {

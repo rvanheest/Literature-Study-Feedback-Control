@@ -21,18 +21,9 @@ import nl.tudelft.rvh.simulation.Loops
 import nl.tudelft.rvh.simulation.Integrator
 import nl.tudelft.rvh.simulation.ServerPool
 import nl.tudelft.rvh.simulation.PIDController
+import nl.tudelft.rvh.ConnectableTuple
 
 object ServerScalingSimulation {
-
-	var global_time = 0
-
-	def load_queue() = {
-		global_time += 1
-
-		if (global_time < 200) Randomizers.gaussian(800, 5)
-		else if (global_time < 500) Randomizers.gaussian(100, 5)
-		else Randomizers.gaussian(1200, 5)
-	}
 
 	def consume_queue() = 100 * Randomizers.betavariate(20, 2)
 
@@ -55,19 +46,23 @@ object ServerScalingSimulation {
 			box
 		}
 
-		def loadqueue() = Randomizers.gaussian(traffic, traffic / 200.0)
+		def load_queue() = Randomizers.gaussian(traffic, traffic / 200.0)
 
 		def seriesName: String = s"Traffic Intensity $traffic"
 
-		def simulation(): Observable[(Int, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = loadqueue), 20, 20, 5, 1000)(_ toInt)
+		def simulation(): Observable[(Int, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = load_queue), 20, 20, 5, 1000)(_ toInt)
 	}
 
-	class ServerClosedLoop1(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Completion rate") {
+	class ServerClosedLoop1(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Completion rate", "Number of servers") {
+		
+		var globalTime = 0
 
-		def loadqueue() = {
-			global_time += 1
+		def load_queue() = {
+			globalTime += 1
+			
+//			println(globalTime)
 
-			if (global_time < 200) Randomizers.gaussian(1000, 5)
+			if (globalTime < 200) Randomizers.gaussian(1000, 5)
 			else Randomizers.gaussian(1200, 5)
 		}
 
@@ -77,57 +72,93 @@ object ServerScalingSimulation {
 
 		def setpoint(time: Long): Double = if (time < 100) 0.8 else 0.6
 
-		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+		def simulation: ConnectableTuple[AnyVal] = {
 			def simul: Observable[Map[String, AnyVal]] = {
-				val p = new ServerPool(8, server = consume_queue, load = loadqueue)
+				val p = new ServerPool(8, server = consume_queue, load = load_queue)
 				val c = new PIDController(1, 5) map math.round map (_ toInt)
-	
+
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
 			}
-			
-			(simul map (_ filter { case (name, _) => name == "Completion rate" }) flatMap (_.values toObservable), Option.empty)
+
+			val sim = simul.publish
+			new ConnectableTuple(sim map (_("Completion rate")), Option(sim map (_("Servers"))), () => sim.connect)
+		}
+
+		def simulationForGitHub(): Observable[Double] = {
+			def time: Observable[Long] = (0L until 300L).toObservable observeOn ComputationScheduler()
+			def setpoint(t: Long): Double = if (t < 100) 0.8 else 0.6
+
+			def consume_queue() = 100 * Randomizers.betavariate(20, 2)
+			def loadqueue() = {
+				globalTime += 1
+
+				if (globalTime < 200) Randomizers.gaussian(1000, 5)
+				else Randomizers.gaussian(1200, 5)
+			}
+
+			val p = new ServerPool(8, server = consume_queue, load = loadqueue)
+			val c = new PIDController(1, 5) map math.round map (_ toInt)
+
+			Loops.closedLoop(time, setpoint, 0.0, c ++ p)
 		}
 	}
 
-	class ServerClosedLoop2(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Completion rate") {
+	class ServerClosedLoop2(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Completion rate", "Number of servers") {
+		
+		var globalTime = 0
 
-		def seriesName = "Completion rate"
+		def load_queue() = {
+			globalTime += 1
+			
+			if (globalTime < 200) Randomizers.gaussian(800, 5)
+			else if (globalTime < 500) Randomizers.gaussian(100, 5)
+			else Randomizers.gaussian(1200, 5)
+		}
 
 		override def time: Observable[Long] = (0L until 700L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = 0.9995
 
-		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+		def simulation: ConnectableTuple[AnyVal] = {
 			def simul(): Observable[Map[String, AnyVal]] = {
 				val p = new ServerPool(0, server = consume_queue, load = load_queue)
 				val c = new AsymmController(10, 200) map math.round map (_ toInt)
-	
+
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
 			}
-			
-			(simul map (_ filter { case (name, _) => name == "Completion rate" }) flatMap (_.values toObservable), Option.empty)
+
+			val sim = simul.publish
+			new ConnectableTuple(sim map (_("Completion rate")), Option(sim map (_("Servers"))), () => sim.connect)
 		}
 	}
 
 	class ServerClosedLoop3(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 3", "Completion rate", "Number of servers")(dt) {
 
+		var globalTime = 0
+
+		def load_queue() = {
+			globalTime += 1
+			
+			if (globalTime < 200) Randomizers.gaussian(800, 5)
+			else if (globalTime < 500) Randomizers.gaussian(100, 5)
+			else Randomizers.gaussian(1200, 5)
+		}
+		
 		override def time: Observable[Long] = (0L until 1200L).toObservable observeOn ComputationScheduler()
 
 		def setpoint(time: Long): Double = 1.0
 
-		def simulation: (Observable[AnyVal], Option[Observable[AnyVal]]) = {
+		def simulation: ConnectableTuple[AnyVal] = {
 			def simul(): Observable[Map[String, AnyVal]] = {
 				val c = new SpecialController(100, 10)
 				val a = new Integrator map math.round map (_ toInt)
 				val p = new ServerPool(0, server = consume_queue, load = load_queue)
-	
+
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ a ++ p)
 			}
-			
-			val sim = simul
-			
-			(sim map (_ filter { case (name, _) => name == "Completion rate"}) flatMap (_.values toObservable),
-					Option(sim map (_ filter { case (name, _) => name == "Servers"}) flatMap (_.values toObservable)))
+
+			val sim = simul.publish
+			new ConnectableTuple(sim map (_("Completion rate")), Option(sim map (_("Servers"))), () => sim.connect)
 		}
 	}
 }

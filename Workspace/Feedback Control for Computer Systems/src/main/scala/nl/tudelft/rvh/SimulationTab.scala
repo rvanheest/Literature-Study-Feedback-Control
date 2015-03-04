@@ -27,12 +27,16 @@ import nl.tudelft.rvh.rxscalafx.Observables
 import rx.lang.scala.JavaConversions
 import rx.lang.scala.Observable
 
+case class ConnectableTuple[T](first: Observable[T], second: Option[Observable[T]], connect: () => Unit)
+
 abstract class SimulationTab(tabName: String, yLabel: String, zLabel: String = "")(implicit DT: Double) extends Tab(tabName) {
 
 	private val print = new Button("Print data")
 	private val save = new Button("Save chart")
 	
-	val (primary, secondary) = simulation
+	val sim = simulation
+	val primary = sim.first
+	val secondary = sim.second
 	
 	val xAxis = new NumberAxis
 	val yAxis = new NumberAxis
@@ -45,6 +49,8 @@ abstract class SimulationTab(tabName: String, yLabel: String, zLabel: String = "
 	val chart = new MultiChart(baseChart, Color.RED)
 	secondary foreach { obs => chart.addSeries(prepareSeries(zLabel, time zip obs), Color.BLUE) }
 	
+	sim.connect()
+
 	val borderPane = new BorderPane(chart)
 	borderPane setBottom chart.getLegend
 	VBox.setVgrow(borderPane, Priority.ALWAYS)
@@ -97,5 +103,5 @@ abstract class SimulationTab(tabName: String, yLabel: String, zLabel: String = "
 
 	def setpoint(time: Long): Double
 	
-	def simulation: (Observable[AnyVal], Option[Observable[AnyVal]])
+	def simulation: ConnectableTuple[AnyVal]
 }
