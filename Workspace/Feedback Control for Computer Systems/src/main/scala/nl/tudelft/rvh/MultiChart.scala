@@ -84,6 +84,7 @@ class MultiChart(baseChart: LineChart[Number, Number], lineColor: Color, strokeW
 		val yAxis = new NumberAxis
 
 		// style x-axis
+		xAxis setLabel baseChart.getXAxis.getLabel
 		xAxis setAutoRanging false
 		xAxis setVisible false
 		xAxis setOpacity 0

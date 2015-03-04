@@ -66,7 +66,7 @@ object CacheSimulation {
 		}
 	}
 
-	class CacheClosedLoop(implicit dt: Double = 1.0) extends SimulationTab("Cache Closed Loop", "Hitrate", "Cache size") {
+	class CacheClosedLoop(implicit dt: Double = 1.0) extends SimulationTab("Cache Closed Loop", "Time", "Hitrate", "Cache size") {
 
 		override def time: Observable[Long] = (0L until 10000L).toObservable observeOn ComputationScheduler()
 

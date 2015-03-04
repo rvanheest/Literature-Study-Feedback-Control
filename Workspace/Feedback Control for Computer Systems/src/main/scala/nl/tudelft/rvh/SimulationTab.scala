@@ -29,7 +29,7 @@ import rx.lang.scala.Observable
 
 case class ConnectableTuple[T](first: Observable[T], second: Option[Observable[T]], connect: () => Unit)
 
-abstract class SimulationTab(tabName: String, yLabel: String, zLabel: String = "")(implicit DT: Double) extends Tab(tabName) {
+abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zLabel: String = "")(implicit DT: Double) extends Tab(tabName) {
 
 	private val print = new Button("Print data")
 	private val save = new Button("Save chart")
@@ -40,6 +40,7 @@ abstract class SimulationTab(tabName: String, yLabel: String, zLabel: String = "
 	
 	val xAxis = new NumberAxis
 	val yAxis = new NumberAxis
+	xAxis setLabel xLabel
 	yAxis setLabel yLabel
 	
 	val baseChart = new LineChart(xAxis, yAxis)

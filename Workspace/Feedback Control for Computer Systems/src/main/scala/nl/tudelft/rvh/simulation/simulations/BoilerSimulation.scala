@@ -14,7 +14,7 @@ import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
 import nl.tudelft.rvh.ConnectableTuple
 
-class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler", "Temperature") {
+class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler", "Time", "Temperature") {
 
 	def time: Observable[Long] = (0L until 150L).toObservable
 

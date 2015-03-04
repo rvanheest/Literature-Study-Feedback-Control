@@ -53,7 +53,7 @@ object ServerScalingSimulation {
 		def simulation(): Observable[(Int, Double)] = Loops.staticTest(new ServerPool(0, server = consume_queue, load = load_queue), 20, 20, 5, 1000)(_ toInt)
 	}
 
-	class ServerClosedLoop1(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Completion rate", "Number of servers") {
+	class ServerClosedLoop1(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 1", "Time", "Completion rate", "Number of servers") {
 		
 		var globalTime = 0
 
@@ -101,15 +101,15 @@ object ServerScalingSimulation {
 		}
 	}
 
-	class ServerClosedLoop2(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Completion rate", "Number of servers") {
+	class ServerClosedLoop2(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 2", "Time", "Completion rate", "Number of servers") {
 		
 		var globalTime = 0
 
 		def load_queue() = {
 			globalTime += 1
 			
-			if (globalTime < 200) Randomizers.gaussian(800, 5)
-			else if (globalTime < 500) Randomizers.gaussian(100, 5)
+			if (globalTime < 200) Randomizers.gaussian(1000, 5)
+			else if (globalTime < 500) Randomizers.gaussian(800, 5)
 			else Randomizers.gaussian(1200, 5)
 		}
 
@@ -130,15 +130,15 @@ object ServerScalingSimulation {
 		}
 	}
 
-	class ServerClosedLoop3(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 3", "Completion rate", "Number of servers")(dt) {
+	class ServerClosedLoop3(implicit dt: Double = 1.0) extends SimulationTab("Server Pool Loop 3", "Time", "Completion rate", "Number of servers")(dt) {
 
 		var globalTime = 0
 
 		def load_queue() = {
 			globalTime += 1
 			
-			if (globalTime < 200) Randomizers.gaussian(800, 5)
-			else if (globalTime < 500) Randomizers.gaussian(100, 5)
+			if (globalTime < 500) Randomizers.gaussian(1000, 5)
+			else if (globalTime < 800) Randomizers.gaussian(800, 5)
 			else Randomizers.gaussian(1200, 5)
 		}
 		
