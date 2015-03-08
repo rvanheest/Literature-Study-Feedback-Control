@@ -16,7 +16,7 @@ import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.schedulers.ComputationScheduler
 import nl.tudelft.rvh.simulation.SpecialController
 import nl.tudelft.rvh.simulation.Randomizers
-import nl.tudelft.rvh.simulation.AsymmController
+import nl.tudelft.rvh.simulation.AsymmetricPIDController
 import nl.tudelft.rvh.simulation.Loops
 import nl.tudelft.rvh.simulation.Integrator
 import nl.tudelft.rvh.simulation.ServerPool
@@ -120,7 +120,7 @@ object ServerScalingSimulation {
 		def simulation: ConnectableTuple[AnyVal] = {
 			def simul(): Observable[Map[String, AnyVal]] = {
 				val p = new ServerPool(0, consume_queue, load_queue)
-				val c = new AsymmController(10, 200) map math.round map (_ toInt)
+				val c = new AsymmetricPIDController(10, 200) map math.round map (_ toInt)
 
 				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
 			}

@@ -92,15 +92,15 @@ class DeadbandRelayController(zone: Double, res: Double = 0) extends Component[D
 	def monitor = Map("Deadband relay controller" -> action)
 }
 
-class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
+class AsymmetricPIDController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double = 0, deriv: Double = 0, prev: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 
-	def update(error: Double): AsymmController = {
+	def update(error: Double): AsymmetricPIDController = {
 		val e = if (error > 0) error / 20.0 else error
 
 		val i = integral + DT * e
 		val d = (prev - e) / DT
 
-		new AsymmController(kp, ki, kd, i, d, e)
+		new AsymmetricPIDController(kp, ki, kd, i, d, e)
 	}
 
 	def action = prev * kp + integral * ki + deriv * kd
@@ -108,15 +108,16 @@ class AsymmController(kp: Double, ki: Double, kd: Double = 0.0, integral: Double
 	def monitor = Map("Asymmetric controller" -> action)
 }
 
-class SpecialController(period1: Int, period2: Int, t: Int = 0, res: Int = 0) extends Component[Double, Double] {
+class SpecialController(period1: Int, period2: Int, time: Int = 0, res: Int = 0) extends Component[Double, Double] {
 
 	def update(error: Double): SpecialController = {
 		if (error > 0)
 			new SpecialController(period1, period2, period1, 1)
-		else if (t - 1 == 0)
+		// at this point we know that the error must be 0
+		else if (time == 1)
 			new SpecialController(period1, period2, period2, -1)
 		else
-			new SpecialController(period1, period2, t - 1, 0)
+			new SpecialController(period1, period2, time - 1, 0)
 	}
 
 	def action = res
