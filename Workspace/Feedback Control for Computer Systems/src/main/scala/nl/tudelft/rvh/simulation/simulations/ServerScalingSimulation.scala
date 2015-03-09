@@ -75,7 +75,7 @@ object ServerScalingSimulation {
 				val p = new ServerPool(8, consume_queue, load_queue)
 				val c = new PIDController(1, 5) map math.round map (_ toInt)
 
-				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
+				Loops.closedLoop1(time map setpoint, 0.0, c ++ p)
 			}
 
 			val sim = simul.publish
@@ -97,7 +97,7 @@ object ServerScalingSimulation {
 			val p = new ServerPool(8, consumeQueue, loadQueue)
 			val c = new PIDController(1, 5) map math.round map (_ toInt)
 
-			Loops.closedLoop(time, setpoint, 0.0, c ++ p)
+			Loops.closedLoop(time map setpoint, 0.0, c ++ p)
 		}
 	}
 
@@ -122,7 +122,7 @@ object ServerScalingSimulation {
 				val p = new ServerPool(0, consume_queue, load_queue)
 				val c = new AsymmetricPIDController(10, 200) map math.round map (_ toInt)
 
-				Loops.closedLoop1(time, setpoint, 0.0, c ++ p)
+				Loops.closedLoop1(time map setpoint, 0.0, c ++ p)
 			}
 
 			val sim = simul.publish
@@ -152,7 +152,7 @@ object ServerScalingSimulation {
 				val a = new Integrator map math.round map (_ toInt)
 				val p = new ServerPool(0, consume_queue, load_queue)
 
-				Loops.closedLoop1(time, setpoint, 0.0, c ++ a ++ p)
+				Loops.closedLoop1(time map setpoint, 0.0, c ++ a ++ p)
 			}
 
 			val sim = simul.publish

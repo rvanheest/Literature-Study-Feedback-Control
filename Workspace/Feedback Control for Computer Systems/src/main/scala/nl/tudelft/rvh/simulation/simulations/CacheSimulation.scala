@@ -85,7 +85,7 @@ object CacheSimulation {
 				val f = new FixedFilter(100)
 				val plant = p ++ f
 				
-				Loops.closedLoop1(time, setpoint, 0.0, c ++ plant)
+				Loops.closedLoop1(time map setpoint, 0.0, c ++ plant)
 			}
 		
 			val sim = simul.publish
@@ -107,7 +107,7 @@ object CacheSimulation {
 			val f = new FixedFilter(100)
 			val plant = p ++ f
 
-			Loops.closedLoop(time, setpoint, 0.0, c ++ plant)
+			Loops.closedLoop(time map setpoint, 0.0, c ++ plant)
 		}
 	}
 }

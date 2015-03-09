@@ -25,7 +25,7 @@ class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler"
 			val p = new Boiler
 			val c = new PIDController(0.45, 0.01)
 	
-			Loops.closedLoop1(time, setpoint(_), 0.0, c ++ p)
+			Loops.closedLoop1(time.map(setpoint), 0.0, c ++ p)
 		}
 		
 		val sim = simul.publish
@@ -40,6 +40,6 @@ class BoilerSimulation(implicit dt: Double = 1.0) extends SimulationTab("Boiler"
 		val p = new Boiler
 		val c = new PIDController(0.45, 0.01)
 
-		Loops.closedLoop(time map (_ toLong), setpoint, 0.0, c ++ p)
+		Loops.closedLoop(time map (_ toLong) map setpoint, 0.0, c ++ p)
 	}
 }

@@ -15,7 +15,7 @@ object Test extends App {
 	val p = new Boiler
 	val c = new PIDController(0.45, 0.01)
 
-	val res = Loops.closedLoop(time, setpoint, 0.0, c ++ p)
+	val res = Loops.closedLoop(time map setpoint, 0.0, c ++ p)
 	time.zipWith(res)((t, r) => s"$t\t$r").subscribe(println(_), println(_))
 
 	StdIn.readLine()

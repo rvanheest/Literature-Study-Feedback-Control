@@ -29,14 +29,13 @@ object Loops {
 		time.map(setPoint).scan(controller ++ plant)(_ update _) drop 1 map (_ action)
 	}
 
-	def closedLoop[A](time: Observable[Long], setPoint: Long => A, seed: A, components: Component[A, A], inverted: Boolean = false)(implicit n: Numeric[A]) = {
+	def closedLoop[A](setPoint: Observable[A], seed: A, components: Component[A, A], inverted: Boolean = false)(implicit n: Numeric[A]) = {
 		import n._
 		Observable[A](subscriber => {
 			val y = BehaviorSubject(seed)
 			y drop 1 subscribe subscriber
 			
-			time.map(setPoint)
-				.zipWith(y)(_ - _)
+			setPoint.zipWith(y)(_ - _)
 				.map { error => if (inverted) -error else error }
 				.scan(components)(_ update _)
 				.drop(1)
@@ -45,13 +44,12 @@ object Loops {
 		}).onBackpressureBuffer
 	}
 	
-	def closedLoop1[A](time: Observable[Long], setPoint: Long => A, seed: A, components: Component[A, A], inverted: Boolean = false)(implicit n: Numeric[A]) = {
+	def closedLoop1[A](setPoint: Observable[A], seed: A, components: Component[A, A], inverted: Boolean = false)(implicit n: Numeric[A]) = {
 		import n._
 		Observable[Map[String, AnyVal]](subscriber => {
 			val y = BehaviorSubject(seed)
 			
-			time.map(setPoint)
-				.zipWith(y)(_ - _)
+			setPoint.zipWith(y)(_ - _)
 				.map { error => if (inverted) -error else error }
 				.scan(components)(_ update _).drop(1)
 				.doOnNext(comp => subscriber.onNext(comp.monitor))
