@@ -54,7 +54,7 @@ object CacheSimulation {
 
 		def seriesName: String = "Cache dynamic response"
 
-		override def time = super.time take 500
+		override def time = (0L until 500).toObservable observeOn ComputationScheduler()
 
 		def simulation: Observable[Double] = {
 			def demand(t: Long) = math floor Randomizers.gaussian(0, 15) toInt
