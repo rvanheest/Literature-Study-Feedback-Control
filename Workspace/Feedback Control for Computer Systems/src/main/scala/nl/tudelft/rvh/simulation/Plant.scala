@@ -81,11 +81,11 @@ object ServerPoolHelpers {
 	case class LatencyServerData(workers: Int, queueLoad: Double, completion: Double, latency: Int, pending: List[Int])
 	
 	def abstractServerPool(n: Int, queue: Double, server: () => Double)(u: Int) = {
-		val nNew = math.max(0, u)
-		val completed = math.min((0 until nNew).map { _ => server() }.sum, queue)
+		val nGoal = math.max(0, u)
+		val completed = math.min((0 until nGoal).map { _ => server() }.sum, queue)
 		val qNew = queue - completed
 		
-		new ServerData(nNew, qNew, completed)
+		new ServerData(nGoal, qNew, completed)
 	}
 	
 	def serverPool(n: Int, server: () => Double, load: () => Double)(u: Int) = {
@@ -93,32 +93,33 @@ object ServerPoolHelpers {
 		
 		if (l == 0) new ServerData(n, 0, 1)
 		else {
-			val ServerData(nNew, qNew, completed) = abstractServerPool(n, l, server)(u)
-			new ServerData(nNew, 0, completed / l)
+			val ServerData(nGoal, _, completed) = abstractServerPool(n, l, server)(u)
+			new ServerData(nGoal, 0, completed / l)
 		}
 	}
 	
 	def queueingServerPool (n: Int, queue: Double, server: () => Double, load: () => Double)(u: Int) = {
 		val l = load()
-		val ServerData(nNew, qNew, completed) = abstractServerPool(n, queue + l, server)(u)
-		ServerData(nNew, qNew, l - completed)
+		val ServerData(nGoal, qNew, completed) = abstractServerPool(n, queue + l, server)(u)
+		ServerData(nGoal, qNew, l - completed)
 	}
 
 	def serverPoolWithLatency(n: Int, server: () => Double, load: () => Double, latency: Int, pending: List[Int])(u: Int) = {
-		val nNew = math.max(0, u)
+		val nGoal = math.max(0, u)
 		
-		if (nNew <= n) {
-			val ServerData(nnNew, qNew, completed) = serverPool(n, server, load)(nNew)
-			new LatencyServerData(nnNew, qNew, completed, latency, pending)
+		if (nGoal <= n) {
+			val ServerData(nNew, qNew, completed) = serverPool(n, server, load)(nGoal)
+			new LatencyServerData(nNew, qNew, completed, latency, pending map (_ - 1))
 		}
 		else {
-			val p2 = pending.map { _ - 1 }
-			val newlyActive = p2.count { _ == 0 }
-			val nnNew = n + newlyActive
-			val p3 = p2.drop(newlyActive) ++ List.fill(nNew - nnNew)(latency)
-			
-			val ServerData(nnnNew, qNew, completed) = serverPool(nnNew, server, load)(nnNew)
-			new LatencyServerData(nnnNew, qNew, completed, latency, p3)
+			val pendNew = pending.map { _ - 1 }
+			val active = pendNew.count { _ <= 0 }
+			val extra = math.min(nGoal - n, active)
+			val nNew = n + extra
+			val pendFinal = pendNew.drop(extra) ++ List.fill(nGoal - nNew)(latency)
+
+			val ServerData(nFinal, qNew, completed) = serverPool(nNew, server, load)(nGoal)
+			new LatencyServerData(nFinal, qNew, completed, latency, pendFinal)
 		}
 	}
 }
@@ -148,5 +149,5 @@ class ServerPoolWithLatency(n: Int, server: () => Double, load: () => Double, la
 
 	def action: Double = res
 
-	def monitor = Map("Completion rate" -> res, "Servers" -> n)
+	def monitor = Map("Completion rate" -> res, "Servers" -> n, "Standby" -> pending.size)
 }

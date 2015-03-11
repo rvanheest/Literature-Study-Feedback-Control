@@ -1,27 +1,23 @@
 package nl.tudelft.rvh.simulation.simulations
 
-import scala.concurrent.duration.DurationDouble
-import scala.util.Random
 import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
-import nl.tudelft.rvh.ChartTab
+import nl.tudelft.rvh.ChartData
 import nl.tudelft.rvh.SimulationTab
 import nl.tudelft.rvh.StaticTestTab
-import nl.tudelft.rvh.StepTestTab
 import nl.tudelft.rvh.rxscalafx.Observables
+import nl.tudelft.rvh.simulation.AsymmetricPIDController
+import nl.tudelft.rvh.simulation.Integrator
+import nl.tudelft.rvh.simulation.Loops
+import nl.tudelft.rvh.simulation.PIDController
+import nl.tudelft.rvh.simulation.Randomizers
+import nl.tudelft.rvh.simulation.ServerPool
+import nl.tudelft.rvh.simulation.ServerPoolWithLatency
+import nl.tudelft.rvh.simulation.SpecialController
 import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.schedulers.ComputationScheduler
-import nl.tudelft.rvh.simulation.SpecialController
-import nl.tudelft.rvh.simulation.Randomizers
-import nl.tudelft.rvh.simulation.AsymmetricPIDController
-import nl.tudelft.rvh.simulation.Loops
-import nl.tudelft.rvh.simulation.Integrator
-import nl.tudelft.rvh.simulation.ServerPool
-import nl.tudelft.rvh.simulation.PIDController
-import nl.tudelft.rvh.ChartData
 
 object ServerScalingSimulation {
 
@@ -157,6 +153,36 @@ object ServerScalingSimulation {
 
 			val sim = simul.publish
 			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")))
+		}
+	}
+	
+	class ServerPoolWithLatencySimulation(implicit dt: Double = 1.0) extends SimulationTab("Server Pool with Latency", "Time", "Completion rate", "Number of servers", "Number of standbys")(dt) {
+		var globalTime = 0
+
+		def load_queue() = {
+			globalTime += 1
+			
+			if (globalTime < 500) Randomizers.gaussian(1000, 5)
+			else if (globalTime < 800) Randomizers.gaussian(800, 5)
+			else Randomizers.gaussian(1200, 5)
+		}
+		
+		def time = (0L until 1200L).toObservable observeOn ComputationScheduler()
+		
+		def setpoint(time: Long): Double = 1.0
+		
+		def simulation: ChartData[AnyVal] = {
+			def simul = {
+				val c = new SpecialController(100, 10)
+				val a = new Integrator map math.round map (_ toInt)
+				val p = new ServerPoolWithLatency(0, consume_queue, load_queue, 120, List.fill(8)(1))
+
+				Loops.closedLoop1(time map setpoint, 0.0, c ++ a ++ p)
+			}
+			
+			val sim = simul.publish
+			
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")), sim map (_("Standby")))
 		}
 	}
 }
