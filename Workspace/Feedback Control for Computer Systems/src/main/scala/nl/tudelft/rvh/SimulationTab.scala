@@ -27,16 +27,17 @@ import nl.tudelft.rvh.rxscalafx.Observables
 import rx.lang.scala.JavaConversions
 import rx.lang.scala.Observable
 
-case class ConnectableTuple[T](first: Observable[T], second: Option[Observable[T]], connect: () => Unit)
+case class ChartData[T](connect: () => Unit, first: Observable[T], seconds: Observable[T]*)
 
 abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zLabel: String = "")(implicit DT: Double) extends Tab(tabName) {
 
+	private val colors = List(Color.BLUE, Color.GREEN, Color.YELLOW, Color.BROWN, Color.BLACK)
 	private val print = new Button("Print data")
 	private val save = new Button("Save chart")
 	
-	val sim = simulation
-	val primary = sim.first
-	val secondary = sim.second
+	val ChartData(connect, primary, secondaries @ _*) = simulation
+	val palet = if (secondaries.size > colors.size) colors ++ List.fill(secondaries.size - colors.size)(Color.PINK)
+				else colors.take(secondaries.size)
 	
 	val xAxis = new NumberAxis
 	val yAxis = new NumberAxis
@@ -48,9 +49,10 @@ abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zL
 	baseChart.getData add prepareSeries("Setpoint", time map (t => (t * DT, setpoint(t))))
 	
 	val chart = new MultiChart(baseChart, Color.RED)
-	secondary foreach { obs => chart.addSeries(prepareSeries(zLabel, time zip obs), Color.BLUE) }
 	
-	sim.connect()
+	secondaries zip palet foreach { case (obs, color) => chart addSeries(prepareSeries(zLabel, time zip obs), color) }
+	
+	connect()
 
 	val borderPane = new BorderPane(chart)
 	borderPane setBottom chart.getLegend
@@ -104,5 +106,5 @@ abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zL
 
 	def setpoint(time: Long): Double
 	
-	def simulation: ConnectableTuple[AnyVal]
+	def simulation: ChartData[AnyVal]
 }

@@ -21,7 +21,7 @@ import nl.tudelft.rvh.simulation.Loops
 import nl.tudelft.rvh.simulation.Integrator
 import nl.tudelft.rvh.simulation.ServerPool
 import nl.tudelft.rvh.simulation.PIDController
-import nl.tudelft.rvh.ConnectableTuple
+import nl.tudelft.rvh.ChartData
 
 object ServerScalingSimulation {
 
@@ -70,7 +70,7 @@ object ServerScalingSimulation {
 
 		def setpoint(time: Long): Double = if (time < 100) 0.8 else 0.6
 
-		def simulation: ConnectableTuple[AnyVal] = {
+		def simulation: ChartData[AnyVal] = {
 			def simul: Observable[Map[String, AnyVal]] = {
 				val p = new ServerPool(8, consume_queue, load_queue)
 				val c = new PIDController(1, 5) map math.round map (_ toInt)
@@ -79,7 +79,7 @@ object ServerScalingSimulation {
 			}
 
 			val sim = simul.publish
-			new ConnectableTuple(sim map (_("Completion rate")), Option(sim map (_("Servers"))), () => sim.connect)
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")))
 		}
 
 		def simulationForGitHub(): Observable[Double] = {
@@ -117,7 +117,7 @@ object ServerScalingSimulation {
 
 		def setpoint(time: Long): Double = 0.9995
 
-		def simulation: ConnectableTuple[AnyVal] = {
+		def simulation: ChartData[AnyVal] = {
 			def simul(): Observable[Map[String, AnyVal]] = {
 				val p = new ServerPool(0, consume_queue, load_queue)
 				val c = new AsymmetricPIDController(10, 200) map math.round map (_ toInt)
@@ -126,7 +126,7 @@ object ServerScalingSimulation {
 			}
 
 			val sim = simul.publish
-			new ConnectableTuple(sim map (_("Completion rate")), Option(sim map (_("Servers"))), () => sim.connect)
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")))
 		}
 	}
 
@@ -146,7 +146,7 @@ object ServerScalingSimulation {
 
 		def setpoint(time: Long): Double = 1.0
 
-		def simulation: ConnectableTuple[AnyVal] = {
+		def simulation: ChartData[AnyVal] = {
 			def simul(): Observable[Map[String, AnyVal]] = {
 				val c = new SpecialController(100, 10)
 				val a = new Integrator map math.round map (_ toInt)
@@ -156,7 +156,7 @@ object ServerScalingSimulation {
 			}
 
 			val sim = simul.publish
-			new ConnectableTuple(sim map (_("Completion rate")), Option(sim map (_("Servers"))), () => sim.connect)
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")))
 		}
 	}
 }
