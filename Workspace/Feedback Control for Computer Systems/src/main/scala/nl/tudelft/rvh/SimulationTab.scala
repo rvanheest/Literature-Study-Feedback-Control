@@ -29,7 +29,7 @@ import rx.lang.scala.Observable
 
 case class ChartData[T](connect: () => Unit, first: Observable[T], seconds: Observable[T]*)
 
-abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zLabel: String = "")(implicit DT: Double) extends Tab(tabName) {
+abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zLabels: String*)(implicit DT: Double) extends Tab(tabName) {
 
 	private val colors = List(Color.BLUE, Color.GREEN, Color.YELLOW, Color.BROWN, Color.BLACK)
 	private val print = new Button("Print data")
@@ -50,7 +50,7 @@ abstract class SimulationTab(tabName: String, xLabel: String, yLabel: String, zL
 	
 	val chart = new MultiChart(baseChart, Color.RED)
 	
-	secondaries zip palet foreach { case (obs, color) => chart addSeries(prepareSeries(zLabel, time zip obs), color) }
+	secondaries zip zLabels zip palet foreach { case ((obs, zLabel), color) => chart addSeries(prepareSeries(zLabel, time zip obs), color) }
 	
 	connect()
 
