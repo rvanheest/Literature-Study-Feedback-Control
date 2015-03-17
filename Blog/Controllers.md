@@ -91,7 +91,7 @@ def simulation(): Observable[Double] = {
 }
 ```
 
-In the diagram below we see the results with two values for ![kp](equations/kp.png). These simulations show the typical behavior of a proportional controller. The simulation with `k = 0.2` simply never reaches the setpoint but rather stabilizes on a different value. In this case the actual stabilization value is just a little bit off, but a similar case was already shown in the [non-cumulative cache example](https://github.com/rvanheest/Literature-Study-Feedback-Control/wiki/Feedback-Systems#experiment-2---noncumulative-controller).
+In the diagram below we see the results with two values for ![kp](equations/kp.png). These simulations show the typical behavior of a proportional controller. The simulation with `k = 0.2` simply never reaches the setpoint but rather stabilizes on a different value. In this case the actual stabilization value is just a little bit off, but a similar case was already shown in the [non-cumulative cache example](Feedback-Systems.md#experiment-2---noncumulative-controller).
 
 The other simulation (`k = 0.5`) does reach the actual setpoint, from which it follows that the next tracking error will be zero. This causes the controller to output zero, which is supplied to the `SpeedSystem`. As discussed before, this causes the speed to drop with 10%, from which the system can start rising the speed again.
 
@@ -104,7 +104,7 @@ To solve problems caused by proportional droop, we introduce a new type of contr
 
 ![Integral control](equations/Integral control.png)
 
-In our examples this controller is implemented as a `scan` operation, followed by a `map` and can be found in previous experiments like the [cumulative cache experiment](https://github.com/rvanheest/Literature-Study-Feedback-Control/wiki/Feedback-Systems#experiment-1---cumulative-controller):
+In our examples this controller is implemented as a `scan` operation, followed by a `map` and can be found in previous experiments like the [cumulative cache experiment](Feedback-Systems.md#experiment-1---cumulative-controller):
 
 ```scala
 trackingError.scan((sum: Double, e: Double) => sum + e).map { k * _ }
@@ -161,6 +161,7 @@ Mathematically we can express the derivative controller by the following equatio
 Even though '*anticipating the future*' sounds promising, there are a number of problems with the derivative controller. First of all a sudden setpoint change will lead to a large momentary spike, which will be the input of the controlled system. This effect is known as *derivative kick*.  
 Besides that the input signal of the controller can have a high-frequency noise. Taking the derivative of such a signal only makes things worse by enhancing the effect of the noise.
 
+### PID control
 The most common use of the derivative controller is in combination with the proportional and integral controllers, forming a three-term *PID controller*. Here we use all three controllers and sum the outcomes.
 
 ![PID controller](images/PIDController.png)
@@ -180,6 +181,8 @@ class PID(val prop: Double = 0, val integral: Double = 0, val deriv: Double = 0,
 ```
 
 Notice that the function `work` takes a parameter `DT` with default value `DT = 1`. This value is used in calculating the derivative to account for multiple iterations within one time unit. If time is measured in seconds and there are 100 control actions, then `DT = 0.01`. Since our simulations currently do not depend on the time unit, we can assume that we do 1 control action per time unit, from which it follows that `DT = 1`.
+
+Also notice that with introducing this controller, the PI controller is needed anymore, since it is equivalent to a PID controller with `kd = 0.0`.
 
 ## Summary
 In this section a number of controllers have been discussed. The most primitive one is the **on/off controller**. This can only signal the controlled system to turn on or off. Its results are quite poor and often cause oscillating behavior.
