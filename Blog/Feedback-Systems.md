@@ -1,8 +1,8 @@
 #Feedback systems
-The technique studied in this repository is based on the *feedback principle*:
+Feedback control is based on the *feedback principle*:
 > Continuously compare the actual output to its desired reference value; then apply a change to the system inputs that counteracts any deviation of the actual output from the reference.
 
-To put this in other words, when the output is higher the reference value, a correction to the next input is applied, which will lead to a reduction in the output. Also, if the output is too low, the input value will be raised, such that the next output will be closer to the reference value. A schematic overview of such a **closed-loop system**, where the output is looped back and used in the calculation for what the next input will be, is shown below.
+To put this in other words, when the output is higher the reference value, a correction to the next input is applied, which will lead to a reduction in the output. Also, if the output is too low, the input value will be raised, such that the next output will be closer to the reference value. Schematically this **closed-loop system** is shown below, where the output is looped back and used in the calculation for what the next input will be.
 
 ![Feedback system](images/Feedback system.png)
 
@@ -11,12 +11,12 @@ Compare this with a **open-loop system**, where the output is not taken into acc
 ![Feedforward system](images/Feedforward system.png)
 
 ## The components of a closed-loop system
-Now let's go over the different parts in the first image. When an output in the system is produced, it is compared with the reference value (usually known as the **setpoint**). This comparison produces a **tracking error*, which is the deviation of the output from the setpoint:
+A basic closed-loop system consists of a number of components that are shown in the first image. When an output in the system is produced, it is compared with the reference value (usually known as the **setpoint**). This comparison produces a *tracking error*, which is the deviation of the output from the setpoint:
 > tracking error = setpoint - previous output
 
 The tracking error is used in the **controller** to determine the system's next input. Usually when the tracking error is positive (the previous output was too low) the controller has to produce a new control input that will raise the output of the process. The reverse holds for the case where the tracking error is negative.
 
-Notice that the controller does not need any knowledge about the system's behavior but instead only needs to know the **directionality** of the process: does the input need to be raised or lowered in order to raise the output value? In practice both situations will occur: increasing the power of a heating element will lead to an increase in temperature, whereas an increase of the power of a cooler will lead to a decrease.
+Notice that the controller does not need any knowledge about the system's internal behavior but instead only needs to know the **directionality** of the process: does the input need to be raised or lowered in order to raise the output value? In practice both situations will occur: increasing the power of a heating element will lead to an increase in temperature, whereas an increase of the power of a cooler will lead to a decrease.
 
 Besides the directionality, the controller also needs to know the **magnitude** of the correction. After all, the controller could overcompensate a positive tracking error, resulting in a negative tracking error. This often results in a **control oscillation**, which is rarely desirable.
 
