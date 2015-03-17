@@ -10,7 +10,7 @@ We are going to construct a feedback control system that controls the cache size
 
 This directly gives us a second hurdle, this time a more mathematical one: *how large does k need to be*? In order to answer this question, we need to observe that (since each request results either in success or failure, a.k.a. a Boolean) requests can be regarded as [Bernoulli trials](http://en.wikipedia.org/wiki/Bernoulli_distribution). From the [classical central limit theorem](http://en.wikipedia.org/wiki/Central_limit_theorem#Classical_CLT) it follows that the standard deviation of such Bernoulli trials with size *k* is approximately 0.5/√*k*. If we want to have good control, we need to know the success rate to within at least 5% or better, hence *k* needs to be approximately 100.
 
-Having solved these two issues we can now construct our feedback control system around the actual cache. To convert the Boolean results of the case into hit rates we will use a [FixedFilter](https://github.com/rvanheest/Literature-Study-Feedback-Control/wiki/Simulation-Framework#filters-and-actuators).
+Having solved these two issues we can now construct our feedback control system around the actual cache. To convert the Boolean results of the case into hit rates we will use a [FixedFilter](Simulation-Framework.md#filters-and-actuators).
 
 ![Cache loop model](images/cache/Loop model.png)
 
@@ -50,13 +50,13 @@ class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[I
 ```
 
 ##Controller settings
-After having constructed the feedback system, we need to decide what kind of controller we will use. The most obvious candidate is the PID controller, which needs two or three parameters (depending on using it as a PI controller or PID controller). As discussed [previously](https://github.com/rvanheest/Literature-Study-Feedback-Control/wiki/Controllers), a PID controller is the sum of the proportional, integral and derivative control:
+After having constructed the feedback system, we need to decide what kind of controller we will use. The most obvious candidate is the PID controller, which needs two or three parameters (depending on using it as a PI controller or PID controller). As discussed [previously](Controllers.md), a PID controller is the sum of the proportional, integral and derivative control:
 
 ![PID control equation](equations/PID control.png)
 
 The parameters of this controller (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png)) will make *the* difference between a good or bad functioning system; therefore choosing the correct values is an important task.
 
-In order to retrieve these values, we need to take a closer look at the controlled system (the cache) first and discover what it's behavior is. First we will look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. When the static behavior is known, we can use its results to determine the dynamic response: how long does it take for the system to respond to a sudden input change? Notice that both these experiments are done in an [open-loop setting](https://github.com/rvanheest/Literature-Study-Feedback-Control/wiki/Feedback-Systems) and without a controller. In the case of our cache we consider the controlled system to be the cache combined with the FixedFilter.
+In order to retrieve these values, we need to take a closer look at the controlled system (the cache) first and discover what it's behavior is. First we will look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. When the static behavior is known, we can use its results to determine the dynamic response: how long does it take for the system to respond to a sudden input change? Notice that both these experiments are done in an [open-loop setting](Feedback-Systems.md) and without a controller. In the case of our cache we consider the controlled system to be the cache combined with the FixedFilter.
 
 ###Static process characteristics
 To measure the static process characteristics we just have to turn on the controlled system, apply a steady input value, wait until the system has settled down and record the output. We do this in the following code sample. The demand is drawn from a gaussian distribution with mean 0 and variance `demandWidth`. Then we construct the controlled system and follow the procedure described above: 
