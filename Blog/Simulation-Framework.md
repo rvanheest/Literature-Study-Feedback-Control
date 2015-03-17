@@ -90,7 +90,7 @@ class AdvController(kp: Double, ki: Double, kd: Double = 0, clamp: (Double, Doub
 ```
 
 ###Filters and actuators
-Besides controllers, we also might want to make use of other components. These are the actuators and filters. The most obvious one (`Identity`) just reproduces its input value and emits that as its output. This filter can be used as a default argument if in fact no filter is needed.
+Besides controllers, we also might want to make use of other components. These are the actuators and filters. The most obvious one (`Identity`) just reproduces its input value and emits that as its output.
 
 ```scala
 class Identity[A](value: A = 0) extends Component[A, A] {
