@@ -11,7 +11,7 @@ import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.PublishSubject
 
-class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumulative simulation", "time", "cache size") {
+class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumulative simulation", "time", "hit rate") {
 
 	private var k: Float = 160
 

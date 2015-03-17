@@ -11,7 +11,7 @@ import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.PublishSubject
 
-class CacheSmallCumulative() extends ChartTab("Chapter 2 - Small cumulative", "Cumulative simulation", "time", "cache size") {
+class CacheSmallCumulative() extends ChartTab("Chapter 2 - Small cumulative", "Cumulative simulation", "time", "hit rate") {
 
 	private var k: Float = 160
 

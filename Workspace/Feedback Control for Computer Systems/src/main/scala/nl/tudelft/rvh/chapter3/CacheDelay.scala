@@ -12,7 +12,7 @@ import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
 import rx.lang.scala.subjects.BehaviorSubject
 
-class CacheDelay extends ChartTab("Chapter 3 - Cache with delay", "Delay simulation", "time", "cache size") {
+class CacheDelay extends ChartTab("Chapter 3 - Cache with delay", "Delay simulation", "time", "hit rate") {
 
 	private var k: Float = 50
 	private var delay: Int = 2
