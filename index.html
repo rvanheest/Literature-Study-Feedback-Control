@@ -910,7 +910,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
     <span class="pl-en">Loops</span>.closedLoop(time map setpoint, <span class="pl-c1">0.0</span>, c <span class="pl-k">++</span> plant)
 }</pre></div>
 
-<p>The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hitrate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.</p>
+<p>The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hit rate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.</p>
 
 <p><img src="images/cache/Simulation%20-%20Ziegler-Nichols.png" alt="Ziegler-Nichols simulation"></p>
 
