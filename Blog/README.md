@@ -517,7 +517,7 @@ class Identity[A](value: A = 0) extends Component[A, A] {
 }
 ```
 
-Another filter is the `Integrator`, which takes the sum of its inputs and returns its current value. Notice that since we are calculating an integral here and that therefore we need to multiply the sum by factor DT to convert from simulated steps to real time.
+Another actuator is the `Integrator`, which takes the sum of its inputs and returns its current value. Notice that since we are calculating an integral here and that therefore we need to multiply the sum by factor DT to convert from simulated steps to real time.
 
 ```scala
 class Integrator(data: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
@@ -823,7 +823,7 @@ def simulationForGitHub(): Observable[Double] = {
 }
 ```
 
-The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hitrate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.
+The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hit rate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.
 
 ![Ziegler-Nichols simulation](images/cache/Simulation - Ziegler-Nichols.png)
 
@@ -1027,3 +1027,18 @@ In our case, we can have a set of "*warm standbys*" that are controlled by a sep
 In cloud computing we often deal with a (complex) system that receives jobs from its users and distributes those over several workers. These workers are leased by cloud providers and are only payed for the time they are used. One of the challenges while implementing such a system is to come up with a good policy for auto-scaling. When to lease or release a machine?
 
 A simplified version of the problem assumes that jobs will never be queued and instead be rejected if immediate processing is not possible. Besides that we assume that newly requested servers are directly available; no spin up time is required. We found that a PID controller is not appropriate to use in this setup, especially as the setpoint requests a completion rate close to 100%. Instead we used a simpler control strategy that performs great with the goal of 100% completion rate.
+
+# Conclusion
+In feedback control we continuously compare the output of a controlled system with a desired reference value and supply new input values to the system in order to counteract any deviations in the output from the reference value. Typically in this kind of systems the difference between the control output and the reference value (setpoint) is taken into a Controller that transforms the error into a new control input for the controlled system.
+
+The controlled system can be an actual machine/program/system but instead it also might be a simulation. The latter is often advisable while designing a feedback control system, since (I) it provides a way to get a better understanding and intuition for the abstract problem and the internal workings of the system, (II) it is most often not possible to do extensive testing and experimenting on real-world machines, (III) it provides a way of proving the correctness of the feedback system.
+
+The controlled system is likely to exhibit some form of lag, delay or other internal dynamics. These cause the controller to have a more difficult job and often result in a less accurate functioning feedback system. In some cases it is however possible to redesign the feedback system to the point where it does not have these internal dynamics.
+
+Controllers come in various types: most used is the PID controller, which is composed of a proportional, integral and derivative controller, all using their one parameter (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png) respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an on/off controller or a controller that is based on another control strategy might be useful. An example of the latter can be found in the [case study on server scaling](#A-better-approach).
+
+There is not one definite approach when it comes to tuning a PID controller. Two cases can be distinguished: when the controlled system has an immediate response without internal dynamics, an analysis of the static process characteristics will suffice. In this case the PID parameters depend on the ratio of the change in the control input and the corresponing change in the control output.
+
+In the other case (when the system does exhibit internal dynamics) there is not one definite approach when it comes to tuning a PID controller. The process starts with doing analysis of both the static process characteristics and the system's dynamic response. Note that both these tests are done in an open-loop setting without the presence of a controller. Based on these tests, values for K, τ and T need to be found by either fitting a model or using the [geometric construction](#finding-the-first-values). These values translate into the PID parameters by applying either one of the [Ziegler-Nichols, Cohen-Coon or AMIGO method](#calculating-the-pid-parameters). In practice it will turn out to be useful to use all three methods and combine the results to get good parameters for the PID controller.
+
+Feedback control systems have been proven to be successful for a long time in a wide variety of expertises. Now it is time to embrace this technique and apply it in the field of computer science!
