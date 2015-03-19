@@ -517,7 +517,7 @@ class Identity[A](value: A = 0) extends Component[A, A] {
 }
 ```
 
-Another filter is the `Integrator`, which takes the sum of its inputs and returns its current value. Notice that since we are calculating an integral here and that therefore we need to multiply the sum by factor DT to convert from simulated steps to real time.
+Another actuator is the `Integrator`, which takes the sum of its inputs and returns its current value. Notice that since we are calculating an integral here and that therefore we need to multiply the sum by factor DT to convert from simulated steps to real time.
 
 ```scala
 class Integrator(data: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
