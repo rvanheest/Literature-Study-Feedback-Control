@@ -722,6 +722,10 @@ a {
   text-decoration: none;
 }
 
+a.thanks {
+  font-style: italic;
+}
+
 p a {
   font-weight: 400;
 }
@@ -743,6 +747,10 @@ ol {
   list-style-position: inside;
   list-style: decimal;
   padding-left: 2em;
+}
+
+li a {
+  font-weight: 400;
 }
 
 dl dd {
