@@ -2,7 +2,7 @@
 **This blog intends to explore the concepts of feedback control applied to computer science. We will make use of the [Scala programming language](http://www.scala-lang.org/) as well as the [ReactiveX framework](http://reactivex.io/). Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.**
 
 **I am thankful for the help and suggestions of a number of people. Without them this blog would not have been written!**
-* **[Philipp K. Janert](www.linkedin.com/in/janert/en), author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) (on which this blog is partially based) for answering several additional questions and help with the controller tuning**
+* **[Philipp K. Janert](www.linkedin.com/in/janert/en), author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) (on which this blog is partially based) for answering additional questions and help with the controller tuning**
 * **[Erik Meijer](www.linkedin.com/pub/erik-meijer/0/5ba/924/en) for suggesting this topic and advice along the way of writing this blog**
 * **[Mike de Waard](nl.linkedin.com/pub/mike-de-waard/16/481/1a3/en) for his feedback and co-reading the blog**
 * **[Lars Willems](nl.linkedin.com/pub/lars-willems/9b/92/153/en) for his feedback and co-reading the blog**
@@ -122,7 +122,11 @@ These results look far from right. The smaller values for `k` will converge, alt
 Now let's see what happens if we change the setpoint during the experiment. In order to do so we change the definition of the `setpoint` function to:
 
 ```scala
-def setPoint(time: Long): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.9
+def setPoint(time: Long): Double = {
+    if (time < 30) 0.6
+	else if (time < 60) 0.8
+	else if (time < 90) 0.1
+	else 0.9
 ```
 
 For this experiment we use the cumulative implementation again, since this gives us the desired outputs.
@@ -172,7 +176,12 @@ To illustrate what a delay will do to a feedback system in practice, we will ext
 
 ```scala
 def simulation(): Observable[Double] = {
-	def setPoint(time: Int): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
+	def setPoint(time: Int): Double = {
+		if (time < 30) 0.6
+		else if (time < 60) 0.8
+		else if (time < 90) 0.1
+		else 0.4
+	}
 	def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
 	Observable((subscriber: Subscriber[Double]) => {
@@ -251,9 +260,15 @@ class SpeedSystem(var speed: Int = 10) {
 		speed
 	}
 }
+```
 
+```scala
 def simulation(): Observable[Int] = {
-	def setPoint(time: Int): Int = if (time < 10) 15 else if (time < 20) 10 else 20
+	def setPoint(time: Int): Int = {
+		if (time < 10) 15
+		else if (time < 20) 10
+		else 20
+	}
 	val ss = new SpeedSystem
 
 	Observable(subscriber => {
@@ -303,7 +318,11 @@ Now we can use the standard pattern for the simulation:
 
 ```scala
 def simulation(): Observable[Double] = {
-	def setPoint(time: Int): Int = if (time < 20) 15 else if (time < 40) 5 else 20
+	def setPoint(time: Int): Int = {
+		if (time < 20) 15
+		else if (time < 40) 5
+		else 20
+	}
 	val ss = new SpeedSystem
 	
 	Observable(subscriber => {
@@ -357,7 +376,11 @@ class PI(val prop: Double = 0, val integral: Double = 0) {
 
 ```scala
 def simulation(): Observable[Double] = {
-	def setPoint(time: Int): Int = if (time < 20) 15 else if (time < 40) 5 else 20
+	def setPoint(time: Int): Int = {
+		if (time < 20) 15
+		else if (time < 40) 5
+		else 20
+	}
 	val ss = new SpeedSystem
 	
 	Observable(subscriber => {
@@ -575,15 +598,30 @@ Finally we introduce a number of convenience functions with the intention of hid
 
 ```scala
 object Setpoint {
-	def impulse(t: Long, t0: Long)(implicit DT: Double) = if (math.abs(t - t0) < DT) 1 else 0
+	def impulse(t: Long, t0: Long)(implicit DT: Double) = {
+		if (math.abs(t - t0) < DT) 1
+		else 0
+	}
 
-	def step(t: Long, t0: Long) = if (t >= t0) 1 else 0
+	def step(t: Long, t0: Long) = {
+		if (t >= t0) 1
+		else 0
+	}
 
-	def doubleStep(t: Long, t0: Long, t1: Long) = if (t >= t0 && t < t1) 1 else 0
+	def doubleStep(t: Long, t0: Long, t1: Long) = {
+		if (t >= t0 && t < t1) 1
+		else 0
+	}
 
-	def harmonic(t: Long, t0: Long, tp: Long) = if (t >= t0) math.sin(2 * math.Pi * (t - t0) / tp) else 0
+	def harmonic(t: Long, t0: Long, tp: Long) = {
+		if (t >= t0) math.sin(2 * math.Pi * (t - t0) / tp)
+		else 0
+	}
 
-	def relay(t: Long, t0: Long, tp: Long) = if (t >= t0 && math.ceil(math.sin(2 * math.Pi * (t - t0) / tp)) > 0) 1 else 0
+	def relay(t: Long, t0: Long, tp: Long) = {
+		if (t >= t0 && math.ceil(math.sin(2 * math.Pi * (t - t0) / tp)) > 0) 1
+		else 0
+	}
 }
 ```
 
@@ -613,7 +651,7 @@ object Loops {
 Notice that using the `closedLoop` function on a control system with controller, actuator, plant (the controlled system) and filter will require using the `++` operator in order to concatenate these components.
 
 ###Running example
-To demonstrate the workings of these basics, let's implement a simple `Plant` (this is the controlled system) and see how this framework performs. First we implement `Boiler`:
+To demonstrate the workings of these basics, let's implement a simple `Plant` and see how this framework performs. First we implement `Boiler`:
 
 ```scala
 class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
