@@ -2,7 +2,7 @@
 **This blog intends to explore the concepts of feedback control applied to computer science. We will make use of the [Scala programming language](http://www.scala-lang.org/) as well as the [ReactiveX framework](http://reactivex.io/). Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.**
 
 **I am thankful for the help and suggestions of a number of people. Without them this blog would not have been written!**
-* **[Philipp K. Janert](www.linkedin.com/in/janert/en), author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) (on which this blog is partially based) for answering several additional questions and help with the controller tuning**
+* **[Philipp K. Janert](www.linkedin.com/in/janert/en), author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) (on which this blog is partially based) for answering additional questions and help with the controller tuning**
 * **[Erik Meijer](www.linkedin.com/pub/erik-meijer/0/5ba/924/en) for suggesting this topic and advice along the way of writing this blog**
 * **[Mike de Waard](nl.linkedin.com/pub/mike-de-waard/16/481/1a3/en) for his feedback and co-reading the blog**
 * **[Lars Willems](nl.linkedin.com/pub/lars-willems/9b/92/153/en) for his feedback and co-reading the blog**
@@ -260,7 +260,9 @@ class SpeedSystem(var speed: Int = 10) {
 		speed
 	}
 }
+```
 
+```scala
 def simulation(): Observable[Int] = {
 	def setPoint(time: Int): Int = {
 		if (time < 10) 15
@@ -649,7 +651,7 @@ object Loops {
 Notice that using the `closedLoop` function on a control system with controller, actuator, plant (the controlled system) and filter will require using the `++` operator in order to concatenate these components.
 
 ###Running example
-To demonstrate the workings of these basics, let's implement a simple `Plant` (this is the controlled system) and see how this framework performs. First we implement `Boiler`:
+To demonstrate the workings of these basics, let's implement a simple `Plant` and see how this framework performs. First we implement `Boiler`:
 
 ```scala
 class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
