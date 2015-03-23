@@ -122,7 +122,11 @@ These results look far from right. The smaller values for `k` will converge, alt
 Now let's see what happens if we change the setpoint during the experiment. In order to do so we change the definition of the `setpoint` function to:
 
 ```scala
-def setPoint(time: Long): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.9
+def setPoint(time: Long): Double = {
+    if (time < 30) 0.6
+	else if (time < 60) 0.8
+	else if (time < 90) 0.1
+	else 0.9
 ```
 
 For this experiment we use the cumulative implementation again, since this gives us the desired outputs.
@@ -172,7 +176,12 @@ To illustrate what a delay will do to a feedback system in practice, we will ext
 
 ```scala
 def simulation(): Observable[Double] = {
-	def setPoint(time: Int): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
+	def setPoint(time: Int): Double = {
+		if (time < 30) 0.6
+		else if (time < 60) 0.8
+		else if (time < 90) 0.1
+		else 0.4
+	}
 	def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
 	Observable((subscriber: Subscriber[Double]) => {
@@ -253,7 +262,11 @@ class SpeedSystem(var speed: Int = 10) {
 }
 
 def simulation(): Observable[Int] = {
-	def setPoint(time: Int): Int = if (time < 10) 15 else if (time < 20) 10 else 20
+	def setPoint(time: Int): Int = {
+		if (time < 10) 15
+		else if (time < 20) 10
+		else 20
+	}
 	val ss = new SpeedSystem
 
 	Observable(subscriber => {
@@ -303,7 +316,11 @@ Now we can use the standard pattern for the simulation:
 
 ```scala
 def simulation(): Observable[Double] = {
-	def setPoint(time: Int): Int = if (time < 20) 15 else if (time < 40) 5 else 20
+	def setPoint(time: Int): Int = {
+		if (time < 20) 15
+		else if (time < 40) 5
+		else 20
+	}
 	val ss = new SpeedSystem
 	
 	Observable(subscriber => {
@@ -357,7 +374,11 @@ class PI(val prop: Double = 0, val integral: Double = 0) {
 
 ```scala
 def simulation(): Observable[Double] = {
-	def setPoint(time: Int): Int = if (time < 20) 15 else if (time < 40) 5 else 20
+	def setPoint(time: Int): Int = {
+		if (time < 20) 15
+		else if (time < 40) 5
+		else 20
+	}
 	val ss = new SpeedSystem
 	
 	Observable(subscriber => {
@@ -575,15 +596,30 @@ Finally we introduce a number of convenience functions with the intention of hid
 
 ```scala
 object Setpoint {
-	def impulse(t: Long, t0: Long)(implicit DT: Double) = if (math.abs(t - t0) < DT) 1 else 0
+	def impulse(t: Long, t0: Long)(implicit DT: Double) = {
+		if (math.abs(t - t0) < DT) 1
+		else 0
+	}
 
-	def step(t: Long, t0: Long) = if (t >= t0) 1 else 0
+	def step(t: Long, t0: Long) = {
+		if (t >= t0) 1
+		else 0
+	}
 
-	def doubleStep(t: Long, t0: Long, t1: Long) = if (t >= t0 && t < t1) 1 else 0
+	def doubleStep(t: Long, t0: Long, t1: Long) = {
+		if (t >= t0 && t < t1) 1
+		else 0
+	}
 
-	def harmonic(t: Long, t0: Long, tp: Long) = if (t >= t0) math.sin(2 * math.Pi * (t - t0) / tp) else 0
+	def harmonic(t: Long, t0: Long, tp: Long) = {
+		if (t >= t0) math.sin(2 * math.Pi * (t - t0) / tp)
+		else 0
+	}
 
-	def relay(t: Long, t0: Long, tp: Long) = if (t >= t0 && math.ceil(math.sin(2 * math.Pi * (t - t0) / tp)) > 0) 1 else 0
+	def relay(t: Long, t0: Long, tp: Long) = {
+		if (t >= t0 && math.ceil(math.sin(2 * math.Pi * (t - t0) / tp)) > 0) 1
+		else 0
+	}
 }
 ```
 
