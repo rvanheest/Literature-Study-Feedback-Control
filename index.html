@@ -139,10 +139,10 @@
 
         <span class="pl-en">Observable</span>.from(<span class="pl-c1">0</span> until <span class="pl-c1">30</span>)
             .map(setPoint)
-            .zipWith(hitrate)(_ <span class="pl-k">-</span> _)                    <span class="pl-c">// calculate hitrate</span>
-            .scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e)  <span class="pl-c">// calculate cumulative hitrate</span>
-            .map { k <span class="pl-k">*</span> _ }                              <span class="pl-c">// calculate next input</span>
-            .map(cache)                                 <span class="pl-c">// calculate newest output</span>
+            .zipWith(hitrate)(_ <span class="pl-k">-</span> _)                    <span class="pl-c">// hitrate</span>
+            .scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e)  <span class="pl-c">// cumulative hitrate</span>
+            .map { k <span class="pl-k">*</span> _ }                              <span class="pl-c">// next input</span>
+            .map(cache)                                 <span class="pl-c">// newest output</span>
             .subscribe(hitrate)
 
         hitrate.subscribe(subscriber)
@@ -180,7 +180,12 @@
 
 <p>Now let's see what happens if we change the setpoint during the experiment. In order to do so we change the definition of the <code>setpoint</code> function to:</p>
 
-<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Long</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">90</span>) <span class="pl-c1">0.1</span> <span class="pl-k">else</span> <span class="pl-c1">0.9</span></pre></div>
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Long</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">= {</span>
+    <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span>
+    <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span>
+    <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">90</span>) <span class="pl-c1">0.1</span>
+    <span class="pl-k">else</span> <span class="pl-c1">0.9</span>
+}</pre></div>
 
 <p>For this experiment we use the cumulative implementation again, since this gives us the desired outputs.</p>
 
@@ -238,7 +243,12 @@
 <p>To illustrate what a delay will do to a feedback system in practice, we will extend the <a href="#experiment-3---changing-setpoint">cache example</a> by adding a delay to the system. In order to do so, we need to change the output stream (<code>val hitrate</code>) from being a <a href="https://github.com/ReactiveX/RxJava/wiki/Subject#publishsubject"><code>PublishSubject</code></a> into a <a href="https://github.com/ReactiveX/RxJava/wiki/Subject#behaviorsubject"><code>BehaviorSubject</code></a> and develop an <a href="https://coderwall.com/p/4clu3a/extension-methods-in-scala">extension method</a> that will cause the delay.</p>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
-    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">90</span>) <span class="pl-c1">0.1</span> <span class="pl-k">else</span> <span class="pl-c1">0.4</span>
+    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">90</span>) <span class="pl-c1">0.1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0.4</span>
+    }
     <span class="pl-k">def</span> <span class="pl-en">cache</span>(<span class="pl-v">size</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, math.min(<span class="pl-c1">1</span>, size <span class="pl-k">/</span> <span class="pl-c1">100</span>))
 
     <span class="pl-en">Observable</span>((<span class="pl-v">subscriber</span>: <span class="pl-en">Subscriber</span>[<span class="pl-st">Double</span>]) <span class="pl-k">=&gt;</span> {
@@ -323,7 +333,11 @@
 }</pre></div>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Int</span>] <span class="pl-k">=</span> {
-    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Int</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">10</span>) <span class="pl-c1">15</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">10</span> <span class="pl-k">else</span> <span class="pl-c1">20</span>
+    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Int</span> <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">10</span>) <span class="pl-c1">15</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">10</span>
+        <span class="pl-k">else</span> <span class="pl-c1">20</span>
+    }
     <span class="pl-k">val</span> <span class="pl-en">ss</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
 
     <span class="pl-en">Observable</span>(subscriber <span class="pl-k">=&gt;</span> {
@@ -371,7 +385,11 @@
 <p>Now we can use the standard pattern for the simulation:</p>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
-    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Int</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">15</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">40</span>) <span class="pl-c1">5</span> <span class="pl-k">else</span> <span class="pl-c1">20</span>
+    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Int</span> <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">15</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">40</span>) <span class="pl-c1">5</span>
+        <span class="pl-k">else</span> <span class="pl-c1">20</span>
+    }
     <span class="pl-k">val</span> <span class="pl-en">ss</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
 
     <span class="pl-en">Observable</span>(subscriber <span class="pl-k">=&gt;</span> {
@@ -425,7 +443,11 @@
 }</pre></div>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
-    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Int</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">15</span> <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">40</span>) <span class="pl-c1">5</span> <span class="pl-k">else</span> <span class="pl-c1">20</span>
+    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Int</span> <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">15</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">40</span>) <span class="pl-c1">5</span>
+        <span class="pl-k">else</span> <span class="pl-c1">20</span>
+    }
     <span class="pl-k">val</span> <span class="pl-en">ss</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
 
     <span class="pl-en">Observable</span>(subscriber <span class="pl-k">=&gt;</span> {
@@ -646,15 +668,30 @@ Besides that the input signal of the controller can have a high-frequency noise.
 <p>Finally we introduce a number of convenience functions with the intention of hiding most of the boilerplate code. First we have a number of basic setpoint functions. These can be used as input for a feedback loop, but can also be composed to get a more complex setpoint function by multiplying the result of such a function with a scalar and/or adding with other functions.</p>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">Setpoint</span> {
-    <span class="pl-k">def</span> <span class="pl-en">impulse</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">=</span> <span class="pl-k">if</span> (math.abs(t <span class="pl-k">-</span> t0) <span class="pl-k">&lt;</span> <span class="pl-en">DT</span>) <span class="pl-c1">1</span> <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    <span class="pl-k">def</span> <span class="pl-en">impulse</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (math.abs(t <span class="pl-k">-</span> t0) <span class="pl-k">&lt;</span> <span class="pl-en">DT</span>) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
 
-    <span class="pl-k">def</span> <span class="pl-en">step</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0) <span class="pl-c1">1</span> <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    <span class="pl-k">def</span> <span class="pl-en">step</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
 
-    <span class="pl-k">def</span> <span class="pl-en">doubleStep</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">t1</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0 <span class="pl-k">&amp;&amp;</span> t <span class="pl-k">&lt;</span> t1) <span class="pl-c1">1</span> <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    <span class="pl-k">def</span> <span class="pl-en">doubleStep</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">t1</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0 <span class="pl-k">&amp;&amp;</span> t <span class="pl-k">&lt;</span> t1) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
 
-    <span class="pl-k">def</span> <span class="pl-en">harmonic</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">tp</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0) math.sin(<span class="pl-c1">2</span> <span class="pl-k">*</span> math.<span class="pl-en">Pi</span> <span class="pl-k">*</span> (t <span class="pl-k">-</span> t0) <span class="pl-k">/</span> tp) <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    <span class="pl-k">def</span> <span class="pl-en">harmonic</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">tp</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0) math.sin(<span class="pl-c1">2</span> <span class="pl-k">*</span> math.<span class="pl-en">Pi</span> <span class="pl-k">*</span> (t <span class="pl-k">-</span> t0) <span class="pl-k">/</span> tp)
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
 
-    <span class="pl-k">def</span> <span class="pl-en">relay</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">tp</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0 <span class="pl-k">&amp;&amp;</span> math.ceil(math.sin(<span class="pl-c1">2</span> <span class="pl-k">*</span> math.<span class="pl-en">Pi</span> <span class="pl-k">*</span> (t <span class="pl-k">-</span> t0) <span class="pl-k">/</span> tp)) <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>) <span class="pl-c1">1</span> <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    <span class="pl-k">def</span> <span class="pl-en">relay</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">tp</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0 <span class="pl-k">&amp;&amp;</span> math.ceil(math.sin(<span class="pl-c1">2</span> <span class="pl-k">*</span> math.<span class="pl-en">Pi</span> <span class="pl-k">*</span> (t <span class="pl-k">-</span> t0) <span class="pl-k">/</span> tp)) <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
 }</pre></div>
 
 <p>Also we provide the boilerplate code for multiple types of loops. For now we discuss the <code>closedLoop</code> and come back later to other types of loops. This function is modeled after the extended version of a feedback control system, including the actuator and filter.</p>
