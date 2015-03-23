@@ -1,5 +1,12 @@
 #Introduction
-**In this blog intends to explore the concepts of feedback control applied to computer science. We will make use of the [Scala programming language](http://www.scala-lang.org/) as well as the [Reactive Extensions Framework](http://reactivex.io/). Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.**
+**This blog intends to explore the concepts of feedback control applied to computer science. We will make use of the [Scala programming language](http://www.scala-lang.org/) as well as the [ReactiveX framework](http://reactivex.io/). Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.**
+
+**I am thankful for the help and suggestions of a number of people. Without them this blog would not have been written!
+* [Philipp K. Janert](www.linkedin.com/in/janert/en) - author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) (on which this blog is partially based) for answering several additional questions and help with the controller tuning
+* [Erik Meijer](www.linkedin.com/pub/erik-meijer/0/5ba/924/en) for suggesting this topic and advice along the way of writing this blog
+* [Mike de Waard](nl.linkedin.com/pub/mike-de-waard/16/481/1a3/en) for his feedback and co-reading the blog
+* [Lars Willems](nl.linkedin.com/pub/lars-willems/9b/92/153/en) for his feedback and co-reading the blog
+**
 
 Enterprise systems are often built to maintain a flow of arbitrary items in a sequence of processing steps. For example, an online retailer wants to manage the flow of packages through its facilities. As a control mechanism *the number of pending orders released to the warehouses per time unit* is used. The main problem for this control mechanism is how to throttle this flow such that the warehouses are not idle, but are not overflowing either.
 
@@ -42,7 +49,7 @@ Besides overcompensating, a controller can also show timid or slow behavior: the
 In conclusion we can say that we want the magnitude of the controller's correction as large as possible such that it does not make the system unstable.
 
 ## Iterative schemes
-It will be clear by now that a closed-loop system uses an iterative scheme, where each control action is supposed to take the system closer to the desired value. Repeating the process of comparing the previous output with the desired value and using that to calculate the next iteration's input will reduce the error. As with each iterative scheme, we are presented with three fundamental questions:
+A closed-loop system is based on an iterative scheme, where each control action is supposed to take the system closer to the desired value. Repeating the process of comparing the previous output with the desired value and using that to calculate the next iteration's input will reduce the error. As with each iterative scheme, we are presented with three fundamental questions:
 
 1. Does the iteration converge?
 2. How quickly does it converge?
@@ -54,7 +61,7 @@ The same holds for the second question: if the controller is set to react slowly
 
 Although the third question may seem obvious (the iteration will converge to the setpoint), sometimes the settings of the controller will result in converging to an incorrect value, which might be higher or lower than the setpoint.
 
-It turns out that the three goals that are related to these questions (stability, performance and accuracy) cannot be achieved simultaneously. The design of feedback systems will always involve trade-offs between stability and performance, since a system that responds quickly will tend to oscillate. It depends on the situation which aspect will be emphasized.
+It turns out that the three goals that are related to these questions (stability, performance and accuracy) are hard to be achieved simultaneously. The design of feedback systems will most often involve trade-offs between stability and performance, since a system that responds quickly will tend to oscillate. It depends on the situation which aspect will be emphasized.
 
 ## Example: cache simulation
 To illustrate the aspects of a feedback system that are discussed in on this page, we will simulate behavior of a system that controls the size of a cache. In this example we will not implement a cache but rather simulate its hit rate by the following function:
@@ -68,6 +75,7 @@ In our first simulation we will have a constant setpoint (or hit rate for cache 
 
 ```scala
 def simulation(): Observable[Double] = {
+    val k = 160
 	def setPoint(time: Int): Double = 0.6
 	def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
@@ -88,7 +96,7 @@ def simulation(): Observable[Double] = {
 }
 ```
 
-Running this simulation with different values of `k` will yield the following:
+Running this simulation with different values of `k` will yield the following (we will come back to the meaning of `k` in a later stage):
 
 ![Results experiment 1](images/Cache small cumulative.png)
 
@@ -135,13 +143,15 @@ In the previous [cache example](#example-cache-simulation) we made the assumptio
 Although in the virtual world these delays only occur in certain systems, they always occur in the physical world. Besides delays, we also have to deal with lags and inverse responses if we are designing a feedback system that involves physical world objects. This is due to the fact that this world is continuous, where objects cannot move from a certain position A to another position B in an instant. In fact they are bounded to a certain non-infinite velocity, which may require large amounts of force, energy and power, which may not be available or even impossible to supply. This makes designing feedback systems very hard and often results in error prone outputs.
 
 ##Lag, delay and inverse response
-For a good understanding, we need to take a closer look at lags, delays and inverse responses first. We will do so using some examples.  
-A system has **lag** when it slowly responds to a control input. It will respond immediately, but it will take while before it reaches the desired value. This is also called an **immediate partial response**. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned of, the temperature will gradually drop back to the environment's temperature.
+For a good understanding, we need to take a closer look at lags, delays and inverse responses first. We will do so using some examples.
+
+A system has **lag** when it only partially responds to a control input. The response will start immediately, but it will take while before it reaches the value that was given as the control input. This is also called an **immediate partial response**. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned of, the temperature will gradually drop back to the environment's temperature.
 
 ![Heating a vessel](images/Heated vessel.png)
 
-As discussed before, **delay** manifests itself by not responding immediately to the control input. In the cloud computing example we saw that when the control input asks for 20 more instances, it takes a while before these are available.  
-In practice we see that delay and lag can be combined. As an example we set up a feedback system for the water level in a tank, where the water input comes from a long pipe feeding into the tank. When we fire the control input, the water starts to flow from the valve at the beginning of the pipe to the tank. However, it will take some time before the water level starts to rise, since the water needs to travel a certain distance (this is the delay). The water that comes in tank will however not cause the tank to be at the desired water level immediately but rather fill up slowly (this is the lag). This process is depicted in the image down below.
+**Delay** manifests itself by not responding immediately to the control input. Over some period of time, the control input does not have any effect on the controlled system. Only after that period, the control input has *full* effect on the system. In the cloud computing example we saw that when the control input asks for 20 more instances, it takes a while before these are available. But when these are available, they are there entirely (not just partially).
+
+In practice we often see a combination of delay and lag. As an example we set up a feedback system for the water level in a tank, where the water input comes from a long pipe feeding into the tank. When we fire the control input, the water starts to flow from the valve at the beginning of the pipe to the tank. However, it will take some time before the water level starts to rise, since the water needs to travel a certain distance (this is the delay). The water that comes in tank will however not cause the tank to be at the desired water level immediately but rather fill up slowly (this is the lag). This process is depicted in the image down below.
 
 ![A tank fed by a pipe](images/Pipe in tank.png)
 
@@ -242,9 +252,7 @@ class SpeedSystem(var speed: Int = 10) {
 		speed
 	}
 }
-```
 
-```scala
 def simulation(): Observable[Int] = {
 	def setPoint(time: Int): Int = if (time < 10) 15 else if (time < 20) 10 else 20
 	val ss = new SpeedSystem
@@ -266,6 +274,8 @@ def simulation(): Observable[Int] = {
 This results in the diagram below. Here we can clearly see the oscillating behavior of the system, rather than stabilizing it on the desired value.
 
 ![On/Off controller on cruise control system](images/Cruise control - OnOff.png)
+
+To improve this controller a bit, we can introduce a dead zone or hysteresis. The former only sends an `on` signal to the system when a certain threshold is exceeded. The latter (also known as [Schmitt trigger](http://en.wikipedia.org/wiki/Schmitt_trigger)) maintains the same corrective action when the tracking error flips from positive to negative, until some threshold is exceeded. The latter is often used in conventional heating systems.
 
 ###Proportional control
 To improve the control we have over the system, we need to come up with something better than an on/off controller. An obvious step is to take the magnitude of the error into account when deciding on the magnitude of the corrective action. This implies that a small error leads to a small correction, whereas a large error leads to a greater corrective action. To achieve this, we let the control action be proportional to the tracking error:
@@ -414,6 +424,8 @@ To solve this issue, an **integral controller** can be added. This keeps track o
 Besides reacting to the present tracking error and taking the past into account, we can also try to predict the future. We do this with the **derivative controller**, which takes the change of the tracking error and multiplies that with the constant ![kd](equations/kd.png). Together with the PI controller, the **PID controller** is formed.
 
 #Simulation
+In this section we will discuss the topic of simulating feedback control systems and provide a simulation framework that was built during this study. We will later use this framework in a couple of case studies.
+
 There are a number of reasons why we need the ability to simulate the behavior of a control system.
 * First of all, the behavior of a control system might be unintuitive or unfamiliar. To develop intuition for the abstract problem we can use simulations and thus get a better understanding of control problems that arise in the real world.
 * In most cases it is not possible to do extensive testing and experimenting on real-world machines. Often they are too big, too expensive, too expensive, too dangerous or simply not available. And if they are available, tests will mostly be too time consuming to conduct serious experiments. Therefore simulations will suit better.
@@ -599,7 +611,7 @@ object Loops {
 }
 ```
 
-Notice that using the `closedLoop` function on a control system with controller, actuator, plant and filter will require using the `++` operator in order to concatenate these components.
+Notice that using the `closedLoop` function on a control system with controller, actuator, plant (the controlled system) and filter will require using the `++` operator in order to concatenate these components.
 
 ###Running example
 To demonstrate the workings of these basics, let's implement a simple `Plant` (this is the controlled system) and see how this framework performs. First we implement `Boiler`:
@@ -1029,16 +1041,16 @@ In cloud computing we often deal with a (complex) system that receives jobs from
 A simplified version of the problem assumes that jobs will never be queued and instead be rejected if immediate processing is not possible. Besides that we assume that newly requested servers are directly available; no spin up time is required. We found that a PID controller is not appropriate to use in this setup, especially as the setpoint requests a completion rate close to 100%. Instead we used a simpler control strategy that performs great with the goal of 100% completion rate.
 
 # Conclusion
-In feedback control we continuously compare the output of a controlled system with a desired reference value and supply new input values to the system in order to counteract any deviations in the output from the reference value. Typically in this kind of systems the difference between the control output and the reference value (setpoint) is taken into a Controller that transforms the error into a new control input for the controlled system.
+In feedback control we continuously compare the output of a controlled system with a desired reference value and supply new input values to the system in order to counteract any deviations in the output from the reference value. Typically in this kind of systems the difference between the control output and the reference value ([setpoint](#the-components-of-a-closed-loop-system)) is taken into a Controller that transforms the error into a new control input for the controlled system.
 
-The controlled system can be an actual machine/program/system but instead it also might be a simulation. The latter is often advisable while designing a feedback control system, since (I) it provides a way to get a better understanding and intuition for the abstract problem and the internal workings of the system, (II) it is most often not possible to do extensive testing and experimenting on real-world machines, (III) it provides a way of proving the correctness of the feedback system.
+The controlled system can be an actual machine/program/system but instead it also might be a [simulation](#simulation). The latter is often advisable while designing a feedback control system, since (I) it provides a way to get a better understanding and intuition for the abstract problem and the internal workings of the system, (II) it is most often not possible to do extensive testing and experimenting on real-world machines, (III) it provides a way of proving the correctness of the feedback system.
 
-The controlled system is likely to exhibit some form of lag, delay or other internal dynamics. These cause the controller to have a more difficult job and often result in a less accurate functioning feedback system. In some cases it is however possible to redesign the feedback system to the point where it does not have these internal dynamics.
+The controlled system is likely to exhibit some form of [lag, delay or other internal dynamics](#system-dynamics). These cause the controller to have a more difficult job and often result in a less accurate functioning feedback system. In some cases it is however possible to redesign the feedback system to the point where it does not have these internal dynamics.
 
-Controllers come in various types: most used is the PID controller, which is composed of a proportional, integral and derivative controller, all using their one parameter (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png) respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an on/off controller or a controller that is based on another control strategy might be useful. An example of the latter can be found in the [case study on server scaling](#A-better-approach).
+Controllers come in various types: most used is the [PID controller](#pid-control), which is composed of a proportional, integral and derivative controller, all using their one parameter (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png) respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an [on/off controller](#onoff-control) or a controller that is based on another control strategy might be useful. An example of the latter can be found in the [case study on server scaling](#A-better-approach).
 
-There is not one definite approach when it comes to tuning a PID controller. Two cases can be distinguished: when the controlled system has an immediate response without internal dynamics, an analysis of the static process characteristics will suffice. In this case the PID parameters depend on the ratio of the change in the control input and the corresponding change in the control output.
+There is not one definite approach when it comes to tuning a PID controller. Two cases can be distinguished: when the controlled system has an immediate response without internal dynamics, an analysis of the static process characteristics will suffice. In this case the PID parameters depend on the [ratio of the change](#tuning-the-controller) in the control input and the corresponding change in the control output.
 
-In the other case (when the system does exhibit internal dynamics) there is not one definite approach when it comes to tuning a PID controller. The process starts with doing analysis of both the static process characteristics and the system's dynamic response. Note that both these tests are done in an open-loop setting without the presence of a controller. Based on these tests, values for K, τ and T need to be found by either fitting a model or using the [geometric construction](#finding-the-first-values). These values translate into the PID parameters by applying either one of the [Ziegler-Nichols, Cohen-Coon or AMIGO method](#calculating-the-pid-parameters). In practice it will turn out to be useful to use all three methods and combine the results to get good parameters for the PID controller.
+In the other case (when the system does exhibit internal dynamics) there is [not one definite approach](#dynamic-response) when it comes to tuning a PID controller. The process starts with doing analysis of both the static process characteristics and the system's dynamic response. Note that both these tests are done in an open-loop setting without the presence of a controller. Based on these tests, values for K, τ and T need to be found by either fitting a model or using the [geometric construction](#finding-the-first-values). These values translate into the PID parameters by applying either one of the [Ziegler-Nichols, Cohen-Coon or AMIGO method](#calculating-the-pid-parameters). In practice it will turn out to be useful to use all three methods and combine the results to get good parameters for the PID controller.
 
-Feedback control systems have been proven to be successful for a long time in a wide variety of expertise. Now it is time to embrace this technique and apply it in the field of computer science!
+Feedback control systems have proven to be successful for a long time in a wide variety of expertise. Now it is time to embrace this technique and apply it in the field of computer science!
