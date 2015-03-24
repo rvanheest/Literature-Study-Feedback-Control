@@ -651,7 +651,7 @@ object Loops {
 Notice that using the `closedLoop` function on a control system with controller, actuator, plant (the controlled system) and filter will require using the `++` operator in order to concatenate these components.
 
 ###Running example
-To demonstrate the workings of these basics, let's implement a simple `Plant` and see how this framework performs. First we implement `Boiler`:
+To demonstrate the workings of these basics, let's implement a simple plant `Boiler` and see how this framework performs:
 
 ```scala
 class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
