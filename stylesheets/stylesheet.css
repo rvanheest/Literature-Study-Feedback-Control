@@ -493,8 +493,36 @@ header h2 {
   width: 690px;
 }
 
+#main-content figure {
+  border: 1px solid black;
+  padding-left: 5px;
+  padding-right: 5px;
+  background-color: white;
+}
+
 #main-content img {
   max-width: 100%;
+}
+
+#main-content figcaption {
+  color: black;
+  border-top: 1px solid black;
+  font-size: 12px;
+}
+
+#main-content figcaption .source {
+  float: right;
+  color: #61AFDA;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+#main-content figcaption .source a {
+  color: #61AFDA;
+}
+
+#main-content figcaption code {
+  font-size: 12px;
 }
 
 aside#sidebar {
@@ -598,17 +626,18 @@ hr {
 
 table {
   width: 100%;
-  border: 1px solid #ebebeb;
+  border: 1px solid #7E7E7E;
 }
 
 th {
   font-weight: 500;
+  border: 1px solid #7E7E7E;
 }
 
 td {
   font-weight: 300;
   text-align: center;
-  border: 1px solid #ebebeb;
+  border: 1px solid #7E7E7E;
 }
 
 form {

@@ -73,11 +73,11 @@
 
 <p>To put this in other words, when the output is higher than the reference value, a correction to the next input is applied, which will lead to a reduction in the output. Also, if the output is too low, the input value will be raised, such that the next output will be closer to the reference value. Schematically this <strong>closed-loop system</strong> is shown below, where the output is looped back and used in the calculation for what the next input will be.</p>
 
-<p><img src="images/Feedback%20system.png" alt="Feedback system"></p>
+<figure><img src="images/Feedback%20system.png" alt="Feedback system"><figcaption>Architecture of a closed-loop<span class="source">source: Feedback Control for Computer Systems, p.16<span></figcaption></figure>
 
 <p>Compare this with an <strong>open-loop system</strong>, where the output is not taken into account.</p>
 
-<p><img src="images/Feedforward%20system.png" alt="Feedforward system"></p>
+<figure><img src="images/Feedforward%20system.png" alt="Feedforward system"><figcaption>Architecture of an open-loop<span class="source">source: Feedback Control for Computer Systems, p.16<span></figcaption></figure>
 
 <h2>
 <a id="the-components-of-a-closed-loop-system" class="anchor" href="#the-components-of-a-closed-loop-system" aria-hidden="true"><span class="octicon octicon-link"></span></a>The components of a closed-loop system</h2>
@@ -154,7 +154,7 @@
 
 <p>Running this simulation with different values of <code>k</code> will yield the following (We will come back to the meaning of <code>k</code> in a <a href="#controller-types">later stage</a>. For now just consider <code>k</code> to be a value the controller multiplies the cumulative error with.):</p>
 
-<p><img src="images/Cache%20small%20cumulative.png" alt="Results experiment 1"></p>
+<figure><img src="images/Cache%20small%20cumulative.png" alt="Results experiment 1"><figcaption>Cumulative simulation of a cache with a constant setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>For <code>k = 10</code> we see that it takes more than 30 iterations to get only close to the hit rate. Also <code>k = 40</code> turns out to be a bit slow (but faster than the previous), for which it takes 27 iterations to get to the desired value (although the output is already at 59.3% after 9 iterations). With either one of these settings the controller would be effective in the long run, but will take to much time to react to changes.</p>
 
@@ -171,11 +171,11 @@
 
 <p>We get to a noncumulative version of the simulation by removing the following single line from the previous listing: <code>.scan((sum: Double, e: Double) =&gt; cum + e)</code>. Running the simulation with the same values for <code>k</code> will yield the following chart:</p>
 
-<p><img src="images/Cache%20small%20noncumulative.png" alt="Results experiment 2"></p>
+<figure><img src="images/Cache%20small%20noncumulative.png" alt="Results experiment 2"><figcaption>Noncumulative simulation of a cache with a constant setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>These results look far from right. The smaller values for <code>k</code> will converge, although not to the desired value. The larger values however will not converge but will rather oscillate between 0 and <code>setpoint * k / 100</code>. Looking closely to what happens, reveals that this is due to the way the <code>cache</code> function is implemented (it maps negative values to 0). If we would change this function to <code>def cache(size: Double): Double = size / 100</code> (notice that this would not make sense in the context of a cache), we see an overshooting that will explode in the long run. Extrapolating will yield that after 30 iterations we get an output of over 300000!</p>
 
-<p><img src="images/Cache%20small%20noncumulative%20exploding.png" alt="Results experiment 2 - exploding"></p>
+<figure><img src="images/Cache%20small%20noncumulative%20exploding.png" alt="Results experiment 2 - exploding"><figcaption>Simulation of an exploding feedback control system<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h3>
 <a id="experiment-3---changing-setpoint" class="anchor" href="#experiment-3---changing-setpoint" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experiment 3 - Changing setpoint</h3>
@@ -191,7 +191,7 @@
 
 <p>For this experiment we use the cumulative implementation again, since this gives us the desired outputs.</p>
 
-<p><img src="images/Cache%20large%20cumulative.png" alt="Results experiment 3"></p>
+<figure><img src="images/Cache%20large%20cumulative.png" alt="Results experiment 3"><figcaption>Cumulative simulation of a cache with a variable setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>As expected, the simulations follow the setpoint values with their own characteristics. <code>k = 100</code> again is the most optimal here and reaches the desired value immediately after it is changed. The case of <code>k = 160</code> again overshoots the setpoint and reaches the desired value in that way, whereas <code>k = 40</code> slowly converges by taking smaller steps.</p>
 
@@ -216,17 +216,17 @@
 
 <p>A system has <strong>lag</strong> when it only partially responds to a control input. The response will start immediately, but it will take a while before it reaches the value that was given as the control input. This is also called an <strong>immediate partial response</strong>. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned off, the temperature will gradually drop back to the environment's temperature.</p>
 
-<p><img src="images/Heated%20vessel.png" alt="Heating a vessel"></p>
+<figure><img src="images/Heated%20vessel.png" alt="Heating a vessel"><figcaption>Example of lag in a heated vessel<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
 
 <p><strong>Delay</strong> manifests itself by not responding immediately to the control input. Over some period of time, the control input does not have any effect on the controlled system. Only after that period, the control input has <em>full</em> effect on the system. In the cloud computing example we saw that when the control input asks for 20 more instances, it takes a while before these are available. But when these are available, they are there entirely (not just partially).</p>
 
 <p>In practice we often see a combination of delay and lag. As an example we set up a feedback system for the water level in a tank, where the water input comes from a long pipe feeding into the tank. When we fire the control input, the water starts to flow from the valve at the beginning of the pipe to the tank. However, it will take some time before the water level starts to rise, since the water needs to travel a certain distance (this is the delay). The water that comes in tank will however not cause the tank to be at the desired water level immediately but rather fill up slowly (this is the lag). This process is depicted in the image down below.</p>
 
-<p><img src="images/Pipe%20in%20tank.png" alt="A tank fed by a pipe"></p>
+<figure><img src="images/Pipe%20in%20tank.png" alt="A tank fed by a pipe"><figcaption>Example of delay in a water tank<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
 
 <p>Besides lag or delay, a system can also give an <strong>inverse response</strong>, also referred to as a <strong>non-minimum phase system</strong>. When a control action is applied in a certain direction, the system responds by first going into the other direction, before going along with the control action. This causes a behavior as depicted in the image down below. An example of this is a flexible fishing rod: when it is yanks <em>back</em>, its tip will first move <em>forward</em>.</p>
 
-<p><img src="images/Fishing%20rod.png" alt="Inverse response"></p>
+<figure><img src="images/Fishing%20rod.png" alt="Inverse response"><figcaption>Example of a non-minimum phase in a fishing rod<span class="source">source: Feedback Control for Computer Systems, p.30<span></figcaption></figure>
 
 <h2>
 <a id="response-components" class="anchor" href="#response-components" aria-hidden="true"><span class="octicon octicon-link"></span></a>Response components</h2>
@@ -237,7 +237,7 @@
 
 <p>As an example, let's look at a <a href="http://en.wikipedia.org/wiki/Simple_harmonic_motion#Mass_on_a_spring">mass on a spring</a>. When we give the other end of the spring a sudden jerk, the mass will begin to oscillate, which will eventually die away (depending on the spring constant), after which we are left with an overall displacement of the mass. Here the final displacement is the goal of our feedback system and thus the steady-state component of the response. The oscillation is a transient component, which fades away after a while.</p>
 
-<p><img src="images/Mass%20on%20spring.png" alt="Mass on a spring"></p>
+<figure><img src="images/Mass%20on%20spring.png" alt="Mass on a spring"><figcaption>Example of transient components in a mass on a spring<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
 
 <h2>
 <a id="example-cache-with-delay" class="anchor" href="#example-cache-with-delay" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example: Cache with delay</h2>
@@ -285,15 +285,15 @@
 
 <p>A better control gain is <code>k = 50</code>, which still overshoots a little, but stabilizes soon on the requested hit rate. This overshooting is almost gone at <code>k = 30</code> and not even there at <code>k = 20</code>. We see here that the latter even is maybe a bit to careful and takes too small steps.</p>
 
-<p><img src="images/Cache%20with%20delay%201.png" alt="Cache with delay 1"></p>
+<figure><img src="images/Cache%20with%20delay%201.png" alt="Cache with delay 1"><figcaption>Cumulative simulation of a cache with a variable setpoint and 1 step of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>When we use a delay of 2 iterations, we find that the range of suitable values for the control gain shrinks quite a bit: <code>k = 50</code> is not suitable anymore to stabilize the hit rate within 30 iterations. <code>k = 30</code> only barely makes it to stabilize and <code>k = 20</code> also overshoots a bit, but stabilizes right after that. We also see <code>k = 10</code>, which is not sufficient enough to stabilize within 30 iterations.</p>
 
-<p><img src="images/Cache%20with%20delay%202.png" alt="Cache with delay 2"></p>
+<figure><img src="images/Cache%20with%20delay%202.png" alt="Cache with delay 2"><figcaption>Cumulative simulation of a cache with a variable setpoint and 2 steps of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>A longer delay makes it even worse! When set to 5 iterations, we cannot find a suitable value that stabilizes within 30 iterations. <code>k = 30</code> and <code>k = 20</code> totally overshoot the hit rate, whereas <code>k = 15</code> and <code>k = 10</code> make good attempts in overshooting a bit, but are too slow to catch up.</p>
 
-<p><img src="images/Cache%20with%20delay%205.png" alt="Cache with delay 5"></p>
+<figure><img src="images/Cache%20with%20delay%205.png" alt="Cache with delay 5"><figcaption>Cumulative simulation of a cache with a variable setpoint and 5 steps of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>It is clear that the longer a delay is, the worse it gets on finding a suitable value for the control gain that stabilizes to the setpoint within a reasonable amount of iterations. If possible, a delay should be avoided in the phase of designing a feedback control system.</p>
 
@@ -309,7 +309,7 @@
 
 <p>Previously we have seen how a feedback system (see the image below) is constructed by looping the controlled system's output <code>y</code> back into a comparison with a reference value <code>r</code>, and providing the resulting error <code>e</code> to a controller <code>K</code>, which generates the next input <code>u</code> for the controlled system <code>H</code>. In this section we will discuss the role of the controller in a feedback system. Its most obvious role is to do the 'smart' numerical work, but we also need to consider the different types of controllers, which may improve the stability, performance and accuracy of the system as a whole.</p>
 
-<p><img src="images/Closed-loop%20System.png" alt="Feedback system"></p>
+<figure><img src="images/Closed-loop%20System.png" alt="Feedback system"><figcaption>Architecture of a closed-loop<span class="source">source: Feedback Control for Computer Systems, p.39<span></figcaption></figure>
 
 <p>When designing a feedback system for controlling the size of a cache we need to consider what the input and output of the cache itself are within the feedback loop. Our reference value is a desired hit rate, which is depicted as a value between 0 and 1, as is the cache's output, to which it is compared. From this comparison, we send the error (<code>desired value - output</code>) to the controller, which is a value in the range -1 to 1. The controller then needs to calculate a new size for the cache and therefore needs to convert a ratio into a size.</p>
 
@@ -357,7 +357,7 @@
 
 <p>This results in the diagram below. Here we can clearly see the oscillating behavior of the system, rather than stabilizing it on the desired value.</p>
 
-<p><img src="images/Cruise%20control%20-%20OnOff.png" alt="On/Off controller on cruise control system"></p>
+<figure><img src="images/Cruise%20control%20-%20OnOff.png" alt="On/Off controller on cruise control system"><figcaption>Simulation of a cruise control system using an on/off controller<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>To improve this controller a bit, we can introduce a dead zone or hysteresis. The former only sends an `on` signal to the system when a certain threshold is exceeded. The latter (also known as <a href="http://en.wikipedia.org/wiki/Schmitt_trigger">Schmitt trigger</a>) maintains the same corrective action when the tracking error flips from positive to negative, until some threshold is exceeded. The latter is often used in conventional heating systems.</p>
 
@@ -411,7 +411,7 @@
 
 <p>The other simulation (<code>k = 0.5</code>) does reach the actual setpoint, from which it follows that the next tracking error will be zero. This causes the controller to output zero, which is supplied to the <code>SpeedSystem</code>. As discussed before, this causes the speed to drop with 10%, from which the system can start rising the speed again.</p>
 
-<p><img src="images/Cruise%20control%20-%20proportional.png" alt="Proportional controller on cruise control system"></p>
+<figure><img src="images/Cruise%20control%20-%20proportional.png" alt="Proportional controller on cruise control system"><figcaption>Simulation of a cruise control system using a proportional controller<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>What happens here in general is that the proportional controller can only produce a nonzero output if it gets a nonzero input. This directly follows from the equation above. As the tracking error diminishes, the controller output will become smaller and eventually will be zero. However, some systems (like the cruise control system or a heated pot on a stove) need a nonzero input in the steady state. If we use a proportional controller in such systems, the consequence will be that some residual error will persist; in other words the system output <code>y</code> will always be less than the desired setpoint <code>r</code>. This phenomenon is known as <em>proportional droop</em>.</p>
 
@@ -469,7 +469,7 @@
 
 <p>By using this code sample we find a correct implementation for the cruise control system. Notice that we still use <code>kp = 0.5</code> and that we only need a very slight integral correction with <code>ki = 0.001</code> to achieve this.</p>
 
-<p><img src="images/Cruise%20control%20-%20PI.png" alt="PI controller on cruise control system"></p>
+<figure><img src="images/Cruise%20control%20-%20PI.png" alt="PI controller on cruise control system"><figcaption>Simulation of a cruise control system using a PI controller<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h3>
 <a id="derivative-control" class="anchor" href="#derivative-control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Derivative control</h3>
@@ -488,7 +488,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>The most common use of the derivative controller is in combination with the proportional and integral controllers, forming a three-term <em>PID controller</em>. Here we use all three controllers and sum the outcomes.</p>
 
-<p><img src="images/PIDController.png" alt="PID controller"></p>
+<figure><img src="images/PIDController.png" alt="PID controller"><figcaption>Architecture of a PID controller<span class="source">source: Feedback Control for Computer Systems, p.48<span></figcaption></figure>
 
 <p>We implement this in the same way as we did for the PI controller:</p>
 
@@ -698,7 +698,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>Also we provide the boilerplate code for multiple types of loops. For now we discuss the <code>closedLoop</code> and come back later to other types of loops. This function is modeled after the extended version of a feedback control system, including the actuator and filter.</p>
 
-<p><img src="images/Feedback%20system%20-%20extended.png" alt="Extended feedback control system"></p>
+<figure><img src="images/Feedback%20system%20-%20extended.png" alt="Extended feedback control system"><figcaption>Architecture of an extended feedback loop<span class="source">source: Feedback Control for Computer Systems, p.143<span></figcaption></figure>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">Loops</span> {
     <span class="pl-k">def</span> <span class="pl-en">closedLoop</span>[<span class="pl-en">A</span>](<span class="pl-v">setPoint</span>: <span class="pl-en">Observable</span>[<span class="pl-en">A</span>], <span class="pl-v">seed</span>: <span class="pl-en">A</span>, <span class="pl-v">components</span>: <span class="pl-en">Component</span>[<span class="pl-en">A</span>, <span class="pl-en">A</span>], <span class="pl-v">inverted</span>: <span class="pl-st">Boolean</span> <span class="pl-k">=</span> <span class="pl-c1">false</span>)(<span class="pl-s">implicit</span> <span class="pl-v">n</span>: <span class="pl-en">Numeric</span>[<span class="pl-en">A</span>]) <span class="pl-k">=</span> {
@@ -722,7 +722,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 <h3>
 <a id="running-example" class="anchor" href="#running-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running example</h3>
 
-<p>To demonstrate the workings of these basics, let's implement a simple <code>Plant</code> and see how this framework performs. First we implement <code>Boiler</code>:</p>
+<p>To demonstrate the workings of these basics, let's implement a simple plant <code>Boiler</code> and see how this framework performs:</p>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">Boiler</span>(<span class="pl-v">g</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.01</span>, <span class="pl-v">y</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
     <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Double</span>) <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Boiler</span>(g, y <span class="pl-k">+</span> <span class="pl-en">DT</span> <span class="pl-k">*</span> (u <span class="pl-k">-</span> g <span class="pl-k">*</span> y))
@@ -747,7 +747,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>The results of running this example program will yield the following plot:</p>
 
-<p><img src="images/BoilerPlot.png" alt="Boiler simulation"></p>
+<figure><img src="images/BoilerPlot.png" alt="Boiler simulation"><figcaption>Simulation of a boiler<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h1>
 <a id="cache-hit-rate-control" class="anchor" href="#cache-hit-rate-control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cache hit rate control</h1>
@@ -767,7 +767,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>Having solved these two issues we can now construct our feedback control system around the actual cache. To convert the Boolean results of the case into hit rates we will use a <a href="#filters-and-actuators">FixedFilter</a>.</p>
 
-<p><img src="images/cache/Loop%20model.png" alt="Cache loop model"></p>
+<figure><img src="images/cache/Loop%20model.png" alt="Cache loop model"><figcaption>Feedback architecture for the cache<span class="source">source: Feedback Control for Computer Systems, p.143<span></figcaption></figure>
 
 <p>The cache can now be implemented as follows:</p>
 
@@ -847,7 +847,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>Since we are working with some form of a stochastic process, we need to take into account that the pattern of requests might vary from time to time. Therefore we will simulate multiple scenarios of the static process characteristics with different values for <code>demandWidth</code>:</p>
 
-<p><img src="images/cache/Static%20process%20characteristics.png" alt="Cache - static process characteristics"></p>
+<figure><img src="images/cache/Static%20process%20characteristics.png" alt="Cache - static process characteristics"><figcaption>Static process characteristics for the cache<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>From these simulations we can derive that if we want a hit rate of 0.7, we need a cache size of about 40, assuming that a demandWidth of 15 is the most common situation.</p>
 
@@ -871,14 +871,14 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>Doing so with the implementation of a cache will yield the following data, gathered over the course of 5 iterations and applied with an input change of 40.</p>
 
-<p><img src="images/cache/Dynamic%20response%20-%20data.png" alt="Dynamic response - experiment data"></p>
+<figure><img src="images/cache/Dynamic%20response%20-%20data.png" alt="Dynamic response - experiment data"><figcaption>Dynamic response for the cache<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h4>
 <a id="finding-the-first-values" class="anchor" href="#finding-the-first-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Finding the first values</h4>
 
 <p>The analysis of this data can be done in multiple ways. A first option is to draw a tangent through the inflection point of the data and then use the construction below to find the values for $K$, $\tau$ and $T$ which we will use in a later stage.</p>
 
-<p><img src="images/Tangent%20construction.png" alt="Tangent construction"></p>
+<figure><img src="images/Tangent%20construction.png" alt="Tangent construction"><figcaption>Analysis of the dynamic response using a tangent<span class="source">source: Feedback Control for Computer Systems, p.84<span></figcaption></figure>
 
 <p>Although there are complete books written about finding these three values and what their relation is to the parameters of a PID controller, for us it is only necessary to understand what these values mean:</p>
 
@@ -909,9 +909,9 @@ K(1-(1 + \frac{t-\tau}{T})e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\
 
 <p>By fitting either of these models onto the data, we will find the values for $K$, $\tau$ and $T$. Notice that both models give different results, as shown in the fittings of the respective models below:</p>
 
-<p><img src="images/cache/Dynamic%20response%20-%20f1.png" alt="Dynamic response - analyzed"></p>
+<figure><img src="images/cache/Dynamic%20response%20-%20f1.png" alt="Dynamic response - analyzed"><figcaption>Model fitting on the dynamic response using model 1<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
-<p><img src="images/cache/Dynamic%20response%20-%20f2.png" alt="Dynamic response - analyzed"></p>
+<figure><img src="images/cache/Dynamic%20response%20-%20f2.png" alt="Dynamic response - analyzed"><figcaption>Model fitting on the dynamic response using model 2<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>In the following we will use the results found by fitting the simple model.</p>
 
@@ -1001,19 +1001,19 @@ K(1-(1 + \frac{t-\tau}{T})e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\
 
 <p>The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hit rate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.</p>
 
-<p><img src="images/cache/Simulation%20-%20Ziegler-Nichols.png" alt="Ziegler-Nichols simulation"></p>
+<figure><img src="images/cache/Simulation%20-%20Ziegler-Nichols.png" alt="Ziegler-Nichols simulation"><figcaption>Cache simulation using the results from Ziegler-Nichols<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>Although Ziegler-Nichols' results seemed poor, the results of Cohen-Coon are actually worse. The system is oscillating so much that changes in demand are not even noticeable. From this it becomes clear that parameters for the PID controller are not what we want in this case.</p>
 
-<p><img src="images/cache/Simulation%20-%20Cohen-Coon.png" alt="Cohen-Coon simulation"></p>
+<figure><img src="images/cache/Simulation%20-%20Cohen-Coon.png" alt="Cohen-Coon simulation"><figcaption>Cache simulation using the results from Cohen-Coon<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>Using lower values for the controller the system seems to work something better, as shown by the results of the AMIGO simulation. The hit rate seems to track the setpoint better than before, the number of oscillations is less and their amplitude is smaller. However, it now takes longer for the system to respond to demand differences.</p>
 
-<p><img src="images/cache/Simulation%20-%20AMIGO.png" alt="AMIGO simulation"></p>
+<figure><img src="images/cache/Simulation%20-%20AMIGO.png" alt="AMIGO simulation"><figcaption>Cache simulation using the results from AMIGO<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>To solve this issue, we will keep the integral part at a low value (<code>ki = 2</code>) and set the proportional part of the controller at a value in the order of Ziegler-Nichols and Cohen-Coon (<code>kp = 200</code>). This gives better results: fewer oscillations and a quicker response to demand changes.</p>
 
-<p><img src="images/cache/Simulation.png" alt="Final simulation"></p>
+<figure><img src="images/cache/Simulation.png" alt="Final simulation"><figcaption>Cache simulation usning the final values for <code>kp</code> and <code>ki</code><span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h2>
 <a id="summary-3" class="anchor" href="#summary-3" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
@@ -1082,7 +1082,7 @@ The <strong>dynamic response</strong> is measured by turning on the system and m
 
 <p>Just as we did in the previous case study, we will now look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. Again we simulated multiple scenarios and came to the following figure:</p>
 
-<p><img src="images/server%20scaling/Static%20process%20characteristics.png" alt="Server scaling - static process characteristics"></p>
+<figure><img src="images/server%20scaling/Static%20process%20characteristics.png" alt="Server scaling - static process characteristics"><figcaption>Static process characteristics for a server pool<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>This shows that the success rate is proportional to the number of worker nodes until there are enough workers to handle all submitted jobs. Also notice that the slope and saturation point are determined by the traffic intensity.</p>
 
@@ -1124,7 +1124,7 @@ The <strong>dynamic response</strong> is measured by turning on the system and m
 
 <p>Running this simulation will result in the following chart:</p>
 
-<p><img src="images/server%20scaling/Server%20Pool%20Loop%201.png" alt="First server pool simulation"></p>
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%201.png" alt="First server pool simulation"><figcaption>Server pool simulation with a setpoint of 0.8 and 0.6 and a variable load<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <p>These results show that in the first 100 time units the number of servers oscillates between 8 and 9. Clearly 8 workers is often not enough, whereas 9 is too much. We see the same thing happen between time units 100 until 200, where 6 workers is too few and 7 is too much.</p>
 
@@ -1157,7 +1157,7 @@ The <strong>dynamic response</strong> is measured by turning on the system and m
 
 <p>This results in a simulation that is improved a bit with respect to the first simulation, but still gives large oscillations in the number of servers and has completion rates that differ up to 10% of the actual setpoint.</p>
 
-<p><img src="images/server%20scaling/Server%20Pool%20Loop%202.png" alt="Second server pool simulation"></p>
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%202.png" alt="Second server pool simulation"><figcaption>Server pool simulation with a setpoint close to 1.0<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h3>
 <a id="a-better-approach" class="anchor" href="#a-better-approach" aria-hidden="true"><span class="octicon octicon-link"></span></a>A better approach</h3>
@@ -1194,11 +1194,11 @@ The <strong>dynamic response</strong> is measured by turning on the system and m
 
 <p>Notice that this is an incremental controller: it does not keep track of the number of leased workers but rather gives instructions on leasing or releasing any machines. Therefore we need to include an <code>Integrator</code> between the controller and the plant.</p>
 
-<p><img src="images/server%20scaling/Final%20system.png" alt="Final feedback system"></p>
+<figure><img src="images/server%20scaling/Final%20system.png" alt="Final feedback system"><figcaption>Feedback architecture of the server pool<span class="source">source: Feedback Control for Computer Systems, p.171<span></figcaption></figure>
 
 <p>A simulation using this approach is very effective, as shown in the following chart. The number of servers stays constant and periodically checks whether a worker could be released. Between time units 500 and 600 we can nicely see the effect of scheduling more frequent test steps after a successful release. Three times in short period of time the controller tries to lower the number of workers. The first and second time, this is successful, the third time it turns out that this worker is really needed.</p>
 
-<p><img src="images/server%20scaling/Server%20Pool%20Loop%203.png" alt="Third server pool simulation"></p>
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%203.png" alt="Third server pool simulation"><figcaption>Server pool simulation using the <code>SpecialController</code><span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
 
 <h2>
 <a id="spinning-up-the-server" class="anchor" href="#spinning-up-the-server" aria-hidden="true"><span class="octicon octicon-link"></span></a>Spinning up the server</h2>
@@ -1209,7 +1209,7 @@ The <strong>dynamic response</strong> is measured by turning on the system and m
 
 <p>In our case, we can have a set of "<em>warm standbys</em>" that are controlled by a separate feedback loop. Instead of requesting new servers and waiting a couple of minutes for them to be active, we can just get extra instances from the second feedback loop. The latter controls the number of standby instances and is supposed to act in a time scale that is equal to the time it takes to spin up a new instance. With this last choice, we allow the new instances to be again available immediately from the perspective of the second loop.</p>
 
-<p><img src="images/server%20scaling/System%20with%20spin%20up.png" alt="System design with spin up"></p>
+<figure><img src="images/server%20scaling/System%20with%20spin%20up.png" alt="System design with spin up"><figcaption>Feedback architecture of the server pool with warm standbys</code><span class="source">source: Feedback Control for Computer Systems, p.168<span></figcaption></figure>
 
 <h2>
 <a id="summary-4" class="anchor" href="#summary-4" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
@@ -1227,7 +1227,7 @@ The <strong>dynamic response</strong> is measured by turning on the system and m
 
 <p>The controlled system is likely to exhibit some form of <a href="#system-dynamics">lag, delay or other internal dynamics</a>. These cause the controller to have a more difficult job and often result in a less accurate functioning feedback system. In some cases it is however possible to redesign the feedback system to the point where it does not have these internal dynamics.</p>
 
-<p>Controllers come in various types: most used is the <a href="#pid-control">PID controller</a>, which is composed of a proportional, integral and derivative controller, all using their own parameter ($k_p$, $k_i$ and $k_d$ respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an <a href="#onoff-control">on/off controller</a> or a controller that is based on another control strategy might be useful. An example of the latter can be found in the <a href="#a-better-approach">case study on server scaling</a>.</p>
+<p>Controllers come in various types: most used is the <a href="#pid-control">PID controller</a>, which is composed of a proportional, integral and derivative controller, all using their own parameter ( $k_p$, $k_i$ and $k_d$ respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an <a href="#onoff-control">on/off controller</a> or a controller that is based on another control strategy might be useful. An example of the latter can be found in the <a href="#a-better-approach">case study on server scaling</a>.</p>
 
 <p>There is not one definite approach when it comes to tuning a PID controller. Two cases can be distinguished: when the controlled system has an immediate response without internal dynamics, an analysis of the static process characteristics will suffice. In this case the PID parameters depend on the <a href="#tuning-the-controller">ratio of the change</a> in the control input and the corresponding change in the control output.</p>
 
