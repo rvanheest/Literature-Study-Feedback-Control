@@ -1,15 +1,15 @@
+**This blog intends to explore the concepts of feedback control applied to computer science. We will make use of the [Scala programming language](http://www.scala-lang.org/) as well as the [ReactiveX framework](http://reactivex.io/). The concepts regarding feedback systems, as well as some of the images presented in this blog, are taken from the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) by Philipp K. Janert. Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.** 
+
+I am thankful for the help and suggestions of a number of people. Without them this blog would not have been written!
+*[Philipp K. Janert](www.linkedin.com/in/janert/en), author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do), for answering additional questions and help with the controller tuning
+* [Erik Meijer](www.linkedin.com/pub/erik-meijer/0/5ba/924/en) for suggesting this topic and advice along the way of writing this blog
+* [Mike de Waard](nl.linkedin.com/pub/mike-de-waard/16/481/1a3/en) for his feedback and co-reading the blog
+* [Lars Willems](nl.linkedin.com/pub/lars-willems/9b/92/153/en) for his feedback and co-reading the blog
+
 #Introduction
-**This blog intends to explore the concepts of feedback control applied to computer science. We will make use of the [Scala programming language](http://www.scala-lang.org/) as well as the [ReactiveX framework](http://reactivex.io/). Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.**
-
-**I am thankful for the help and suggestions of a number of people. Without them this blog would not have been written!**
-* **[Philipp K. Janert](www.linkedin.com/in/janert/en), author of the book [Feedback Control for Computer Systems](http://shop.oreilly.com/product/0636920028970.do) (on which this blog is partially based) for answering additional questions and help with the controller tuning**
-* **[Erik Meijer](www.linkedin.com/pub/erik-meijer/0/5ba/924/en) for suggesting this topic and advice along the way of writing this blog**
-* **[Mike de Waard](nl.linkedin.com/pub/mike-de-waard/16/481/1a3/en) for his feedback and co-reading the blog**
-* **[Lars Willems](nl.linkedin.com/pub/lars-willems/9b/92/153/en) for his feedback and co-reading the blog**
-
 Enterprise systems are often built to maintain a flow of arbitrary items in a sequence of processing steps. For example, an online retailer wants to manage the flow of packages through its facilities. As a control mechanism *the number of pending orders released to the warehouses per time unit* is used. The main problem for this control mechanism is how to throttle this flow such that the warehouses are not idle, but are not overflowing either.
 
-A solution for this might be the so called *feed-forward control* method in which one verifies for each type of order how long the warehouses take to process it and base throttling calculations on these results. This strategy will work, as long as there are no disturbances of the workflow. However, conveyors may run slower of faster than expected, a packing machine may malfunction which makes that one single order takes longer to be processed or the internal workings of a certain part of the process is unknown. All kinds of uncertainties (random effects or lack of knowledge) may happen that cannot be dealt with in feed-forward control.
+A solution for this might be the so called *feed-forward control* method in which one verifies for each type of order how long the warehouses take to process it and base throttling calculations on these results. This strategy will work, as long as there are no disturbances of the workflow. However, conveyors may run slower or faster than expected, a packing machine may malfunction which makes that one single order takes longer to be processed or the internal workings of a certain part of the process is unknown. All kinds of uncertainties (random effects or lack of knowledge) may happen that cannot be dealt with in feed-forward control.
 
 At this point one might argue that this is an unfair game. We are supposed to maintain a flow of items while neither overwhelming nor starving the downstream processing steps. In fact, we cannot predict when these processing steps are overwhelmed or starved caused by the item flow, given the uncertainties that come with this system.
 
@@ -63,7 +63,7 @@ Although the third question may seem obvious (the iteration will converge to the
 It turns out that the three goals that are related to these questions (stability, performance and accuracy) are hard to be achieved simultaneously. The design of feedback systems will most often involve trade-offs between stability and performance, since a system that responds quickly will tend to oscillate. It depends on the situation which aspect will be emphasized.
 
 ## Example: cache simulation
-To illustrate the aspects of a feedback system that are discussed in on this page, we will simulate behavior of a system that controls the size of a cache. In this example we will not implement a cache but rather simulate its hit rate by the following function:
+To illustrate the aspects of a feedback system that are discussed on this page, we will simulate behavior of a system that controls the size of a cache. In this example we will not implement a cache but rather simulate its hit rate by the following function:
 
 ```scala
 def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
@@ -83,8 +83,8 @@ def simulation(): Observable[Double] = {
 
 		Observable.from(0 until 30)
 			.map(setPoint)
-			.zipWith(hitrate)(_ - _)					// calculate hitrate
-			.scan((sum: Double, e: Double) => sum + e)	// calculate cumulative hitrate
+			.zipWith(hitrate)(_ - _)					// calculate tracking error
+			.scan((sum: Double, e: Double) => sum + e)	// calculate cumulative tracking error
 			.map { k * _ }								// calculate next input
 			.map(cache)									// calculate newest output
 			.subscribe(hitrate)
@@ -95,7 +95,7 @@ def simulation(): Observable[Double] = {
 }
 ```
 
-Running this simulation with different values of `k` will yield the following (we will come back to the meaning of `k` in a later stage):
+Running this simulation with different values of `k` will yield the following (We will come back to the meaning of `k` in a [later stage](#controller-types). For now just consider `k` to be a value the controller multiplies the cumulative error with.):
 
 ![Results experiment 1](images/Cache small cumulative.png)
 
@@ -110,11 +110,11 @@ Searching for the most optimal value for `k` is obvious in this case and already
 It should be noticed in the code that we use a feature of the controller that is not yet discussed so far: calculating the cumulative error and using this value for producing the next input rather than using the tracking error itself. We will get to this technique later. We can however already show the difference between using and not using this cumulative error.
 
 ### Experiment 2 - Noncumulative controller
-We get to a noncumulative version of the simulation by removing the following single line from the previous listing: `.scan((cum: Double, e: Double) => cum + e)`. Running the simulation with the same values for `k` will yield the following chart:
+We get to a noncumulative version of the simulation by removing the following single line from the previous listing: `.scan((sum: Double, e: Double) => sum + e)`. Running the simulation with the same values for `k` will yield the following chart:
 
 ![Results experiment 2](images/Cache small noncumulative.png)
 
-These results look far from right. The smaller values for `k` will converge, although not to desired value. The larger values however will not converge but will rather oscillate between 0 and `setpoint * k / 100`. Looking closely to what happens, reveals that this is due to the way the `cache` function is implemented (it maps negative values to 0). If we would change this function to `def cache(size: Double): Double = size / 100` (notice that this would not make sense in the context of a cache), we see an overshooting that will explode in the long run. Extrapolating will yield that after 30 iterations we get an output of over 300000!
+These results look far from right. The smaller values for `k` will converge, although not to the desired value. The larger values however will not converge but will rather oscillate between 0 and `setpoint * k / 100`. Looking closely to what happens, reveals that this is due to the way the `cache` function is implemented (it maps negative values to 0). If we would change this function to `def cache(size: Double): Double = size / 100` (notice that this would not make sense in the context of a cache), we see an overshooting that will explode in the long run. Extrapolating will yield that after 30 iterations we get an output of over 300000!
 
 ![Results experiment 2 - exploding](images/Cache small noncumulative exploding.png)
 
@@ -122,7 +122,7 @@ These results look far from right. The smaller values for `k` will converge, alt
 Now let's see what happens if we change the setpoint during the experiment. In order to do so we change the definition of the `setpoint` function to:
 
 ```scala
-def setPoint(time: Long): Double = {
+def setPoint(time: Int): Double = {
     if (time < 30) 0.6
 	else if (time < 60) 0.8
 	else if (time < 90) 0.1
@@ -138,17 +138,17 @@ As expected, the simulations follow the setpoint values with their own character
 ## Summary
 We have seen the basic components that together make up a feedback system. First we compare the system's previous output with the reference value (or **setpoint**) and feed the resulting **tracking error** into the **controller**. Based on this, the controller calculates the system's next **input**. The system's **output** is then compared again with the setpoint.
 
-The controller only needs to know about the **directionality** of the process and the **magnitude** correction. It does not need any understanding of the internal workings of the controlled system. The magnitude of the correction determines whether the controller will overcompensate or react too slow. Overcompensating may lead to heavy oscillations that can cause the system to get out of control.
+The controller only needs to know about the **directionality** of the process and the **magnitude** of the correction. It does not need any understanding of the internal workings of the controlled system. The magnitude of the correction determines whether the controller will overcompensate or react too slow. Overcompensating may lead to heavy oscillations that can cause the system to get out of control.
 
 #System dynamics
-In the previous [cache example](#example-cache-simulation) we made the assumption that the cache responds immediately to a change. Although this may seem an obvious choice (after all, we are manipulating the state of a computer program, which can be changed in an instant), there are cases where we have to be more careful. While working with cloud computing, requesting 20 more instances from the cloud data center will take a couple of minutes before they 'arrive'. In the meantime these instances are not available for any requests, but when they are online, they are immediately fully operational. Handling this with a feedback system is a harder task, since there is a certain time between the control action and the response.
+In the previous [cache example](#example-cache-simulation) we made the assumption that the cache responds immediately to a change. Although this may seem an obvious choice (after all, we are manipulating the state of a computer program, which can be changed in an instant), there are cases where we have to be more careful. While working with cloud computing, requesting 20 more instances from the cloud data center will take a couple of minutes before they 'arrive'. In the meantime these instances are not available for any requests, but when they are online, they are immediately fully operational. Handling this with a feedback system is a harder task, since there is a certain amount of time between the control action and the response.
 
 Although in the virtual world these delays only occur in certain systems, they always occur in the physical world. Besides delays, we also have to deal with lags and inverse responses if we are designing a feedback system that involves physical world objects. This is due to the fact that this world is continuous, where objects cannot move from a certain position A to another position B in an instant. In fact they are bounded to a certain non-infinite velocity, which may require large amounts of force, energy and power, which may not be available or even impossible to supply. This makes designing feedback systems very hard and often results in error prone outputs.
 
 ##Lag, delay and inverse response
 For a good understanding, we need to take a closer look at lags, delays and inverse responses first. We will do so using some examples.
 
-A system has **lag** when it only partially responds to a control input. The response will start immediately, but it will take while before it reaches the value that was given as the control input. This is also called an **immediate partial response**. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned of, the temperature will gradually drop back to the environment's temperature.
+A system has **lag** when it only partially responds to a control input. The response will start immediately, but it will take a while before it reaches the value that was given as the control input. This is also called an **immediate partial response**. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned off, the temperature will gradually drop back to the environment's temperature.
 
 ![Heating a vessel](images/Heated vessel.png)
 
@@ -229,7 +229,7 @@ A longer delay makes it even worse! When set to 5 iterations, we cannot find a s
 
 ![Cache with delay 5](images/Cache with delay 5.png)
 
-It is clear that the longer a delay is, the worse gets on finding a suitable value for the control gain that stabilizes to the setpoint within a reasonable amount of iterations. If possible, a delay should be avoided in the phase of designing a feedback control system.
+It is clear that the longer a delay is, the worse it gets on finding a suitable value for the control gain that stabilizes to the setpoint within a reasonable amount of iterations. If possible, a delay should be avoided in the phase of designing a feedback control system.
 
 ## Summary
 The controlled systems often exhibit some **internal behavior** that we need to take into account while designing a feedback system. It might be that the system exhibits **lag**, which causes it to only respond partially to the input. Another type of internal behavior is **delay**, where it takes a certain amount of time to respond to the control input. Also, the system might have a **non-minimum phase**, causing it to first go the opposite way before going along the control input values.
@@ -450,19 +450,19 @@ In this section we will discuss the topic of simulating feedback control systems
 
 There are a number of reasons why we need the ability to simulate the behavior of a control system.
 * First of all, the behavior of a control system might be unintuitive or unfamiliar. To develop intuition for the abstract problem we can use simulations and thus get a better understanding of control problems that arise in the real world.
-* In most cases it is not possible to do extensive testing and experimenting on real-world machines. Often they are too big, too expensive, too expensive, too dangerous or simply not available. And if they are available, tests will mostly be too time consuming to conduct serious experiments. Therefore simulations will suit better.
+* In most cases it is not possible to do extensive testing and experimenting on real-world machines. Often they are too big, too expensive, too dangerous or simply not available. And if they are available, tests will mostly be too time consuming to conduct serious experiments. Therefore simulations will suit better.
 * The most difficult part is to implement controllers, filters, etc. according to abstract concepts like *transfer functions*. Simulations can help with a better understanding and make these concepts more concrete.
 * Finally, no control system will ever be put into production unless it has proven itself to function correctly. Therefore, simulations are not *just for fun*, but form a crucial step in the design of a feedback control system.
 
 In this section of the blog we will discuss a simulation framework that was built for this study. Also we will go over a number of case studies by using this framework.
 
 ##Time
-One of the most important parts of the simulation framework is the simulation of time. For computer systems we are given a choice between two possible representations. We can use real time (also know as '*wall-clock*' time) where the controlled system evolves according to its own rules and dynamics, independent from control actions. In this case, control actions will usually occur periodically with a fixed time interval between two actions. Another choice is to use control time (also known as '*event time*'). Here the system does not evolve between two control actions, hence the time is synchronous with the control actions. Notice that this is the type of time that was used in the earlier examples.
+One of the most important parts of the simulation framework is the simulation of time. For computer systems we are given a choice between two possible representations. We can use real time (also known as '*wall-clock*' time) where the controlled system evolves according to its own rules and dynamics, independent from control actions. In this case, control actions will usually occur periodically with a fixed time interval between two actions. Another choice is to use control time (also known as '*event time*'). Here the system does not evolve between two control actions, hence the time is synchronous with the control actions. Notice that this is the type of time that was used in the earlier examples.
 
 In a simulation, the time is determined by the number of simulation steps. To convert this to a simulation of real time, we must assume that each simulation step has exactly the same duration (measured in real time). Therefore the steps in the simulation correspond to a certain duration in real time. Hence we need a conversion factor `DT` that translates simulation steps into real time durations.
 
 ##Simulation framework
-In order to model every component in the simulation framework, we use a `Component` trait (or interface) containing two abstract functions: `update` and `action`. The former is used to iterate to the component's state in the *next* simulation step, based on its current state and an update parameter `u`. The latter is used to calculate the action that needs to be taken at in the *current* simulation step. To see what is going on inside a component, another abstract function `monitor` is provided that returns a `Map[String, AnyVal]`. This needs to be implemented on each component.
+In order to model every component in the simulation framework, we use a `Component` trait (or interface) containing two abstract functions: `update` and `action`. The former is used to iterate to the component's state in the *next* simulation step, based on its current state and an update parameter `u`. The latter is used to calculate the action that needs to be taken at the *current* simulation step. To see what is going on inside a component, another abstract function `monitor` is provided that returns a `Map[String, AnyVal]`. This needs to be implemented on each component.
 
 Furthermore it should be noticed that components can be concatenated in order to compose more complex components. In other words, `Component` can be viewed as a monoid, hence the `++` operator. Also, we can implement `map` on a `Component` in order to apply functions to the output signal of a component (`Component` is a functor).
 
@@ -734,13 +734,13 @@ class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[I
 ```
 
 ##Controller settings
-After having constructed the feedback system, we need to decide what kind of controller we will use. The most obvious candidate is the PID controller, which needs two or three parameters (depending on using it as a PI controller or PID controller). As discussed [previously](#Controllers), a PID controller is the sum of the proportional, integral and derivative control:
+After having constructed the feedback system, we need to decide what kind of controller we will use. The most obvious candidate is the PID controller, which needs two or three parameters (depending on using it as a PI controller or PID controller). As discussed [previously](#pid-control), a PID controller is the sum of the proportional, integral and derivative control:
 
 ![PID control equation](equations/PID control.png)
 
 The parameters of this controller (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png)) will make *the* difference between a good or bad functioning system; therefore choosing the correct values is an important task.
 
-In order to retrieve these values, we need to take a closer look at the controlled system (the cache) first and discover what its behavior is. First we will look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. When the static behavior is known, we can use its results to determine the dynamic response: how long does it take for the system to respond to a sudden input change? Notice that both these experiments are done in an [open-loop setting](#Feedback systems) and without a controller. In the case of our cache we consider the controlled system to be the cache combined with the FixedFilter.
+In order to retrieve these values, we need to take a closer look at the controlled system (the cache) first and discover what its behavior is. First we will look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. When the static behavior is known, we can use its results to determine the dynamic response: how long does it take for the system to respond to a sudden input change? Notice that both these experiments are done in an [open-loop setting](#feedback-systems) and without a controller. In the case of our cache we consider the controlled system to be the cache combined with the FixedFilter.
 
 ###Static process characteristics
 To measure the static process characteristics we just have to turn on the controlled system, apply a steady input value, wait until the system has settled down and record the output. We do this in the following code sample. The demand is drawn from a Gaussian distribution with mean 0 and variance `demandWidth`. Then we construct the controlled system and follow the procedure described above: 
@@ -778,7 +778,7 @@ Since we are working with some form of a stochastic process, we need to take int
 
 ![Cache - static process characteristics](images/cache/Static process characteristics.png)
 
-From these simulations we can derive that if we want a hit rate of 0.7, we need a cache size of about 40-70, assuming that a demandWidth of 15-35 is the most common situation.
+From these simulations we can derive that if we want a hit rate of 0.7, we need a cache size of about 40, assuming that a demandWidth of around 15 is the most common situation.
 
 ###Dynamic response
 The next step in determining the parameters of the PID controller is to conduct a step test to measure the dynamic response of the system. Performing this experiment is just a matter of turning on the system and observing what happens. First let the system be at rest initially (zero input). Then apply a sudden (preferably large) input change and record the development of the output value over time. If possible, do this a number of times in order to get a good signal-to-noise ratio.
@@ -892,14 +892,14 @@ To solve this issue, we will keep the integral part at a low value (`ki = 2`) an
 The cache is a typical example of how to use feedback control in practice. Analyzing the case, we found that the cache requests could be viewed as Bernoulli trials and that we needed an average of the last 100 trials to get a hit ratio with about 95% accuracy.
 
 Further analysis in the behavior of the cache system revealed the static process characteristics as well as the internal dynamics, which both need to be taken into account when choosing the values for the control system's PID controller. To measure the **static process characteristics**, we just have to turn on the controlled system in an open-loop setting without controller, apply a steady input value and wait until the system has settled down, while recording the outputs. If possible, perform multiple simulations with different kinds of parameters to get a wider perspective of this part of the system's behavior.  
-The **dynamic response** is measured by turning on the system and measure what happens when you apply a sudden input change. These results are then analyzed by doing geometric constructions on the tangent or fitting a model through the data. The parameters obtained from this can be used to calculated the factors of the PID controller.
+The **dynamic response** is measured by turning on the system and measure what happens when you apply a sudden input change. These results are then analyzed by doing geometric constructions on the tangent or fitting a model through the data. The parameters obtained from this can be used to calculate the factors of the PID controller.
 
 For the cache examples we used these analyses to come up with some values that would give a satisfactory performance. Here we had to make a trade-off between the number and size of the oscillations and the speed with which the system deals with demand changes.
 
 #Server Scaling
-In cloud computing we often deal with a complex system that takes in jobs, distributes them over the system, where they are executed. For a simple cloud based system that is based on an *[Infrastructure as a Service](http://en.wikipedia.org/wiki/Cloud_computing#Infrastructure_as_a_service_.28IaaS.29)* architecture, the jobs are often taken in by a head node that distributes them over multiple worker nodes. These worker nodes are often leased from a cloud provider (Amazon EC2, Microsoft Azure, etc.), where you only pay for the time they are used. Once a job is finished, the result is send back to the head node, which returns it to the user.
+In cloud computing we often deal with a complex system that takes in jobs, distributes them over the system, where they are executed. For a simple cloud based system that is based on an *[Infrastructure as a Service](http://en.wikipedia.org/wiki/Cloud_computing#Infrastructure_as_a_service_.28IaaS.29)* architecture, the jobs are often taken in by a head node that distributes them over multiple worker nodes. These worker nodes are often leased from a cloud provider (Amazon EC2, Microsoft Azure, etc.), where you only pay for the time they are used. Once a job is finished, the result is sent back to the head node, which returns it to the user.
 
-While creating a cloud application you have a number of issues to deal with. Your system should run with *as less human intervention as possible*. This means that you have to implement some smart algorithms to get a good performance. Your customers will send you jobs to be executed and don't like to wait a long time for their results to come back. Therefore you need to *lease and release* virtual machines depending on how many job are in the system and what their loads are. In literature this is also referred to as *elasticity* or *auto-scaling*. Also jobs need to be scheduled or distributed over the available virtual machines evenly, such that every jobs can be completed as fast as possible.
+While creating a cloud application you have a number of issues to deal with. Your system should run with *as little human intervention as possible*. This means that you have to implement some smart algorithms to get a good performance. Your customers will send you jobs to be executed and don't like to wait a long time for their results to come back. Therefore you need to *lease and release* virtual machines depending on how many jobs are in the system and what their loads are. In literature this is also referred to as *elasticity* or *auto-scaling*. Also jobs need to be scheduled or distributed over the available virtual machines evenly, such that every job can be completed as fast as possible.
 
 A challenging question in this whole problem is when to lease an extra machine? After all, it takes a couple of minutes for a new machine to be up and running and after that time, the machine might not be needed or it turned out that only one new machine was not enough. And when to release a machine? In fact, you don't know whether or not you will urgently need the machine seconds after its release.
 
@@ -907,7 +907,7 @@ A challenging question in this whole problem is when to lease an extra machine? 
 The underlying problem is typically a problem that can be solved using feedback control. Let us first consider a simplified version of this problem, where we will assume the following:
 
 1. Control actions are applied periodically, with constant intervals in between.
-2. In the intervals between in control actions, jobs come in at the head node and are handled by the worker nodes
+2. In the intervals between control actions, jobs come in at the head node and are handled by the worker nodes
 3. If a job comes in and no worker nodes are available, then the job is send back as a failure. Jobs will not be queued, so there will be no accumulation of pending jobs.
 4. We can obtain the number of incoming and handled jobs for each interval.
 5. The number of jobs that arrive during each interval is a random quantity, as is the number of jobs that are handled by the worker nodes.
@@ -959,7 +959,7 @@ Here *Δu* is the static change in the control input and *Δy* is the correspond
 
 ![Ranges for a, b and c](equations/abc ranges.png)
 
-From the measurements taken in the static process characteristics we can see that *Δu* = 5 and *Δy* = 0.45 for the orange line. With that in mind we choose `kp = 1` and `ki = 5`.
+From the measurements taken in the static process characteristics we can see that *Δu* = 5 and *Δy* = 0.45 for the line with traffic intensity 1000. With that in mind we choose `kp = 1` and `ki = 5` (notice that with this value for `kp`, the value of *a* is outside the given range).
 
 We implement a first simulation that runs for 300 time units and has a setpoint of 0.8 until 100 time units and 0.6 afterwards. Notice that these are far from ideal, since we actually want a setpoint of 1.0. Since there are some issues with this value as a setpoint (as discussed later) we will stick to these lower values for now.
 
@@ -996,7 +996,7 @@ These results show that in the first 100 time units the number of servers oscill
 Also the completion rate does not perform well. It oscillates with amplitudes of 5 to 10 percent. Notice that the diminishing of the oscillations in the last part of the simulation (time units 200 until 300) is not due to a mechanic in the system, but rather a change in the amount of traffic.
 
 ### Getting close to 100 percent
-Of course having a completion rate of 60% or 80% is not exactly the behavior we would expect from a cloud based system. We want all jobs to be completed and none being rejected. Therefore we prefer to have the completion rate at 100%. Taking a closer look at the theory behind feedback control systems will however reveals an important thing we cannot forget: if our setpoint value is 100% (or 1.0), then the tracking error can never be negative and hence no workers can be released in this particular example!
+Of course having a completion rate of 60% or 80% is not exactly the behavior we would expect from a cloud based system. We want all jobs to be completed and none being rejected. Therefore we prefer to have the completion rate at 100%. Taking a closer look at the theory behind feedback control systems will however reveal an important thing we cannot forget: if our setpoint value is 100% (or 1.0), then the tracking error can never be negative and hence no workers can be released in this particular example!
 
 A simple solution to this would be to choose a setpoint value sufficiently close to 1.0, for example 0.995. But choosing this will face us with an unusual asymmetry in the tracking error. Everything from 0 to 0.995 produces a positive error, whereas everything from 0.995 to 1.0 causes a negative error. In a PID controller this means that control action that tend to increase the number of workers will be 100 times stronger than those who will decrease the number of workers.
 
@@ -1027,7 +1027,7 @@ This results in a simulation that is improved a bit with respect to the first si
 ### A better approach
 At this point we need to take a step back and look at what we are really facing. First of all, it should be clear by now that the control input must be a positive integer. We can only have a whole number of workers; not halves or thirds are allowed. Secondly, until now we have looked at the *magnitude* of the error, rather than the *sign*.
 
-With these two things in mind, lets create a control strategy that is way simpler than the PID controller's strategy:
+With these two things in mind, let's create a control strategy that is way simpler than the PID controller's strategy:
 
 1. Let the setpoint be 1.0; causing the tracking error to never be negative.
 2. If the tracking error is positive, add an extra worker to the worker pool.
@@ -1066,7 +1066,7 @@ A simulation using this approach is very effective, as shown in the following ch
 ## Spinning up the server
 Until now we have made the assumption that newly requested servers are available instantaneously. In practice however, it often takes about a minute or 2 until a requested server is available. Given that the control actions take place on the order of seconds, this is simply too big of a delay to be ignored.
 
-A rule of thumb in designing feedback loops is to "*redesign the system to avoid delay*". Although this might seem strange at first, it is worth taking seriously, since alternative like the [Smith predictor](http://en.wikipedia.org/wiki/Smith_predictor) are even more complicated!
+A rule of thumb in designing feedback loops is to "*redesign the system to avoid delay*". Although this might seem strange at first, it is worth taking seriously, since alternatives like the [Smith predictor](http://en.wikipedia.org/wiki/Smith_predictor) are even more complicated!
 
 In our case, we can have a set of "*warm standbys*" that are controlled by a separate feedback loop. Instead of requesting new servers and waiting a couple of minutes for them to be active, we can just get extra instances from the second feedback loop. The latter controls the number of standby instances and is supposed to act in a time scale that is equal to the time it takes to spin up a new instance. With this last choice, we allow the new instances to be again available immediately from the perspective of the second loop.
 
@@ -1084,7 +1084,7 @@ The controlled system can be an actual machine/program/system but instead it als
 
 The controlled system is likely to exhibit some form of [lag, delay or other internal dynamics](#system-dynamics). These cause the controller to have a more difficult job and often result in a less accurate functioning feedback system. In some cases it is however possible to redesign the feedback system to the point where it does not have these internal dynamics.
 
-Controllers come in various types: most used is the [PID controller](#pid-control), which is composed of a proportional, integral and derivative controller, all using their one parameter (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png) respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an [on/off controller](#onoff-control) or a controller that is based on another control strategy might be useful. An example of the latter can be found in the [case study on server scaling](#A-better-approach).
+Controllers come in various types: most used is the [PID controller](#pid-control), which is composed of a proportional, integral and derivative controller, all using their own parameter (![kp](equations/kp.png), ![ki](equations/ki.png) and ![kd](equations/kd.png) respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an [on/off controller](#onoff-control) or a controller that is based on another control strategy might be useful. An example of the latter can be found in the [case study on server scaling](#A-better-approach).
 
 There is not one definite approach when it comes to tuning a PID controller. Two cases can be distinguished: when the controlled system has an immediate response without internal dynamics, an analysis of the static process characteristics will suffice. In this case the PID parameters depend on the [ratio of the change](#tuning-the-controller) in the control input and the corresponding change in the control output.
 
