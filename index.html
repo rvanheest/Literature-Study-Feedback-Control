@@ -37,7 +37,7 @@
           <h1>
 <a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h1>
 
-<p><strong>In this blog intends to explore the concepts of feedback control applied to computer science. We will make use of the <a href="http://www.scala-lang.org/">Scala programming language</a> as well as the <a href="http://reactivex.io/">ReactiveX Framework</a>. Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.</strong></p>
+<p><strong>This blog intends to explore the concepts of feedback control applied to computer science. We will make use of the <a href="http://www.scala-lang.org/">Scala programming language</a> as well as the <a href="http://reactivex.io/">ReactiveX Framework</a>. Although feedback control can generally be described in terms of complicated mathematics, this blog does not cover those but will rather focus on the higher level concepts and some practical applications related to computer science.</strong></p>
 
 <p><strong>I am thankful for the help and suggestions of a number of people. Without them this blog would not have been written!
 	<ul>
@@ -48,7 +48,7 @@
 	</ul>
 </strong></p>
 
-<p>Enterprise systems are often built to maintain a flow of arbitrary items in a sequence of processing steps. For example, an online retailer wants to manage the flow of packages through its facilities. As a control mechanism <em>the number of pending orders released to the warehouses per time unit</em> is used. The main problem for this control mechanism is how to throttle this flow such that the warehouses are not idle, but are not overflowing either</p>
+<p>Enterprise systems are often built to maintain a flow of arbitrary items in a sequence of processing steps. For example, an online retailer wants to manage the flow of packages through its facilities. As a control mechanism <em>the number of pending orders released to the warehouses per time unit</em> is used. The main problem for this control mechanism is how to throttle this flow such that the warehouses are not idle, but are not overflowing either.</p>
 
 <p>A solution for this might be the so called <em>feed-forward control</em> method in which one verifies for each type of order how long the warehouses take to process it and base throttling calculations on these results. This strategy will work, as long as there are no disturbances of the workflow. However, conveyors may run slower of faster than expected, a packing machine may malfunction which makes that one single order takes longer to be processed or the internal workings of a certain part of the process is unknown. All kinds of uncertainties (random effects or lack of knowledge) may happen that cannot be dealt with in feed-forward control.</p>
 
