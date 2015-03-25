@@ -245,10 +245,9 @@ When designing a feedback system for controlling the size of a cache we need to 
 
 The same holds for designing a feedback system for the example of a pipe feeding into a water tank. Here the water tank's output might be a ratio (to what percentage it is filled) or a volume (how many cubic meters of water are in), which the controller needs to convert into an action on the water supply. This action depends on the type of water supply: can it be only *opened* and *closed* or are there more states in between?
 
-##Controller types
 In general we can thus say that the controller serves the purpose of translating the controlled system's output signal into its next input signal. But as we just saw, the controller might be different, depending on the situation.
 
-###On/Off control
+##On/Off control
 The simplest controller is the on/off switch. Whenever the error is positive, the controlled system is turned on and visa versa. This is a very simple approach, but in practice not very effective since the system will not settle to a steady state. It will rather oscillate rapidly between its two states.
 
 To show this behavior, let's implement a cruise control feedback system that uses an on/off controller. To keep the behavior of the cruise control simple, we expect any changes to be applied immediately, without any form of lag or delay. We define a class `SpeedSystem` which has a function `interact(setting: Boolean): Int` which respectively increases and decreases the `speed` variable depending on the `setting: Boolean` being `true` or `false`. We also define speed limits that vary over time in the `setPoint` function.
@@ -291,7 +290,7 @@ This results in the diagram below. Here we can clearly see the oscillating behav
 
 To improve this controller a bit, we can introduce a dead zone or hysteresis. The former only sends an `on` signal to the system when a certain threshold is exceeded. The latter (also known as [Schmitt trigger](http://en.wikipedia.org/wiki/Schmitt_trigger)) maintains the same corrective action when the tracking error flips from positive to negative, until some threshold is exceeded. The latter is often used in conventional heating systems.
 
-###Proportional control
+##Proportional control
 To improve the control we have over the system, we need to come up with something better than an on/off controller. An obvious step is to take the magnitude of the error into account when deciding on the magnitude of the corrective action. This implies that a small error leads to a small correction, whereas a large error leads to a greater corrective action. To achieve this, we let the control action be proportional to the tracking error:
 
 ![Proportional control](equations/Proportional control.png)
@@ -347,7 +346,7 @@ The other simulation (`k = 0.5`) does reach the actual setpoint, from which it f
 
 What happens here in general is that the proportional controller can only produce a nonzero output if it gets a nonzero input. This directly follows from the equation above. As the tracking error diminishes, the controller output will become smaller and eventually will be zero. However, some systems (like the cruise control system or a heated pot on a stove) need a nonzero input in the steady state. If we use a proportional controller in such systems, the consequence will be that some residual error will persist; in other words the system output `y` will always be less than the desired setpoint `r`. This phenomenon is known as *proportional droop*.
 
-###Integral Control
+##Integral control
 To solve problems caused by proportional droop, we introduce a new type of controller. This controller does not look at the *current* tracking error, but uses the *sum of all previous tracking errors* to produce its newest control action. As we know from mathematics, in a continuous stream a sum becomes an integral (hence its name), resulting in the following equation.
 
 ![Integral control](equations/Integral control.png)
@@ -403,7 +402,7 @@ By using this code sample we find a correct implementation for the cruise contro
 
 ![PI controller on cruise control system](images/Cruise control - PI.png)
 
-### Derivative control
+## Derivative control
 Besides the proportional controller and integral controller, which respectively control based on the present and the past, we can also try to control a feedback system based on a prediction of the future. This is done by the derivative controller. From mathematics we know that the derivative is the rate of change of some quantity. Therefore we can conclude that if the derivative of the tracking error is positive, the tracking error is currently growing (and vice versa). From this conclusion we can then take action and react to changes as fast as possible (before the tracking error has a chance to become large).
 
 Mathematically we can express the derivative controller by the following equation:
@@ -413,7 +412,7 @@ Mathematically we can express the derivative controller by the following equatio
 Even though '*anticipating the future*' sounds promising, there are a number of problems with the derivative controller. First of all a sudden setpoint change will lead to a large momentary spike, which will be the input of the controlled system. This effect is known as *derivative kick*.  
 Besides that the input signal of the controller can have a high-frequency noise. Taking the derivative of such a signal only makes things worse by enhancing the effect of the noise.
 
-### PID control
+## PID control
 The most common use of the derivative controller is in combination with the proportional and integral controllers, forming a three-term *PID controller*. Here we use all three controllers and sum the outcomes.
 
 ![PID controller](images/PIDController.png)
@@ -1024,7 +1023,7 @@ This results in a simulation that is improved a bit with respect to the first si
 
 ![Second server pool simulation](images/server scaling/Server Pool Loop 2.png)
 
-### A better approach
+## A better approach
 At this point we need to take a step back and look at what we are really facing. First of all, it should be clear by now that the control input must be a positive integer. We can only have a whole number of workers; not halves or thirds are allowed. Secondly, until now we have looked at the *magnitude* of the error, rather than the *sign*.
 
 With these two things in mind, let's create a control strategy that is way simpler than the PID controller's strategy:
