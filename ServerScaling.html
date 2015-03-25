@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+	<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+	<script type="text/javascript">
+		LatexIT.add('p',true);
+		LatexIT.add('li',true);
+		LatexIT.add('td',true);
+	</script>
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Feedback Control for Hackers</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Feedback Control for Hackers</h1>
+        <h2>Introduction to feedback control in computer science</h2>
+        <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          
+<h1>
+<a id="server-scaling" class="anchor" href="#server-scaling" aria-hidden="true"><span class="octicon octicon-link"></span></a>Server Scaling</h1>
+
+<p>In cloud computing we often deal with a complex system that takes in jobs, distributes them over the system, where they are executed. For a simple cloud based system that is based on an <em><a href="http://en.wikipedia.org/wiki/Cloud_computing#Infrastructure_as_a_service_.28IaaS.29">Infrastructure as a Service</a></em> architecture, the jobs are often taken in by a head node that distributes them over multiple worker nodes. These worker nodes are often leased from a cloud provider (Amazon EC2, Microsoft Azure, etc.), where you only pay for the time they are used. Once a job is finished, the result is sent back to the head node, which returns it to the user.</p>
+
+<p>While creating a cloud application you have a number of issues to deal with. Your system should run with <em>as little human intervention as possible</em>. This means that you have to implement some smart algorithms to get a good performance. Your customers will send you jobs to be executed and don't like to wait a long time for their results to come back. Therefore you need to <em>lease and release</em> virtual machines depending on how many job are in the system and what their loads are. In literature this is also referred to as <em>elasticity</em> or <em>auto-scaling</em>. Also jobs need to be scheduled or distributed over the available virtual machines evenly, such that every job can be completed as fast as possible.</p>
+
+<p>A challenging question in this whole problem is when to lease an extra machine? After all, it takes a couple of minutes for a new machine to be up and running and after that time, the machine might not be needed or it turned out that only one new machine was not enough. And when to release a machine? In fact, you don't know whether or not you will urgently need the machine seconds after its release.</p>
+
+<h2>
+<a id="a-first-approach" class="anchor" href="#a-first-approach" aria-hidden="true"><span class="octicon octicon-link"></span></a>A first approach</h2>
+
+<p>The underlying problem is typically a problem that can be solved using feedback control. Let us first consider a simplified version of this problem, where we will assume the following:</p>
+
+<ol>
+<li>Control actions are applied periodically, with constant intervals in between.</li>
+<li>In the intervals between control actions, jobs come in at the head node and are handled by the worker nodes</li>
+<li>If a job comes in and no worker nodes are available, then the job is send back as a failure. Jobs will not be queued, so there will be no accumulation of pending jobs.</li>
+<li>We can obtain the number of incoming and handled jobs for each interval.</li>
+<li>The number of jobs that arrive during each interval is a random quantity, as is the number of jobs that are handled by the worker nodes.</li>
+<li>Leasing a worker does not take any time. They are immediately available and do not need any time to spin up!</li>
+</ol>
+
+<p>This set of specifications will seem weird at first glance, but will later turn out to be a nice starting point for approaching the general problem of elasticity. From a control perspective, the absence of a queue is important: a queue is a form of memory, which leads to more complicated behavior and internal dynamics.</p>
+
+<h3>
+<a id="system-design" class="anchor" href="#system-design" aria-hidden="true"><span class="octicon octicon-link"></span></a>System design</h3>
+
+<p>With this set of specifications in mind, we can now define the input and output variables for the controlled system. The number of active servers will be the control input variable. The output will be the success ratio, which is defined as the ratio of completed to incoming jobs. The goal is to maximize this ratio and get it as close to 100% as possible.</p>
+
+<p>This design results in the following implementation for the <code>ServerPool</code> that we will use in our simulations. Here <code>server</code> is a function that indicates how many jobs are handled by the system and <code>load</code> is a function that determines how many jobs are submitted per interval. We will discuss implementations of these functions later. Finally, <code>n</code> is the number of workers that are available.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">ServerPool</span>(<span class="pl-v">n</span>: <span class="pl-st">Int</span>, <span class="pl-v">server</span>: () <span class="pl-k">=&gt;</span> <span class="pl-st">Double</span>, <span class="pl-v">load</span>: () <span class="pl-k">=&gt;</span> <span class="pl-st">Double</span>, <span class="pl-v">res</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.0</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Int</span>, <span class="pl-st">Double</span>] {
+
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-en">ServerPool</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">l</span> <span class="pl-k">=</span> load()
+
+        <span class="pl-k">if</span> (l <span class="pl-k">==</span> <span class="pl-c1">0</span>) {
+            <span class="pl-k">new</span> <span class="pl-en">ServerPool</span>(n, server, load, <span class="pl-c1">1</span>)
+        }
+        <span class="pl-k">else</span> {
+            <span class="pl-k">val</span> <span class="pl-en">nNew</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, u)
+            <span class="pl-k">val</span> <span class="pl-en">completed</span> <span class="pl-k">=</span> math.min((<span class="pl-c1">0</span> until nNew).map { _ <span class="pl-k">=&gt;</span> server() }.sum, l)
+            <span class="pl-k">new</span> <span class="pl-en">ServerPool</span>(nNew, server, load, completed <span class="pl-k">/</span> l)
+        }
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span><span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> res
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Completion rate<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> res, <span class="pl-s1"><span class="pl-pds">"</span>Servers<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> n)
+}</pre></div>
+
+<h3>
+<a id="tuning-the-controller" class="anchor" href="#tuning-the-controller" aria-hidden="true"><span class="octicon octicon-link"></span></a>Tuning the controller</h3>
+
+<p>Just as we did in the previous case study, we will now look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. Again we simulated multiple scenarios and came to the following figure:</p>
+
+<figure><img src="images/server%20scaling/Static%20process%20characteristics.png" alt="Server scaling - static process characteristics"><figcaption>Static process characteristics for a server pool<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>This shows that the success rate is proportional to the number of worker nodes until there are enough workers to handle all submitted jobs. Also notice that the slope and saturation point are determined by the traffic intensity.</p>
+
+<p>Performing a dynamic response test is not necessary, since we can already conclude that there are no partial responses. When <code>n</code> worker nodes are requested, we will get them all (possibly after some delay); not a portion at first and the rest later! Although this may seem good news at first, we have to realize the consequences of not having partial responses. After all, we need to find values for a controller to act in the control loop which only can be found by measuring a delay τ and a time constant T. However, in this case there is no delay, causing the tuning formulas end up in dividing by zero! Therefore we need to find another method to get to these controller values.</p>
+
+<p>Luckily we can combine the three types of tuning formulas and come up with the following set of formulas:</p>
+
+<p lang="latex">k_p = a \frac{\Delta u}{\Delta y} \ \ \ k_i = b \frac{\Delta u}{\Delta y} \ \ \ k_d = c \frac{\Delta u}{\Delta y}</p>
+
+<p>Here $\Delta u$ is the static change in the control input and $\Delta y$ is the corresponding change in the control output. The values for $a$, $b$ and $c$ are typically chosen somewhat arbitrarily in the following ranges:</p>
+
+<p lang="latex">a \in [0.3,1.2]\ \ \ b \in [0.25,1.0]\ \ \ c \in [0.4,0.5]</p>
+
+<p>From the measurements taken in the static process characteristics we can see that $\Delta u = 5$ and $\Delta y = 0.45$ for the line with traffic intensity 1000. With that in mind we choose $k_p = 1$ and $k_i = 5$ (notice that with this value for $k_p$, the value of $a$ is outside the given range).</p>
+
+<p>We implement a first simulation that runs for 300 time units and has a setpoint of 0.8 until 100 time units and 0.6 afterwards. Notice that these are far from ideal, since we actually want a setpoint of 1.0. Since there are some issues with this value as a setpoint (as discussed later) we will stick to these lower values for now.</p>
+
+<p>The <code>server</code> function is based on a <a href="http://en.wikipedia.org/wiki/Beta_distribution">beta distribution</a>, since this makes sure that every worker in the model does some finite work. The <code>load</code> function is based on a normal distribution but changes over time, such that the simulated workload is not always the same.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">val</span> <span class="pl-en">global_time</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-k">def</span> <span class="pl-en">time</span><span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Long</span>] <span class="pl-k">=</span> (<span class="pl-c1">0L</span> until <span class="pl-c1">300L</span>).toObservable observeOn <span class="pl-en">ComputationScheduler</span>()
+    <span class="pl-k">def</span> <span class="pl-en">setpoint</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (t <span class="pl-k">&lt;</span> <span class="pl-c1">100</span>) <span class="pl-c1">0.8</span> <span class="pl-k">else</span> <span class="pl-c1">0.6</span>
+
+    <span class="pl-k">def</span> <span class="pl-en">server</span>() <span class="pl-k">=</span> <span class="pl-c1">100</span> <span class="pl-k">*</span> <span class="pl-en">Randomizers</span>.betavariate(<span class="pl-c1">20</span>, <span class="pl-c1">2</span>)
+    <span class="pl-k">def</span> <span class="pl-en">load</span>() <span class="pl-k">=</span> {
+        global_time <span class="pl-k">+</span><span class="pl-k">=</span> <span class="pl-c1">1</span>
+
+        <span class="pl-k">if</span> (global_time <span class="pl-k">&lt;</span> <span class="pl-c1">200</span>) <span class="pl-en">Randomizers</span>.gaussian(<span class="pl-c1">1000</span>, <span class="pl-c1">5</span>)
+        <span class="pl-k">else</span> <span class="pl-en">Randomizers</span>.gaussian(<span class="pl-c1">1200</span>, <span class="pl-c1">5</span>)
+    }
+
+    <span class="pl-k">val</span> <span class="pl-en">p</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">ServerPool</span>(<span class="pl-c1">8</span>, server, load)
+    <span class="pl-k">val</span> <span class="pl-en">c</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">PIDController</span>(<span class="pl-c1">1</span>, <span class="pl-c1">5</span>) map math.round map (_ toInt)
+
+    <span class="pl-en">Loops</span>.closedLoop(time map setpoint, <span class="pl-c1">0.0</span>, c <span class="pl-k">++</span> p)
+}</pre></div>
+
+<p>Running this simulation will result in the following chart:</p>
+
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%201.png" alt="First server pool simulation"><figcaption>Server pool simulation with a setpoint of 0.8 and 0.6 and a variable load<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>These results show that in the first 100 time units the number of servers oscillates between 8 and 9. Clearly 8 workers is often not enough, whereas 9 is too much. We see the same thing happen between time units 100 until 200, where 6 workers is too few and 7 is too much.</p>
+
+<p>Also the completion rate does not perform well. It oscillates with amplitudes of 5 to 10 percent. Notice that the diminishing of the oscillations in the last part of the simulation (time units 200 until 300) is not due to a mechanic in the system, but rather a change in the amount of traffic.</p>
+
+<h3>
+<a id="getting-close-to-100-percent" class="anchor" href="#getting-close-to-100-percent" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting close to 100 percent</h3>
+
+<p>Of course having a completion rate of 60% or 80% is not exactly the behavior we would expect from a cloud based system. We want all jobs to be completed and none being rejected. Therefore we prefer to have the completion rate at 100%. Taking a closer look at the theory behind feedback control systems will however reveal an important thing we cannot forget: if our setpoint value is 100% (or 1.0), then the tracking error can never be negative and hence no workers can be released in this particular example!</p>
+
+<p>A simple solution to this would be to choose a setpoint value sufficiently close to 1.0, for example 0.995. But choosing this will face us with an unusual asymmetry in the tracking error. Everything from 0 to 0.995 produces a positive error, whereas everything from 0.995 to 1.0 causes a negative error. In a PID controller this means that control action that tend to increase the number of workers will be 100 times stronger than those who will decrease the number of workers.</p>
+
+<p>This is fixable by applying different weights to positive and negative control actions of a PID controller. In the following implementation of <code>AsymmetricPIDController</code> we apply a ratio of $1:20$ for positive and negative control actions.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">AsymmetricPIDController</span>(<span class="pl-v">kp</span>: <span class="pl-st">Double</span>, <span class="pl-v">ki</span>: <span class="pl-st">Double</span>, <span class="pl-v">kd</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.0</span>, <span class="pl-v">integral</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">deriv</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">prev</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">error</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">AsymmetricPIDController</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">e</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (error <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>) error <span class="pl-k">/</span> <span class="pl-c1">20.0</span> <span class="pl-k">else</span> error
+
+        <span class="pl-k">val</span> <span class="pl-en">i</span> <span class="pl-k">=</span> integral <span class="pl-k">+</span> <span class="pl-en">DT</span> <span class="pl-k">*</span> e
+        <span class="pl-k">val</span> <span class="pl-en">d</span> <span class="pl-k">=</span> (prev <span class="pl-k">-</span> e) <span class="pl-k">/</span> <span class="pl-en">DT</span>
+
+        <span class="pl-k">new</span> <span class="pl-en">AsymmetricPIDController</span>(kp, ki, kd, i, d, e)
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> prev <span class="pl-k">*</span> kp <span class="pl-k">+</span> integral <span class="pl-k">*</span> ki <span class="pl-k">+</span> deriv <span class="pl-k">*</span> kd
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Asymmetric controller<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>This results in a simulation that is improved a bit with respect to the first simulation, but still gives large oscillations in the number of servers and has completion rates that differ up to 10% of the actual setpoint.</p>
+
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%202.png" alt="Second server pool simulation"><figcaption>Server pool simulation with a setpoint close to 1.0<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<h2>
+<a id="a-better-approach" class="anchor" href="#a-better-approach" aria-hidden="true"><span class="octicon octicon-link"></span></a>A better approach</h2>
+
+<p>At this point we need to take a step back and look at what we are really facing. First of all, it should be clear by now that the control input must be a positive integer. We can only have a whole number of workers; not halves or thirds are allowed. Secondly, until now we have looked at the <em>magnitude</em> of the error, rather than the <em>sign</em>.</p>
+
+<p>With these two things in mind, let's create a control strategy that is way simpler than the PID controller's strategy:</p>
+
+<ol>
+<li>Let the setpoint be 1.0; causing the tracking error to never be negative.</li>
+<li>If the tracking error is positive, add an extra worker to the worker pool.</li>
+<li>If the tracking error is zero, do nothing.</li>
+<li>Periodically decrease the number of workers by 1 and see whether a smaller number is sufficient.</li>
+</ol>
+
+<p>Step 4 is crucial in order to allow for workers to be released. This can be improved even further by scheduling trial steps more frequently after releasing a worker than after leasing a worker. Implementing this in the simulation framework results in the following <code>SpecialController</code>:</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">SpecialController</span>(<span class="pl-v">period1</span>: <span class="pl-st">Int</span>, <span class="pl-v">period2</span>: <span class="pl-st">Int</span>, <span class="pl-v">time</span>: <span class="pl-st">Int</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">res</span>: <span class="pl-st">Int</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">error</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">SpecialController</span> <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (error <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>)
+            <span class="pl-k">new</span> <span class="pl-en">SpecialController</span>(period1, period2, period1, <span class="pl-c1">1</span>)
+        <span class="pl-c">// at this point we know that the error must be 0</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">==</span> <span class="pl-c1">1</span>)
+            <span class="pl-k">new</span> <span class="pl-en">SpecialController</span>(period1, period2, period2, <span class="pl-k">-</span><span class="pl-c1">1</span>)
+        <span class="pl-k">else</span>
+            <span class="pl-k">new</span> <span class="pl-en">SpecialController</span>(period1, period2, time <span class="pl-k">-</span> <span class="pl-c1">1</span>, <span class="pl-c1">0</span>)
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> res
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Special controller<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>Notice that this is an incremental controller: it does not keep track of the number of leased workers but rather gives instructions on leasing or releasing any machines. Therefore we need to include an <code>Integrator</code> between the controller and the plant.</p>
+
+<figure><img src="images/server%20scaling/Final%20system.png" alt="Final feedback system"><figcaption>Feedback architecture of the server pool<span class="source">source: Feedback Control for Computer Systems, p.171<span></figcaption></figure>
+
+<p>A simulation using this approach is very effective, as shown in the following chart. The number of servers stays constant and periodically checks whether a worker could be released. Between time units 500 and 600 we can nicely see the effect of scheduling more frequent test steps after a successful release. Three times in short period of time the controller tries to lower the number of workers. The first and second time, this is successful, the third time it turns out that this worker is really needed.</p>
+
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%203.png" alt="Third server pool simulation"><figcaption>Server pool simulation using the <code>SpecialController</code><span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<h2>
+<a id="spinning-up-the-server" class="anchor" href="#spinning-up-the-server" aria-hidden="true"><span class="octicon octicon-link"></span></a>Spinning up the server</h2>
+
+<p>Until now we have made the assumption that newly requested servers are available instantaneously. In practice however, it often takes about a minute or 2 until a requested server is available. Given that the control actions take place on the order of seconds, this is simply too big of a delay to be ignored.</p>
+
+<p>A rule of thumb in designing feedback loops is to "<em>redesign the system to avoid delay</em>". Although this might seem strange at first, it is worth taking seriously, since alternatives like the <a href="http://en.wikipedia.org/wiki/Smith_predictor">Smith predictor</a> are even more complicated!</p>
+
+<p>In our case, we can have a set of "<em>warm standbys</em>" that are controlled by a separate feedback loop. Instead of requesting new servers and waiting a couple of minutes for them to be active, we can just get extra instances from the second feedback loop. The latter controls the number of standby instances and is supposed to act in a time scale that is equal to the time it takes to spin up a new instance. With this last choice, we allow the new instances to be again available immediately from the perspective of the second loop.</p>
+
+<figure><img src="images/server%20scaling/System%20with%20spin%20up.png" alt="System design with spin up"><figcaption>Feedback architecture of the server pool with warm standbys</code><span class="source">source: Feedback Control for Computer Systems, p.168<span></figcaption></figure>
+
+<h2>
+<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
+
+<p>In cloud computing we often deal with a (complex) system that receives jobs from its users and distributes those over several workers. These workers are leased by cloud providers and are only paid for the time they are used. One of the challenges while implementing such a system is to come up with a good policy for auto-scaling. When to lease or release a machine?</p>
+
+<p>A simplified version of the problem assumes that jobs will never be queued and instead be rejected if immediate processing is not possible. Besides that we assume that newly requested servers are directly available; no spin up time is required. We found that a PID controller is not appropriate to use in this setup, especially as the setpoint requests a completion rate close to 100%. Instead we used a simpler control strategy that performs great with the goal of 100% completion rate.</p>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/zipball/master" class="button">
+            <small>Download the code as</small>
+            .zip file
+          </a>
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/tarball/master" class="button">
+            <small>Download the code as</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><em>Feedback Control for Hackers</em> is<br/>written by <a href="https://github.com/rvanheest">Richard van Heest</a>.</p>
+		  
+		  <h2>Table of Contents</h2>
+		  <ol>
+			<li><a href="./index.html">Introduction</a></li>
+			<li><a href="./FeedbackSystems.html">Feedback systems</a></li>
+			<li><a href="./SystemDynamics.html">System dynamics</a></li>
+			<li><a href="./Controllers.html">Controllers</a></li>
+			<li><a href="./Simulation.html">Simulation</a></li>
+			<li><a href="./CacheHitRate.html">Case study: Cache hit rate</a></li>
+			<li id="selected"><a href="./ServerScaling.html">Case study: Server scaling</a>
+				<ul>
+					<li><a href="#a-first-approach">A first approach</a>
+						<ul>
+							<li><a href="#system-design">System design</a></li>
+							<li><a href="#tuning-the-controller">Tuning the controller</a></li>
+							<li><a href="#getting-close-to-100-percent">Getting close to 100 percent</a></li>
+						</ul>
+					</li>
+					<li><a href="#a-better-approach">A better approach</a></li>
+					<li><a href="#spinning-up-the-server">Spinning up the server</a></li>
+					<li><a href="#summary">Summary</a></li>
+				</ul>
+			</li>
+			<li><a href="./Conclusion.html">Conclusion</a></li>
+		  </ol>
+        </aside>
+      </div>
+    </div>
+
+	<script type="text/javascript">
+	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	  try {
+	    var pageTracker = _gat._getTracker("UA-60861631-1");
+	  pageTracker._trackPageview();
+	  } catch(err) {}
+	</script>
+  </body>
+</html>

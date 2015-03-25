@@ -479,7 +479,7 @@ header h2 {
 
 .inner {
   position: relative;
-  width: 940px;
+  width: 1053px;
   margin: 0 auto;
 }
 
@@ -527,7 +527,7 @@ header h2 {
 
 aside#sidebar {
   float: right;
-  width: 201px;
+  width: 317px;
   min-height: 504px;
   padding-left: 20px;
   font-size: 12px;
@@ -546,6 +546,16 @@ aside#sidebar ol {
 }
 aside#sidebar ol a {
   color: #666;
+}
+
+aside#sidebar li#selected,
+aside#sidebar li#selected a {
+  color: #2879d0;
+}
+
+aside#sidebar ol,
+aside#sidebar ul {
+  margin-bottom: 0;
 }
 
 #downloads {

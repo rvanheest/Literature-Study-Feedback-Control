@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+	<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+	<script type="text/javascript">
+		LatexIT.add('p',true);
+		LatexIT.add('li',true);
+		LatexIT.add('td',true);
+	</script>
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Feedback Control for Hackers</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Feedback Control for Hackers</h1>
+        <h2>Introduction to feedback control in computer science</h2>
+        <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          
+<h1>
+<a id="conclusion" class="anchor" href="#conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion</h2>
+
+<p>In feedback control we continuously compare the output of a controlled system with a desired reference value and supply new input values to the system in order to counteract any deviations in the output from the reference value. Typically in this kind of systems the difference between the control output and the reference value (<a href="./FeedbackSystems.html#the-components-of-a-closed-loop-system">setpoint</a>) is taken into a Controller that transforms the error into a new control input for the controlled system.</p>
+
+<p>The controlled system can be an actual machine/program/system but instead it also might be a <a href="./Simulation.html#simulation">simulation</a>. The latter is often advisable while designing a feedback control system, since (I) it provides a way to get a better understanding and intuition for the abstract problem and the internal workings of the system, (II) it is most often not possible to do extensive testing and experimenting on real-world machines, (III) it provides a way of proving the correctness of the feedback system.</p>
+
+<p>The controlled system is likely to exhibit some form of <a href="./SystemDynamics.html#system-dynamics">lag, delay or other internal dynamics</a>. These cause the controller to have a more difficult job and often result in a less accurate functioning feedback system. In some cases it is however possible to redesign the feedback system to the point where it does not have these internal dynamics.</p>
+
+<p>Controllers come in various types: most used is the <a href="./Controllers.html#pid-control">PID controller</a>, which is composed of a proportional, integral and derivative controller, all using their own parameter ( $k_p$, $k_i$ and $k_d$ respectively). Occasionally we find ourselves in situations where a PID controller is not good enough. In those cases an <a href="./Controllers.html#onoff-control">on/off controller</a> or a controller that is based on another control strategy might be useful. An example of the latter can be found in the <a href="./ServerScaling.html#a-better-approach">case study on server scaling</a>.</p>
+
+<p>There is not one definite approach when it comes to tuning a PID controller. Two cases can be distinguished: when the controlled system has an immediate response without internal dynamics, an analysis of the static process characteristics will suffice. In this case the PID parameters depend on the <a href="./ServerScaling.html#tuning-the-controller">ratio of the change</a> in the control input and the corresponding change in the control output.</p>
+
+<p>In the other case (when the system does exhibit internal dynamics) there is <a href="./CacheHitRate.html#dynamic-response">not one definite approach</a> when it comes to tuning a PID controller. The process starts with doing analysis of both the static process characteristics and the system's dynamic response. Note that both these tests are done in an open-loop setting without the presence of a controller. Based on these tests, values for $K$, $\tau$ and $T$ need to be found by either fitting a model or using the <a href="./CacheHitRate.html#finding-the-first-values">geometric construction</a>. These values translate into the PID parameters by applying either one of the <a href="./CacheHitRate.html#calculating-the-pid-parameters">Ziegler-Nichols, Cohen-Coon or AMIGO method</a>. In practice it will turn out to be useful to use all three methods and combine the results to get good parameters for the PID controller.</p>
+
+<p>Feedback control systems have proven to be successful for a long time in a wide variety of expertise. Now it is time to embrace this technique and apply it in the field of computer science!</p>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/zipball/master" class="button">
+            <small>Download the code as</small>
+            .zip file
+          </a>
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/tarball/master" class="button">
+            <small>Download the code as</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><em>Feedback Control for Hackers</em> is<br/>written by <a href="https://github.com/rvanheest">Richard van Heest</a>.</p>
+		  
+		  <h2>Table of Contents</h2>
+		  <ol>
+			<li><a href="./index.html">Introduction</a></li>
+			<li><a href="./FeedbackSystems.html">Feedback systems</a></li>
+			<li><a href="./SystemDynamics.html">System dynamics</a></li>
+			<li><a href="./Controllers.html">Controllers</a></li>
+			<li><a href="./Simulation.html">Simulation</a></li>
+			<li><a href="./CacheHitRate.html">Case study: Cache hit rate</a></li>
+			<li><a href="./ServerScaling.html">Case study: Server scaling</a></li>
+			<li id="selected"><a href="./Conclusion.html">Conclusion</a></li>
+		  </ol>
+        </aside>
+      </div>
+    </div>
+
+	<script type="text/javascript">
+	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	  try {
+	    var pageTracker = _gat._getTracker("UA-60861631-1");
+	  pageTracker._trackPageview();
+	  } catch(err) {}
+	</script>
+  </body>
+</html>

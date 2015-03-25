@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+	<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+	<script type="text/javascript">
+		LatexIT.add('p',true);
+		LatexIT.add('li',true);
+		LatexIT.add('td',true);
+	</script>
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Feedback Control for Hackers</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Feedback Control for Hackers</h1>
+        <h2>Introduction to feedback control in computer science</h2>
+        <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          
+<h1>
+<a id="cache-hit-rate-control" class="anchor" href="#cache-hit-rate-control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cache hit rate control</h1>
+
+<p>In computer science caches are used in various places in order to speed up the response to common queries or requests. Instead of doing the same long and slow calculation or disk operation again and again, we can save the result in memory the first time we receive the request. The next time a request comes in, we first look whether or not its result is already in the cache. We only choose to perform the calculation or disk operation if the result is not in the cache. From this we define a successful request as one whose result was in the cache already</p>
+
+<p>A good metric for how well the cache performs is the hit rate, which is the success rate of requests. This metric can be influenced by altering the cache size as well as by which requests are done. Keeping the cache size constant can obtain a 100% hit rate if always the same request is done, but also might obtain a much lower hit rate if many different requests are done.</p>
+
+<p>Unfortunately in practice we cannot control which requests are done, hence we can only adjust the size in order to increase the hit rate. Although in theory we could make the cache infinitely big, in practice we have a limited amount of space. To be more specific, we want to maintain a certain hit rate with as few space as possible.</p>
+
+<h2>
+<a id="system-design" class="anchor" href="#system-design" aria-hidden="true"><span class="octicon octicon-link"></span></a>System design</h2>
+
+<p>We are going to construct a feedback control system that controls the cache size and hence tries to maintain a certain hit rate. A first hurdle is to choose an output quantity. Although a cache's output actually is the result of the request, we are only interested in whether or not this result was already in the cache. Therefore the cache's output can be modeled as a Boolean variable. The hit rate is then defined as the <em>trailing average number of successes over the last $k$ requests</em>.</p>
+
+<p>This directly gives us a second hurdle, this time a more mathematical one: <em>how large does $k$ need to be</em>? In order to answer this question, we need to observe that (since each request results either in success or failure, a.k.a. a Boolean) requests can be regarded as <a href="http://en.wikipedia.org/wiki/Bernoulli_distribution">Bernoulli trials</a>. From the <a href="http://en.wikipedia.org/wiki/Central_limit_theorem#Classical_CLT">classical central limit theorem</a> it follows that the standard deviation of such Bernoulli trials with size $k$ is approximately $1/2\sqrt{k}$. If we want to have good control, we need to know the success rate to within at least 5% or better, hence $k$ needs to be approximately 100.</p>
+
+<p>Having solved these two issues we can now construct our feedback control system around the actual cache. To convert the Boolean results of the case into hit rates we will use a <a href="./Simulation.html#filters-and-actuators">FixedFilter</a>.</p>
+
+<figure><img src="images/cache/Loop%20model.png" alt="Cache loop model"><figcaption>Feedback architecture for the cache<span class="source">source: Feedback Control for Computer Systems, p.143<span></figcaption></figure>
+
+<p>The cache can now be implemented as follows:</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">Cache</span>(<span class="pl-v">size</span>: <span class="pl-st">Int</span>, <span class="pl-v">demand</span>: <span class="pl-st">Long</span> <span class="pl-k">=&gt;</span> <span class="pl-st">Int</span>, <span class="pl-v">internalTime</span>: <span class="pl-st">Long</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">cache</span>: <span class="pl-en">Map</span>[<span class="pl-st">Int</span>, <span class="pl-st">Long</span>] <span class="pl-k">=</span> <span class="pl-en">Map</span>(), <span class="pl-v">res</span>: <span class="pl-st">Boolean</span> <span class="pl-k">=</span> <span class="pl-c1">false</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Boolean</span>] {
+
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">Cache</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">time</span> <span class="pl-k">=</span> internalTime <span class="pl-k">+</span> <span class="pl-c1">1</span>
+        <span class="pl-k">val</span> <span class="pl-en">newSize</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, math floor u)
+        <span class="pl-k">val</span> <span class="pl-en">item</span> <span class="pl-k">=</span> demand(time)
+
+        <span class="pl-k">if</span> (cache contains item) {
+            <span class="pl-k">val</span> <span class="pl-en">newCache</span> <span class="pl-k">=</span> cache <span class="pl-k">+</span> (item <span class="pl-k">-</span><span class="pl-k">&gt;</span> time)
+
+            <span class="pl-k">new</span> <span class="pl-en">Cache</span>(newSize toInt, demand, time, newCache, <span class="pl-c1">true</span>)
+        }
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (cache.size <span class="pl-k">&gt;=</span> size) {
+            <span class="pl-k">val</span> <span class="pl-en">n</span> <span class="pl-k">=</span> <span class="pl-c1">1</span> <span class="pl-k">+</span> cache.size <span class="pl-k">-</span> size
+            <span class="pl-k">val</span> <span class="pl-en">vk</span> <span class="pl-k">=</span> cache map { <span class="pl-k">case</span> (i, l) <span class="pl-k">=&gt;</span> (l, i) }
+            <span class="pl-k">val</span> <span class="pl-en">newCache</span> <span class="pl-k">=</span> (cache <span class="pl-k">/</span><span class="pl-k">:</span> vk.map { <span class="pl-k">case</span> (l, _) <span class="pl-k">=&gt;</span> l }.toList.sorted.take(n).map(vk(_)))(_ <span class="pl-k">-</span> _)
+
+            <span class="pl-k">new</span> <span class="pl-en">Cache</span>(newSize.toInt, demand, time, newCache <span class="pl-k">+</span> (item <span class="pl-k">-</span><span class="pl-k">&gt;</span> time), <span class="pl-c1">false</span>)
+        }
+        <span class="pl-k">else</span> {
+            <span class="pl-k">val</span> <span class="pl-en">newCache</span> <span class="pl-k">=</span> cache <span class="pl-k">+</span> (item <span class="pl-k">-</span><span class="pl-k">&gt;</span> time)
+
+            <span class="pl-k">new</span> <span class="pl-en">Cache</span>(newSize.toInt, demand, time, newCache, <span class="pl-c1">false</span>)
+        }
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span><span class="pl-k">:</span> <span class="pl-st">Boolean</span> <span class="pl-k">=</span> res
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Cache hit rate<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action, <span class="pl-s1"><span class="pl-pds">"</span>Cache size<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> cache.size)
+}</pre></div>
+
+<h2>
+<a id="controller-settings" class="anchor" href="#controller-settings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Controller settings</h2>
+
+<p>After having constructed the feedback system, we need to decide what kind of controller we will use. The most obvious candidate is the PID controller, which needs two or three parameters (depending on using it as a PI controller or PID controller). As discussed <a href="./Controllers.html#pid-control">previously</a>, a PID controller is the sum of the proportional, integral and derivative control:</p>
+
+<p lang="latex">u_{PID}(t) = k_p e(t) + k_i \int_{0}^{t}e(\tau) \mathrm{d} \tau + k_d \frac{\mathrm{d} e(t)}{\mathrm{d} x}</p>
+
+<p>The parameters of this controller $k_p$, $k_i$ and $k_d$ will make <em>the</em> difference between a good or bad functioning system; therefore choosing the correct values is an important task.</p>
+
+<p>In order to retrieve these values, we need to take a closer look at the controlled system (the cache) first and discover what its behavior is. First we will look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. When the static behavior is known, we can use its results to determine the dynamic response: how long does it take for the system to respond to a sudden input change? Notice that both these experiments are done in an <a href="./FeedbackSystems.html#feedforward">open-loop setting</a> and without a controller. In the case of our cache we consider the controlled system to be the cache combined with the FixedFilter.</p>
+
+<h3>
+<a id="static-process-characteristics" class="anchor" href="#static-process-characteristics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Static process characteristics</h3>
+
+<p>To measure the static process characteristics we just have to turn on the controlled system, apply a steady input value, wait until the system has settled down and record the output. We do this in the following code sample. The demand is drawn from a Gaussian distribution with mean 0 and variance <code>demandWidth</code>. Then we construct the controlled system and follow the procedure described above: </p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[(<span class="pl-st">Double</span>, <span class="pl-st">Double</span>)] <span class="pl-k">=</span> {
+    <span class="pl-k">val</span> <span class="pl-en">demandWidth</span> <span class="pl-k">=</span> <span class="pl-c1">15</span>
+    <span class="pl-k">def</span> <span class="pl-en">demand</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> math floor gaussian(<span class="pl-c1">0</span>, demandWidth) toInt
+
+    <span class="pl-k">val</span> <span class="pl-en">p</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Cache</span>(<span class="pl-c1">0</span>, demand) map(<span class="pl-k">if</span> (_) <span class="pl-c1">1.0</span> <span class="pl-k">else</span> <span class="pl-c1">0.0</span>)
+    <span class="pl-k">val</span> <span class="pl-en">f</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">FixedFilter</span>(<span class="pl-c1">100</span>)
+    staticTest(p <span class="pl-k">++</span> f, <span class="pl-c1">150</span>, <span class="pl-c1">100</span>, <span class="pl-c1">5</span>, <span class="pl-c1">3000</span>)
+}
+
+<span class="pl-k">def</span> <span class="pl-en">gaussian</span>(<span class="pl-v">mean</span>: <span class="pl-st">Double</span>, <span class="pl-v">stdDev</span>: <span class="pl-st">Double</span>) <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Random</span>().nextGaussian() <span class="pl-k">*</span> stdDev <span class="pl-k">+</span> mean
+
+<span class="pl-k">def</span> <span class="pl-en">staticTest</span>[<span class="pl-en">A</span>](<span class="pl-v">initPlant</span>: <span class="pl-en">Component</span>[<span class="pl-st">Double</span>, <span class="pl-en">A</span>], <span class="pl-v">umax</span>: <span class="pl-st">Int</span>, <span class="pl-v">stepMax</span>: <span class="pl-st">Int</span>, <span class="pl-v">repeatMax</span>: <span class="pl-st">Int</span>, <span class="pl-v">tMax</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-en">Observable</span>[(<span class="pl-st">Double</span>, <span class="pl-en">A</span>)] <span class="pl-k">=</span> {
+    <span class="pl-k">val</span> <span class="pl-en">steps</span> <span class="pl-k">=</span> (<span class="pl-c1">0</span> until stepMax).toObservable.observeOn(<span class="pl-en">ComputationScheduler</span>())
+    <span class="pl-k">val</span> <span class="pl-en">repeats</span> <span class="pl-k">=</span> (<span class="pl-c1">0</span> until repeatMax).toObservable
+    <span class="pl-k">val</span> <span class="pl-en">ts</span> <span class="pl-k">=</span> (<span class="pl-c1">0</span> until tMax).toObservable
+    staticTest(initPlant, umax, steps, repeats, ts)
+}
+
+<span class="pl-k">def</span> <span class="pl-en">staticTest</span>[<span class="pl-en">A</span>](<span class="pl-v">initPlant</span>: <span class="pl-en">Component</span>[<span class="pl-st">Double</span>, <span class="pl-en">A</span>], <span class="pl-v">umax</span>: <span class="pl-st">Int</span>, <span class="pl-v">steps</span>: <span class="pl-en">Observable</span>[<span class="pl-st">Int</span>], <span class="pl-v">repeats</span>: <span class="pl-en">Observable</span>[<span class="pl-st">Int</span>], <span class="pl-v">ts</span>: <span class="pl-en">Observable</span>[<span class="pl-st">Int</span>])<span class="pl-k">:</span> <span class="pl-en">Observable</span>[(<span class="pl-st">Double</span>, <span class="pl-en">A</span>)] <span class="pl-k">=</span> {
+    <span class="pl-k">for</span> {
+        i <span class="pl-k">&lt;</span><span class="pl-k">-</span> steps
+        u <span class="pl-k">&lt;</span><span class="pl-k">-</span> steps.size.single map { i.toDouble <span class="pl-k">*</span> umax <span class="pl-k">/</span> _ }
+        plant <span class="pl-k">&lt;</span><span class="pl-k">-</span> repeats map { r <span class="pl-k">=&gt;</span> initPlant }
+        y <span class="pl-k">&lt;</span><span class="pl-k">-</span> (ts map (_ <span class="pl-k">=&gt;</span> u) scan(plant))(_ update _) drop <span class="pl-c1">1</span> map (_ action) last
+    } <span class="pl-k">yield</span> (u, y)
+}</pre></div>
+
+<p>Since we are working with some form of a stochastic process, we need to take into account that the pattern of requests might vary from time to time. Therefore we will simulate multiple scenarios of the static process characteristics with different values for <code>demandWidth</code>:</p>
+
+<figure><img src="images/cache/Static%20process%20characteristics.png" alt="Cache - static process characteristics"><figcaption>Static process characteristics for the cache<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>From these simulations we can derive that if we want a hit rate of 0.7, we need a cache size of about 40, assuming that a demandWidth of 15 is the most common situation.</p>
+
+<h3>
+<a id="dynamic-response" class="anchor" href="#dynamic-response" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dynamic response</h3>
+
+<p>The next step in determining the parameters of the PID controller is to conduct a step test to measure the dynamic response of the system. Performing this experiment is just a matter of turning on the system and observing what happens. First let the system be at rest initially (zero input). Then apply a sudden (preferably large) input change and record the development of the output value over time. If possible, do this a number of times in order to get a good signal-to-noise ratio.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">stepResponse</span>[<span class="pl-en">A</span>, <span class="pl-en">B</span>](<span class="pl-v">time</span>: <span class="pl-en">Observable</span>[<span class="pl-st">Long</span>], <span class="pl-v">input</span>: <span class="pl-st">Long</span> <span class="pl-k">=&gt;</span> <span class="pl-en">A</span>, <span class="pl-v">plant</span>: <span class="pl-en">Component</span>[<span class="pl-en">A</span>, <span class="pl-en">B</span>])<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-en">B</span>] <span class="pl-k">=</span> {
+    (time map input scan plant)(_ update _) drop <span class="pl-c1">1</span> map (_ action)
+}
+
+<span class="pl-k">def</span> <span class="pl-en">simulation</span><span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-k">def</span> <span class="pl-en">demand</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> math floor <span class="pl-en">Randomizers</span>.gaussian(<span class="pl-c1">0</span>, <span class="pl-c1">15</span>) toInt
+    <span class="pl-k">def</span> <span class="pl-en">input</span>(<span class="pl-v">time</span>: <span class="pl-st">Long</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">40</span>
+
+    <span class="pl-k">val</span> <span class="pl-en">p</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Cache</span>(<span class="pl-c1">0</span>, demand) map(<span class="pl-k">if</span> (_) <span class="pl-c1">1.0</span> <span class="pl-k">else</span> <span class="pl-c1">0.0</span>)
+    <span class="pl-k">val</span> <span class="pl-en">f</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">FixedFilter</span>(<span class="pl-c1">100</span>)
+    stepResponse(time, input, p <span class="pl-k">++</span> f)
+}</pre></div>
+
+<p>Doing so with the implementation of a cache will yield the following data, gathered over the course of 5 iterations and applied with an input change of 40.</p>
+
+<figure><img src="images/cache/Dynamic%20response%20-%20data.png" alt="Dynamic response - experiment data"><figcaption>Dynamic response for the cache<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<h4>
+<a id="finding-the-first-values" class="anchor" href="#finding-the-first-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Finding the first values</h4>
+
+<p>The analysis of this data can be done in multiple ways. A first option is to draw a tangent through the inflection point of the data and then use the construction below to find the values for $K$, $\tau$ and $T$ which we will use in a later stage.</p>
+
+<figure><img src="images/Tangent%20construction.png" alt="Tangent construction"><figcaption>Analysis of the dynamic response using a tangent<span class="source">source: Feedback Control for Computer Systems, p.84<span></figcaption></figure>
+
+<p>Although there are complete books written about finding these three values and what their relation is to the parameters of a PID controller, for us it is only necessary to understand what these values mean:</p>
+
+<ul>
+<li>
+<strong>Process gain $K$</strong> is the ratio between the value of the applied input signal and the steady-state process output after all transients have disappeared. In the construction above it is denoted as the height of the asymptote of the output.</li>
+<li>
+<strong>Time constant $T$</strong> denotes the time it takes for the process to settle to a steady state. Usually in this context 'settle' is defined as about 63% of its final value.</li>
+<li>
+<strong>Dead time $\tau$</strong> is the initial delay until the first input changes will begin to have any effect on the output.</li>
+</ul>
+
+<p>Unfortunately the data is more than often not as smooth as the red curve in the construction above. Since the data drawn from the experiment with the cache contains a lot of noise, it is a difficult task to find the inflection point and draw a tangent through it. What is a tangent to noisy data, after all? But besides that, it might be possible that (even when the data is smoothened enough) there is no inflection point at all. In that case, try to imagine where the inflection point would be if it would be there, and draw the tangent there. Of course, the values won't be as precise, but as we will see later, it is all a matter of eyeballing.</p>
+
+<p>A second method of finding the values for $K$, $\tau$ and $T$ is to fit a model through the data. Most commonly the following model is used to describe the step response of a process like the cache:</p>
+
+<p lang="latex">f_1(t) = \left\{\begin{matrix}
+K(1-e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\ 
+0 & \text{otherwise}
+\end{matrix}\right.</p>
+
+<p>A little more complex model solves an issue with this simple model: it has no vanishing slope as t gets closer to τ.</p>
+
+<p lang="latex">f_2(t) = \left\{\begin{matrix}
+K(1-(1 + \frac{t-\tau}{T})e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\ 
+0 & \text{otherwise}
+\end{matrix}\right.</p>
+
+<p>By fitting either of these models onto the data, we will find the values for $K$, $\tau$ and $T$. Notice that both models give different results, as shown in the fittings of the respective models below:</p>
+
+<figure><img src="images/cache/Dynamic%20response%20-%20f1.png" alt="Dynamic response - analyzed"><figcaption>Model fitting on the dynamic response using model 1<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<figure><img src="images/cache/Dynamic%20response%20-%20f2.png" alt="Dynamic response - analyzed"><figcaption>Model fitting on the dynamic response using model 2<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>In the following we will use the results found by fitting the simple model.</p>
+
+<h4>
+<a id="calculating-the-pid-parameters" class="anchor" href="#calculating-the-pid-parameters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Calculating the PID parameters</h4>
+
+<p>Once we have found values for $K$, $\tau$ and $T$, we can use multiple sets of tuning formulas (indicated as <strong>Ziegler-Nichols</strong>, <strong>Cohen-Coon</strong> and <strong>AMIGO</strong>) to find the parameters of the PID controller that we need to use. It should be noted that these sets will all give different results, which may vary considerably. Altogether these methods will give us however a good indication of the <em>range</em> where the parameters possibly lie. Respectively the Ziegler-Nichols, Cohen-Coon and AMIGO tuning formulas are given below. For each type of controller (P, PI and PID) the parameters $k_p$, $k_i$ and $k_d$ are specified:</p>
+
+<p lang="latex">\begin{matrix}
+ & \textbf{P} & \textbf{PI} & \textbf{PID} \\ 
+\bf{k_p} & \frac{T}{K\tau} & \frac{0.9T}{K\tau} & \frac{1.2T}{K\tau} \\ 
+\bf{k_i} & - & \frac{0.3T}{K\tau^2} & \frac{0.6T}{K\tau^2}\\ 
+\bf{k_d} & - & - & \frac{0.6T}{K}
+\end{matrix}
+</p>
+
+<p lang="latex">\begin{matrix}
+ & \textbf{P} & \textbf{PI} & \textbf{PID} \\ 
+\bf{k_p} & \frac{0.35\tau + T}{K\tau} & \frac{0.828\tau + 0.9T}{K\tau} & \frac{0.243\tau + 1.35T}{K\tau} \\ 
+\bf{k_i} & - & \frac{6.072 \tau^2 + 9.36 \tau T + 3T^2}{K\tau^3 + 11K \tau^2  T} & \frac{0.29646\tau^2 + 2.133\tau T + 2.7T^2}{K\tau^3 + 5K \tau^2 T}\\ 
+\bf{k_d} & - & - & \frac{0.4995T(0.18\tau + T)}{K(0.19\tau + T)}
+\end{matrix}
+</p>
+
+<p lang="latex">\begin{matrix}
+ & \textbf{P} & \textbf{PI} & \textbf{PID} \\ 
+\bf{k_p} & - & \frac{0.15 + \frac{0.35T}{\tau} - \frac{T^2}{(\tau + T)^2}}{K} & \frac{0.2\tau + 0.45T}{K\tau} \\ 
+\bf{k_i} & - & -\frac{(7\tau^2 + 12\tau T + T^2)(-3\tau^3 - 13\tau^2 T + 3 \tau T^2 -7T^3)}{K\tau^2(\tau + T)^2(49\tau^2 + 84\tau T + 267T^2)} & \frac{0.5\tau^2 + 1.175\tau T + 0.1125T^2}{K\tau^3 + 2K\tau^2T}\\ 
+\bf{k_d} & - & - & \frac{0.5\tau T(\frac{0.45T}{\tau} + 0.2)}{K(0.3\tau + T)}
+\end{matrix}
+</p>
+
+<p>When using these formulas, keep in mind that $K$ is the ratio of the applied input signal and the final steady-state process output. Therefore, divide $K$ by the input signal first, before plugging it in the tuning formulas. Since the input signal was 40, the value to be plugged in is $K = \frac{0.71}{40} = 0.01775$.</p>
+
+<p>Choosing to control the system with a PI controller and using the tuning formulas we find the following results:</p>
+
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="center"><strong>Ziegler-Nichols</strong></th>
+<th align="center"><strong>Cohen-Coon</strong></th>
+<th align="center"><strong>AMIGO</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">$k_p$</td>
+<td align="right">192.7</td>
+<td align="right">239.3</td>
+<td align="right">48</td>
+</tr>
+<tr>
+<td align="left">$k_i$</td>
+<td align="right">4.3</td>
+<td align="right">7.5</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">$k_d$</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+
+<p>The next and final step is to try out values within these ranges by simulating the entire feedback system (controllers, actuators, controlled system, and filters included) as designed at the start of this page. The demand will be simulated by drawing values from a Gaussian distribution. Changes in demand will be taken into account by changing the mean and variance of the distribution at times <code>t = 3000</code> and <code>t = 5000</code>. The former change increases the variance from 15 to 35, keeping the mean at 0, such that more values will be asked for. The latter demand change brings the mean up to 100, causing the demand function to return entirely new values. Because of this, the cache will need to repopulate, which is expected to take some time.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulationForGitHub</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-k">def</span> <span class="pl-en">time</span><span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Long</span>] <span class="pl-k">=</span> (<span class="pl-c1">0L</span> until <span class="pl-c1">10000L</span>).toObservable observeOn <span class="pl-en">ComputationScheduler</span>()
+    <span class="pl-k">def</span> <span class="pl-en">setpoint</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.7</span>
+
+    <span class="pl-k">def</span> <span class="pl-en">gaus</span>(<span class="pl-v">tuple</span>: (<span class="pl-st">Int</span>, <span class="pl-st">Int</span>)) <span class="pl-k">=</span> math floor <span class="pl-en">Randomizers</span>.gaussian(tuple _1, tuple _2) toInt
+    <span class="pl-k">def</span> <span class="pl-en">demand</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> gaus(<span class="pl-k">if</span> (t <span class="pl-k">&lt;</span> <span class="pl-c1">3000</span>) (<span class="pl-c1">0</span>, <span class="pl-c1">15</span>) <span class="pl-k">else</span> <span class="pl-k">if</span> (t <span class="pl-k">&lt;</span> <span class="pl-c1">5000</span>) (<span class="pl-c1">0</span>, <span class="pl-c1">35</span>) <span class="pl-k">else</span> (<span class="pl-c1">100</span>, <span class="pl-c1">15</span>))
+
+<span class="pl-c">//  val c = new PIDController(192.7, 4.3) // Ziegler-Nichols</span>
+<span class="pl-c">//  val c = new PIDController(239.3, 7.5) // Cohen-Coon</span>
+<span class="pl-c">//  val c = new PIDController(48, 1)      // AMIGO</span>
+    <span class="pl-k">val</span> <span class="pl-en">c</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">PIDController</span>(<span class="pl-c1">200</span>, <span class="pl-c1">2</span>)
+    <span class="pl-k">val</span> <span class="pl-en">p</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Cache</span>(<span class="pl-c1">0</span>, demand) map(<span class="pl-k">if</span> (_) <span class="pl-c1">1.0</span> <span class="pl-k">else</span> <span class="pl-c1">0.0</span>)
+    <span class="pl-k">val</span> <span class="pl-en">f</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">FixedFilter</span>(<span class="pl-c1">100</span>)
+    <span class="pl-k">val</span> <span class="pl-en">plant</span> <span class="pl-k">=</span> p <span class="pl-k">++</span> f
+
+    <span class="pl-en">Loops</span>.closedLoop(time map setpoint, <span class="pl-c1">0.0</span>, c <span class="pl-k">++</span> plant)
+}</pre></div>
+
+<p>The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hit rate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.</p>
+
+<figure><img src="images/cache/Simulation%20-%20Ziegler-Nichols.png" alt="Ziegler-Nichols simulation"><figcaption>Cache simulation using the results from Ziegler-Nichols<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>Although Ziegler-Nichols' results seemed poor, the results of Cohen-Coon are actually worse. The system is oscillating so much that changes in demand are not even noticeable. From this it becomes clear that parameters for the PID controller are not what we want in this case.</p>
+
+<figure><img src="images/cache/Simulation%20-%20Cohen-Coon.png" alt="Cohen-Coon simulation"><figcaption>Cache simulation using the results from Cohen-Coon<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>Using lower values for the controller the system seems to work something better, as shown by the results of the AMIGO simulation. The hit rate seems to track the setpoint better than before, the number of oscillations is less and their amplitude is smaller. However, it now takes longer for the system to respond to demand differences.</p>
+
+<figure><img src="images/cache/Simulation%20-%20AMIGO.png" alt="AMIGO simulation"><figcaption>Cache simulation using the results from AMIGO<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>To solve this issue, we will keep the integral part at a low value (<code>ki = 2</code>) and set the proportional part of the controller at a value in the order of Ziegler-Nichols and Cohen-Coon (<code>kp = 200</code>). This gives better results: fewer oscillations and a quicker response to demand changes.</p>
+
+<figure><img src="images/cache/Simulation.png" alt="Final simulation"><figcaption>Cache simulation usning the final values for <code>kp</code> and <code>ki</code><span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<h2>
+<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
+
+<p>The cache is a typical example of how to use feedback control in practice. Analyzing the case, we found that the cache requests could be viewed as Bernoulli trials and that we needed an average of the last 100 trials to get a hit ratio with about 95% accuracy.</p>
+
+<p>Further analysis in the behavior of the cache system revealed the static process characteristics as well as the internal dynamics, which both need to be taken into account when choosing the values for the control system's PID controller. To measure the <strong>static process characteristics</strong>, we just have to turn on the controlled system in an open-loop setting without controller, apply a steady input value and wait until the system has settled down, while recording the outputs. If possible, perform multiple simulations with different kinds of parameters to get a wider perspective of this part of the system's behavior.<br>
+The <strong>dynamic response</strong> is measured by turning on the system and measure what happens when you apply a sudden input change. These results are then analyzed by doing geometric constructions on the tangent or fitting a model through the data. The parameters obtained from this can be used to calculate the factors of the PID controller.</p>
+
+<p>For the cache examples we used these analyses to come up with some values that would give a satisfactory performance. Here we had to make a trade-off between the number and size of the oscillations and the speed with which the system deals with demand changes.</p>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/zipball/master" class="button">
+            <small>Download the code as</small>
+            .zip file
+          </a>
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/tarball/master" class="button">
+            <small>Download the code as</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><em>Feedback Control for Hackers</em> is<br/>written by <a href="https://github.com/rvanheest">Richard van Heest</a>.</p>
+		  
+		  <h2>Table of Contents</h2>
+		  <ol>
+			<li><a href="./index.html">Introduction</a></li>
+			<li><a href="./FeedbackSystems.html">Feedback systems</a></li>
+			<li><a href="./SystemDynamics.html">System dynamics</a></li>
+			<li><a href="./Controllers.html">Controllers</a></li>
+			<li><a href="./Simulation.html">Simulation</a></li>
+			<li id="selected"><a href="./CacheHitRate.html">Case study: Cache hit rate</a>
+				<ul>
+					<li><a href="#system-design">System design</a></li>
+					<li><a href="#controller-settings">Controller settings</a>
+						<ul>
+							<li><a href="#static-process-characteristics">Static process characteristics</a></li>
+							<li><a href="#dynamic-response">Dynamic response</a>
+								<ul>
+									<li><a href="#finding-the-first-values">Finding the first values</a></li>
+									<li><a href="#calculating-the-pid-parameters">Calculating the PID parameters</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#summary">Summary</a></li>
+				</ul>
+			</li>
+			<li><a href="./ServerScaling.html">Case study: Server scaling</a></li>
+			<li><a href="./Conclusion.html">Conclusion</a></li>
+		  </ol>
+        </aside>
+      </div>
+    </div>
+
+	<script type="text/javascript">
+	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	  try {
+	    var pageTracker = _gat._getTracker("UA-60861631-1");
+	  pageTracker._trackPageview();
+	  } catch(err) {}
+	</script>
+  </body>
+</html>

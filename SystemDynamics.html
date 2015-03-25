@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+	<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+	<script type="text/javascript">
+		LatexIT.add('p',true);
+		LatexIT.add('li',true);
+		LatexIT.add('td',true);
+	</script>
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Feedback Control for Hackers</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Feedback Control for Hackers</h1>
+        <h2>Introduction to feedback control in computer science</h2>
+        <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          
+<h1>
+<a id="system-dynamics" class="anchor" href="#system-dynamics" aria-hidden="true"><span class="octicon octicon-link"></span></a>System dynamics</h1>
+
+<p>In the previous <a href="./FeedbackSystems.html#example-cache-simulation">cache example</a> we made the assumption that the cache responds immediately to a change. Although this may seem an obvious choice (after all, we are manipulating the state of a computer program, which can be changed in an instant), there are cases where we have to be more careful. While working with cloud computing, requesting 20 more instances from the cloud data center will take a couple of minutes before they 'arrive'. In the meantime these instances are not available for any requests, but when they are online, they are immediately fully operational. Handling this with a feedback system is a harder task, since there is a certain amount of time between the control action and the response.</p>
+
+<p>Although in the virtual world these delays only occur in certain systems, they always occur in the physical world. Besides delays, we also have to deal with lags and inverse responses if we are designing a feedback system that involves physical world objects. This is due to the fact that this world is continuous, where objects cannot move from a certain position A to another position B in an instant. In fact they are bounded to a certain non-infinite velocity, which may require large amounts of force, energy and power, which may not be available or even impossible to supply. This makes designing feedback systems very hard and often results in error prone outputs.</p>
+
+<h2>
+<a id="lag-delay-and-inverse-response" class="anchor" href="#lag-delay-and-inverse-response" aria-hidden="true"><span class="octicon octicon-link"></span></a>Lag, delay and inverse response</h2>
+
+<p>For a good understanding, we need to take a closer look at lags, delays and inverse responses first. We will do so using some examples.</p>
+
+<p>A system has <strong>lag</strong> when it only partially responds to a control input. The response will start immediately, but it will take a while before it reaches the value that was given as the control input. This is also called an <strong>immediate partial response</strong>. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned off, the temperature will gradually drop back to the environment's temperature.</p>
+
+<figure><img src="images/Heated%20vessel.png" alt="Heating a vessel"><figcaption>Example of lag in a heated vessel<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
+
+<p><strong>Delay</strong> manifests itself by not responding immediately to the control input. Over some period of time, the control input does not have any effect on the controlled system. Only after that period, the control input has <em>full</em> effect on the system. In the cloud computing example we saw that when the control input asks for 20 more instances, it takes a while before these are available. But when these are available, they are there entirely (not just partially).</p>
+
+<p>In practice we often see a combination of delay and lag. As an example we set up a feedback system for the water level in a tank, where the water input comes from a long pipe feeding into the tank. When we fire the control input, the water starts to flow from the valve at the beginning of the pipe to the tank. However, it will take some time before the water level starts to rise, since the water needs to travel a certain distance (this is the delay). The water that comes in tank will however not cause the tank to be at the desired water level immediately but rather fill up slowly (this is the lag). This process is depicted in the image down below.</p>
+
+<figure><img src="images/Pipe%20in%20tank.png" alt="A tank fed by a pipe"><figcaption>Example of delay in a water tank<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
+
+<p>Besides lag or delay, a system can also give an <strong>inverse response</strong>, also referred to as a <strong>non-minimum phase system</strong>. When a control action is applied in a certain direction, the system responds by first going into the other direction, before going along with the control action. This causes a behavior as depicted in the image down below. An example of this is a flexible fishing rod: when it is yanks <em>back</em>, its tip will first move <em>forward</em>.</p>
+
+<figure><img src="images/Fishing%20rod.png" alt="Inverse response"><figcaption>Example of a non-minimum phase in a fishing rod<span class="source">source: Feedback Control for Computer Systems, p.30<span></figcaption></figure>
+
+<h2>
+<a id="response-components" class="anchor" href="#response-components" aria-hidden="true"><span class="octicon octicon-link"></span></a>Response components</h2>
+
+<p>In general we can divide the system's responses to a control action into two categories: forced and free response. The <strong>forced response</strong> is caused by the external disturbance due to the control action, whereas the <strong>free response</strong> is cause by the system's internal structure. For the heated vessel the forced response is the temperature going up because of the heat supply. However, as soon as the heat supply is turned off, the temperature drops down again, which is due to its free response of matching the temperature with its environment. On the other hand, the water tank does not have any free response: the water level stays the same if no water flows from the pipe into the tank.</p>
+
+<p>From another perspective we can divide the system's response into <strong>transient components</strong>, which decay over time and <strong>steady-state components</strong>. We can view the latter as the component which realizes the goal of a control action, whereas the transient component is some form of an unwanted side-effect, which decays over time. The time it takes for all the transient components of a control action to disappear makes a good metric for the performance of the feedback system.</p>
+
+<p>As an example, let's look at a <a href="http://en.wikipedia.org/wiki/Simple_harmonic_motion#Mass_on_a_spring">mass on a spring</a>. When we give the other end of the spring a sudden jerk, the mass will begin to oscillate, which will eventually die away (depending on the spring constant), after which we are left with an overall displacement of the mass. Here the final displacement is the goal of our feedback system and thus the steady-state component of the response. The oscillation is a transient component, which fades away after a while.</p>
+
+<figure><img src="images/Mass%20on%20spring.png" alt="Mass on a spring"><figcaption>Example of transient components in a mass on a spring<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
+
+<h2>
+<a id="example-cache-with-delay" class="anchor" href="#example-cache-with-delay" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example: Cache with delay</h2>
+
+<p>To illustrate what a delay will do to a feedback system in practice, we will extend the <a href="./FeedbackSystems.html#experiment-3---changing-setpoint">cache example</a> by adding a delay to the system. In order to do so, we need to change the output stream (<code>val hitrate</code>) from being a <a href="https://github.com/ReactiveX/RxJava/wiki/Subject#publishsubject"><code>PublishSubject</code></a> into a <a href="https://github.com/ReactiveX/RxJava/wiki/Subject#behaviorsubject"><code>BehaviorSubject</code></a> and develop an <a href="https://coderwall.com/p/4clu3a/extension-methods-in-scala">extension method</a> that will cause the delay.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span>
+        <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">90</span>) <span class="pl-c1">0.1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0.4</span>
+    }
+    <span class="pl-k">def</span> <span class="pl-en">cache</span>(<span class="pl-v">size</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, math.min(<span class="pl-c1">1</span>, size <span class="pl-k">/</span> <span class="pl-c1">100</span>))
+
+    <span class="pl-en">Observable</span>((<span class="pl-v">subscriber</span>: <span class="pl-en">Subscriber</span>[<span class="pl-st">Double</span>]) <span class="pl-k">=&gt;</span> {
+        <span class="pl-k">val</span> <span class="pl-en">hitrate</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>[<span class="pl-st">Double</span>]
+
+        <span class="pl-en">Observable</span>.from(<span class="pl-c1">0</span> until <span class="pl-c1">120</span>)
+            .map(setPoint)
+            .zipWith(hitrate)(_ <span class="pl-k">-</span> _)
+            .scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e)
+            .map { k <span class="pl-k">*</span> _ }
+            .map(cache)
+            .delay(delay, <span class="pl-c1">0.0</span>)
+            .subscribe(hitrate)
+
+        hitrate.subscribe(subscriber)
+    })
+}</pre></div>
+
+<p>As discussed before, delay manifests itself by not responding immediately to the control input. Thus, during the delay, the output lags behind a number of iterations. Reasoning back to the start of this feedback system, it follows that there was a certain initial output value to the system before it responded to the first control actions. From this, the implementation of the extension method <code>delay(steps: Int, initVal: T)</code> is as follows:</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">DelayExtension</span> {
+    <span class="pl-k">class</span> <span class="pl-en">DelayObservable</span>[<span class="pl-en">T</span>](<span class="pl-v">obs</span>: <span class="pl-en">Observable</span>[<span class="pl-en">T</span>]) {
+        <span class="pl-k">def</span> <span class="pl-en">delay</span>(<span class="pl-v">steps</span>: <span class="pl-st">Int</span>, <span class="pl-v">initVal</span>: <span class="pl-en">T</span>) <span class="pl-k">=</span> (<span class="pl-en">Observable</span>.from(<span class="pl-en">List</span>.fill(steps)(initVal)) <span class="pl-k">++</span> obs).slidingBuffer(steps, <span class="pl-c1">1</span>).map(_.head)
+    }
+
+    <span class="pl-s">implicit</span> <span class="pl-k">def</span> <span class="pl-en">delayObservable</span>[<span class="pl-en">T</span>](<span class="pl-v">obs</span>: <span class="pl-en">Observable</span>[<span class="pl-en">T</span>]) <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">DelayObservable</span>(obs)
+}</pre></div>
+
+<p>In this implementation we start off with a number of constant initial values, followed by the original stream of values. On this we use a sliding buffer of side <code>steps</code> (the number of iteration of the delay), which causes the stream to buffer and wait for the right amount of values.</p>
+
+<p>With only 1 step of delay and using the control gain <code>k = 160</code> (which used to work fine without delay) we already get very bad behavior. The cache's hit rate continuously oscillates between 0% and 100% and causes unstable behavior.</p>
+
+<p>A better control gain is <code>k = 50</code>, which still overshoots a little, but stabilizes soon on the requested hit rate. This overshooting is almost gone at <code>k = 30</code> and not even there at <code>k = 20</code>. We see here that the latter even is maybe a bit to careful and takes too small steps.</p>
+
+<figure><img src="images/Cache%20with%20delay%201.png" alt="Cache with delay 1"><figcaption>Cumulative simulation of a cache with a variable setpoint and 1 step of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>When we use a delay of 2 iterations, we find that the range of suitable values for the control gain shrinks quite a bit: <code>k = 50</code> is not suitable anymore to stabilize the hit rate within 30 iterations. <code>k = 30</code> only barely makes it to stabilize and <code>k = 20</code> also overshoots a bit, but stabilizes right after that. We also see <code>k = 10</code>, which is not sufficient enough to stabilize within 30 iterations.</p>
+
+<figure><img src="images/Cache%20with%20delay%202.png" alt="Cache with delay 2"><figcaption>Cumulative simulation of a cache with a variable setpoint and 2 steps of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>A longer delay makes it even worse! When set to 5 iterations, we cannot find a suitable value that stabilizes within 30 iterations. <code>k = 30</code> and <code>k = 20</code> totally overshoot the hit rate, whereas <code>k = 15</code> and <code>k = 10</code> make good attempts in overshooting a bit, but are too slow to catch up.</p>
+
+<figure><img src="images/Cache%20with%20delay%205.png" alt="Cache with delay 5"><figcaption>Cumulative simulation of a cache with a variable setpoint and 5 steps of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>It is clear that the longer a delay is, the worse it gets on finding a suitable value for the control gain that stabilizes to the setpoint within a reasonable amount of iterations. If possible, a delay should be avoided in the phase of designing a feedback control system.</p>
+
+<h2>
+<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
+
+<p>The controlled systems often exhibit some <strong>internal behavior</strong> that we need to take into account while designing a feedback system. It might be that the system exhibits <strong>lag</strong>, which causes it to only respond partially to the input. Another type of internal behavior is <strong>delay</strong>, where it takes a certain amount of time to respond to the control input. Also, the system might have a <strong>non-minimum phase</strong>, causing it to first go the opposite way before going along the control input values.</p>
+
+<p>The response of the control system consists of two components: <strong>steady-state</strong>, which realizes the goal of the control action, and <strong>transient</strong>, which is some form of unwanted side-effect that decays over time. The time it takes to decay is a good metric for the quality of the feedback system.</p>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/zipball/master" class="button">
+            <small>Download the code as</small>
+            .zip file
+          </a>
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/tarball/master" class="button">
+            <small>Download the code as</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><em>Feedback Control for Hackers</em> is<br/>written by <a href="https://github.com/rvanheest">Richard van Heest</a>.</p>
+		  
+		  <h2>Table of Contents</h2>
+		  <ol>
+			<li><a href="./index.html">Introduction</a></li>
+			<li><a href="./FeedbackSystems.html">Feedback systems</a></li>
+			<li id="selected"><a href="./SystemDynamics.html">System dynamics</a>
+				<ul>
+					<li><a href="#lag-delay-and-inverse-response">Lag, delay and inverse response</a></li>
+					<li><a href="#response-components">Response components</a></li>
+					<li><a href="#example-cache-with-delay">Example: Cache with delay</a></li>
+					<li><a href="#summary">Summary</a></li>
+				</ul>
+			</li>
+			<li><a href="./Controllers.html">Controllers</a></li>
+			<li><a href="./Simulation.html">Simulation</a></li>
+			<li><a href="./CacheHitRate.html">Case study: Cache hit rate</a></li>
+			<li><a href="./ServerScaling.html">Case study: Server scaling</a></li>
+			<li><a href="./Conclusion.html">Conclusion</a></li>
+		  </ol>
+        </aside>
+      </div>
+    </div>
+
+	<script type="text/javascript">
+	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	  try {
+	    var pageTracker = _gat._getTracker("UA-60861631-1");
+	  pageTracker._trackPageview();
+	  } catch(err) {}
+	</script>
+  </body>
+</html>

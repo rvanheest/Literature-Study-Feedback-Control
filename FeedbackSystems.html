@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+	<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+	<script type="text/javascript">
+		LatexIT.add('p',true);
+		LatexIT.add('li',true);
+		LatexIT.add('td',true);
+	</script>
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Feedback Control for Hackers</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Feedback Control for Hackers</h1>
+        <h2>Introduction to feedback control in computer science</h2>
+        <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          
+<h1>
+<a id="feedback-systems" class="anchor" href="#feedback-systems" aria-hidden="true"><span class="octicon octicon-link"></span></a>Feedback systems</h1>
+
+<p>Feedback control is based on the <em>feedback principle</em>:</p>
+
+<blockquote>
+<p>Continuously compare the actual output to its desired reference value; then apply a change to the system inputs that counteracts any deviation of the actual output from the reference.</p>
+</blockquote>
+
+<p>To put this in other words, when the output is higher than the reference value, a correction to the next input is applied, which will lead to a reduction in the output. Also, if the output is too low, the input value will be raised, such that the next output will be closer to the reference value. Schematically this <strong>closed-loop system</strong> is shown below, where the output is looped back and used in the calculation for what the next input will be.</p>
+
+<figure><img src="images/Feedback%20system.png" alt="Feedback system"><figcaption>Architecture of a closed-loop<span class="source">source: Feedback Control for Computer Systems, p.16<span></figcaption></figure>
+
+<p>Compare this with an <strong>open-loop system</strong>, where the output is not taken into account.</p>
+
+<figure><a id="feedforward" class="anchor" href="#feedforward" aria-hidden="true"><span class="octicon octicon-link"></span></a><img src="images/Feedforward%20system.png" alt="Feedforward system"><figcaption>Architecture of an open-loop<span class="source">source: Feedback Control for Computer Systems, p.16<span></figcaption></figure>
+
+<h2>
+<a id="the-components-of-a-closed-loop-system" class="anchor" href="#the-components-of-a-closed-loop-system" aria-hidden="true"><span class="octicon octicon-link"></span></a>The components of a closed-loop system</h2>
+
+<p>A basic closed-loop system consists of a number of components that are shown in the first image. When an output in the system is produced, it is compared with the reference value (usually known as the <strong>setpoint</strong>). This comparison produces a <em>tracking error</em>, which is the deviation of the output from the setpoint:</p>
+
+<blockquote>
+<p>tracking error = setpoint - previous output</p>
+</blockquote>
+
+<p>The tracking error is used in the <strong>controller</strong> to determine the system's next input. Usually when the tracking error is positive (the previous output was too low) the controller has to produce a new control input that will raise the output of the process. The reverse holds for the case where the tracking error is negative.</p>
+
+<p>Notice that the controller does not need any knowledge about the system's internal behavior but instead only needs to know the <strong>directionality</strong> of the process: does the input need to be raised or lowered in order to raise the output value? In practice both situations will occur: increasing the power of a heating element will lead to an increase in temperature, whereas an increase of the power of a cooler will lead to a decrease.</p>
+
+<p>Besides the directionality, the controller also needs to know the <strong>magnitude</strong> of the correction. After all, the controller could overcompensate a positive tracking error, resulting in a negative tracking error. This often results in a <strong>control oscillation</strong>, which is rarely desirable.</p>
+
+<p>However, it can be worse: if the controller overcompensates a positive tracking error in such a way that the resulting negative tracking error needs an even bigger compensating action, then the amplitude of the oscillations will grow over time. In that case the system will become unstable and will blow up. It needs no explanation that this unstable behavior needs to be avoided.</p>
+
+<p>Besides overcompensating, a controller can also show timid or slow behavior: the corrective actions are too small. This causes tracking errors to persist for a long time and makes the system responding slow to disturbances. Although this is less dangerous than instability, this slow behavior is unsatisfactory as well.</p>
+
+<p>In conclusion we can say that we want the magnitude of the controller's correction as large as possible such that it does not make the system unstable.</p>
+
+<h2>
+<a id="iterative-schemes" class="anchor" href="#iterative-schemes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Iterative schemes</h2>
+
+<p>A closed-loop system is based on an iterative scheme, where each control action is supposed to take the system closer to the desired value. Repeating the process of comparing the previous output with the desired value and using that to calculate the next iteration's input will reduce the error. As with each iterative scheme, we are presented with three fundamental questions:</p>
+
+<ol>
+<li>Does the iteration converge?</li>
+<li>How quickly does it converge?</li>
+<li>To what value does it converge?</li>
+</ol>
+
+<p>The answer to the first question lies in the settings of the system's controller. If the controller does not overcompensate too much (if the amplitude of the oscillations will never build up), the iteration will converge.</p>
+
+<p>The same holds for the second question: if the controller is set to react slowly, it will take longer for it to converge. To make the iteration converge quickly, the controller has to be set such that it will produce the largest correction without causing oscillations.</p>
+
+<p>Although the third question may seem obvious (the iteration will converge to the setpoint), sometimes the settings of the controller will result in converging to an incorrect value, which might be higher or lower than the setpoint.</p>
+
+<p>It turns out that the three goals that are related to these questions (stability, performance and accuracy) are hard to be achieved simultaneously. The design of feedback systems will most often involve trade-offs between stability and performance, since a system that responds quickly will tend to oscillate. It depends on the situation which aspect will be emphasized.</p>
+
+<h2>
+<a id="example-cache-simulation" class="anchor" href="#example-cache-simulation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example: cache simulation</h2>
+
+<p>To illustrate the aspects of a feedback system that are discussed on this page, we will simulate behavior of a system that controls the size of a cache. In this example we will not implement a cache but rather simulate its hit rate by the following function:</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">cache</span>(<span class="pl-v">size</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, math.min(<span class="pl-c1">1</span>, size <span class="pl-k">/</span> <span class="pl-c1">100</span>))</pre></div>
+
+<h3>
+<a id="experiment-1---cumulative-controller" class="anchor" href="#experiment-1---cumulative-controller" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experiment 1 - Cumulative controller</h3>
+
+<p>In our first simulation we will have a constant setpoint (or hit rate for cache requests) of 60%.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-k">val</span> <span class="pl-en">k</span> <span class="pl-k">=</span> <span class="pl-c1">160</span>
+    <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.6</span>
+    <span class="pl-k">def</span> <span class="pl-en">cache</span>(<span class="pl-v">size</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, math.min(<span class="pl-c1">1</span>, size <span class="pl-k">/</span> <span class="pl-c1">100</span>))
+
+    <span class="pl-en">Observable</span>((<span class="pl-v">subscriber</span>: <span class="pl-en">Subscriber</span>[<span class="pl-st">Double</span>]) <span class="pl-k">=&gt;</span> {
+        <span class="pl-k">val</span> <span class="pl-en">hitrate</span> <span class="pl-k">=</span> <span class="pl-en">PublishSubject</span>[<span class="pl-st">Double</span>]
+
+        <span class="pl-en">Observable</span>.from(<span class="pl-c1">0</span> until <span class="pl-c1">30</span>)
+            .map(setPoint)
+            .zipWith(hitrate)(_ <span class="pl-k">-</span> _)                    <span class="pl-c">// calculate tracking error</span>
+            .scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e)  <span class="pl-c">// calculate cumulative tracking error</span>
+            .map { k <span class="pl-k">*</span> _ }                              <span class="pl-c">// next input</span>
+            .map(cache)                                 <span class="pl-c">// newest output</span>
+            .subscribe(hitrate)
+
+        hitrate.subscribe(subscriber)
+        hitrate.onNext(<span class="pl-c1">0.0</span>)
+    })
+}</pre></div>
+
+<p>Running this simulation with different values of <code>k</code> will yield the following (We will come back to the meaning of <code>k</code> in a <a href="#controller-types">later stage</a>. For now just consider <code>k</code> to be a value the controller multiplies the cumulative error with.):</p>
+
+<figure><img src="images/Cache%20small%20cumulative.png" alt="Results experiment 1"><figcaption>Cumulative simulation of a cache with a constant setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>For <code>k = 10</code> we see that it takes more than 30 iterations to get only close to the hit rate. Also <code>k = 40</code> turns out to be a bit slow (but faster than the previous), for which it takes 27 iterations to get to the desired value (although the output is already at 59.3% after 9 iterations). With either one of these settings the controller would be effective in the long run, but will take to much time to react to changes.</p>
+
+<p>On the other hand, if we look at the case of <code>k = 160</code>, we see a clear overshooting in the first iteration to a value of 96%, from which it overshoots again to 38.4% and so on. Just as the case of <code>k = 40</code> it will get to the desired hit rate after 27 iterations, although it already is really close after 9 iterations.</p>
+
+<p>The same (but less drastic) holds for <code>k = 120</code>: it overshoots the first time to 72%, but already converges to 60% after 8 iterations.</p>
+
+<p>Searching for the most optimal value for <code>k</code> is obvious in this case and already becomes clear in the code: <code>k = 100</code>. With this configuration the controller is already at the desired value after one iteration. Although it is easy to find in this example, in practice it often turns out to be much more difficult to find the most optimal value for <code>k</code>.</p>
+
+<p>It should be noticed in the code that we use a feature of the controller that is not yet discussed so far: calculating the cumulative error and using this value for producing the next input rather than using the tracking error itself. We will get to this technique later. We can however already show the difference between using and not using this cumulative error.</p>
+
+<h3>
+<a id="experiment-2---noncumulative-controller" class="anchor" href="#experiment-2---noncumulative-controller" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experiment 2 - Noncumulative controller</h3>
+
+<p>We get to a noncumulative version of the simulation by removing the following single line from the previous listing: <code>.scan((sum: Double, e: Double) =&gt; cum + e)</code>. Running the simulation with the same values for <code>k</code> will yield the following chart:</p>
+
+<figure><img src="images/Cache%20small%20noncumulative.png" alt="Results experiment 2"><figcaption>Noncumulative simulation of a cache with a constant setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>These results look far from right. The smaller values for <code>k</code> will converge, although not to the desired value. The larger values however will not converge but will rather oscillate between 0 and <code>setpoint * k / 100</code>. Looking closely to what happens, reveals that this is due to the way the <code>cache</code> function is implemented (it maps negative values to 0). If we would change this function to <code>def cache(size: Double): Double = size / 100</code> (notice that this would not make sense in the context of a cache), we see an overshooting that will explode in the long run. Extrapolating will yield that after 30 iterations we get an output of over 300000!</p>
+
+<figure><img src="images/Cache%20small%20noncumulative%20exploding.png" alt="Results experiment 2 - exploding"><figcaption>Simulation of an exploding feedback control system<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<h3>
+<a id="experiment-3---changing-setpoint" class="anchor" href="#experiment-3---changing-setpoint" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experiment 3 - Changing setpoint</h3>
+
+<p>Now let's see what happens if we change the setpoint during the experiment. In order to do so we change the definition of the <code>setpoint</code> function to:</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">= {</span>
+    <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span>
+    <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span>
+    <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">90</span>) <span class="pl-c1">0.1</span>
+    <span class="pl-k">else</span> <span class="pl-c1">0.9</span>
+}</pre></div>
+
+<p>For this experiment we use the cumulative implementation again, since this gives us the desired outputs.</p>
+
+<figure><img src="images/Cache%20large%20cumulative.png" alt="Results experiment 3"><figcaption>Cumulative simulation of a cache with a variable setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+<p>As expected, the simulations follow the setpoint values with their own characteristics. <code>k = 100</code> again is the most optimal here and reaches the desired value immediately after it is changed. The case of <code>k = 160</code> again overshoots the setpoint and reaches the desired value in that way, whereas <code>k = 40</code> slowly converges by taking smaller steps.</p>
+
+<h2>
+<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
+
+<p>We have seen the basic components that together make up a feedback system. First we compare the system's previous output with the reference value (or <strong>setpoint</strong>) and feed the resulting <strong>tracking error</strong> into the <strong>controller</strong>. Based on this, the controller calculates the system's next <strong>input</strong>. The system's <strong>output</strong> is then compared again with the setpoint.</p>
+
+<p>The controller only needs to know about the <strong>directionality</strong> of the process and the <strong>magnitude</strong> of the correction. It does not need any understanding of the internal workings of the controlled system. The magnitude of the correction determines whether the controller will overcompensate or react too slow. Overcompensating may lead to heavy oscillations that can cause the system to get out of control.</p>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/zipball/master" class="button">
+            <small>Download the code as</small>
+            .zip file
+          </a>
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/tarball/master" class="button">
+            <small>Download the code as</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><em>Feedback Control for Hackers</em> is<br/>written by <a href="https://github.com/rvanheest">Richard van Heest</a>.</p>
+		  
+		  <h2>Table of Contents</h2>
+		  <ol>
+			<li><a href="./index.html">Introduction</a></li>
+			<li id="selected"><a href="./FeedbackSystems.html">Feedback systems</a>
+				<ul>
+					<li><a href="#the-components-of-a-closed-loop-system">The components of a closed-loop system</a></li>
+					<li><a href="#iterative-schemes">Iterative schemes</a></li>
+					<li><a href="#example-cache-simulation">Example: cache simulation</a>
+						<ul>
+							<li><a href="#experiment-1---cumulative-controller">Experiment 1 - Cumulative controller</a></li>
+							<li><a href="#experiment-2---noncumulative-controller">Experiment 2 - Noncumulative controller</a></li>
+							<li><a href="#experiment-3---changing-setpoint">Experiment 3 - Changing setpoint</a></li>
+						</ul>
+					</li>
+					<li><a href="#summary">Summary</a></li>
+				</ul>
+			</li>
+			<li><a href="./SystemDynamics.html">System dynamics</a></li>
+			<li><a href="./Controllers.html">Controllers</a></li>
+			<li><a href="./Simulation.html">Simulation</a></li>
+			<li><a href="./CacheHitRate.html">Case study: Cache hit rate</a></li>
+			<li><a href="./ServerScaling.html">Case study: Server scaling</a></li>
+			<li><a href="./Conclusion.html">Conclusion</a></li>
+		  </ol>
+        </aside>
+      </div>
+    </div>
+
+	<script type="text/javascript">
+	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	  try {
+	    var pageTracker = _gat._getTracker("UA-60861631-1");
+	  pageTracker._trackPageview();
+	  } catch(err) {}
+	</script>
+  </body>
+</html>

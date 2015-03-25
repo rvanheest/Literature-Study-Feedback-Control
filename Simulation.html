@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+	<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+	<script type="text/javascript">
+		LatexIT.add('p',true);
+		LatexIT.add('li',true);
+		LatexIT.add('td',true);
+	</script>
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Feedback Control for Hackers</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Feedback Control for Hackers</h1>
+        <h2>Introduction to feedback control in computer science</h2>
+        <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          
+<h1>
+<a id="simulation" class="anchor" href="#simulation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Simulation</h1>
+
+<p>In this section we will discuss the topic of simulating feedback control systems and provide a simulation framework that was built during this study. We will later use this framework in a couple of case studies.</p>
+
+<p>There are a number of reasons why we need the ability to simulate the behavior of a control system.</p>
+
+<ul>
+<li>First of all, the behavior of a control system might be unintuitive or unfamiliar. To develop intuition for the abstract problem we can use simulations and thus get a better understanding of control problems that arise in the real world.</li>
+<li>In most cases it is not possible to do extensive testing and experimenting on real-world machines. Often they are too big, too expensive, too dangerous or simply not available. And if they are available, tests will mostly be too time consuming to conduct serious experiments. Therefore simulations will suit better.</li>
+<li>The most difficult part is to implement controllers, filters, etc. according to abstract concepts like <em>transfer functions</em>. Simulations can help with a better understanding and make these concepts more concrete.</li>
+<li>Finally, no control system will ever be put into production unless it has proven itself to function correctly. Therefore, simulations are not <em>just for fun</em>, but form a crucial step in the design of a feedback control system.</li>
+</ul>
+
+<p>In this section of the blog we will discuss a simulation framework that was built for this study. Also we will go over a number of case studies by using this framework.</p>
+
+<h2>
+<a id="time" class="anchor" href="#time" aria-hidden="true"><span class="octicon octicon-link"></span></a>Time</h2>
+
+<p>One of the most important parts of the simulation framework is the simulation of time. For computer systems we are given with a choice between two possible representations. We can use real time (also known as '<em>wall-clock</em>' time) where the controlled system evolves according to its own rules and dynamics, independent from control actions. In this case, control actions will usually occur periodically with a fixed time interval between two actions. Another choice is to use control time (also known as '<em>event time</em>'). Here the system does not evolve between two control actions, hence the time is synchronous with the control actions. Notice that this is the type of time that was used in the earlier examples.</p>
+
+<p>In a simulation, the time is determined by the number of simulation steps. To convert this to a simulation of real time, we must assume that each simulation step has exactly the same duration (measured in real time). Therefore the steps in the simulation correspond to a certain duration in real time. Hence we need a conversion factor <code>DT</code> that translates simulation steps into real time durations.</p>
+
+<h2>
+<a id="simulation-framework" class="anchor" href="#simulation-framework" aria-hidden="true"><span class="octicon octicon-link"></span></a>Simulation framework</h2>
+
+<p>In order to model every component in the simulation framework, we use a <code>Component</code> trait (or interface) containing two abstract functions: <code>update</code> and <code>action</code>. The former is used to iterate to the component's state in the <em>next</em> simulation step, based on its current state and an update parameter <code>u</code>. The latter is used to calculate the action that needs to be taken at the <em>current</em> simulation step. To see what is going on inside a component, another abstract function <code>monitor</code> is provided that returns a <code>Map[String, AnyVal]</code>. This needs to be implemented on each component.</p>
+
+<p>Furthermore it should be noticed that components can be concatenated in order to compose more complex components. In other words, <code>Component</code> can be viewed as a monoid, hence the <code>++</code> operator. Also, we can implement <code>map</code> on a <code>Component</code> in order to apply functions to the output signal of a component (<code>Component</code> is a functor).</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">trait</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">O</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-en">I</span>)<span class="pl-k">:</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">O</span>]
+    <span class="pl-k">def</span> <span class="pl-en">action</span><span class="pl-k">:</span> <span class="pl-en">O</span>
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span><span class="pl-k">:</span> <span class="pl-en">Map</span>[<span class="pl-st">String</span>, <span class="pl-en">AnyVal</span>]
+
+    <span class="pl-k">def</span> <span class="pl-en">++</span>[<span class="pl-en">Y</span>](<span class="pl-v">other</span>: <span class="pl-en">Component</span>[<span class="pl-en">O</span>, <span class="pl-en">Y</span>])<span class="pl-k">:</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">Y</span>] <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">self</span> <span class="pl-k">=</span> <span class="pl-v">this</span>
+        <span class="pl-k">new</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">Y</span>] {
+            <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-en">I</span>)<span class="pl-k">:</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">Y</span>] <span class="pl-k">=</span> {
+                <span class="pl-k">val</span> <span class="pl-en">thisComp</span> <span class="pl-k">=</span> <span class="pl-v">self</span> update u
+                <span class="pl-k">val</span> <span class="pl-en">otherComp</span> <span class="pl-k">=</span> other update thisComp.action
+                thisComp <span class="pl-k">++</span> otherComp
+            }
+
+            <span class="pl-k">def</span> <span class="pl-en">action</span><span class="pl-k">:</span> <span class="pl-en">Y</span> <span class="pl-k">=</span> other.action
+        }
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">map</span>[<span class="pl-en">Y</span>](<span class="pl-v">f</span>: <span class="pl-en">O</span> <span class="pl-k">=&gt;</span> <span class="pl-en">Y</span>)<span class="pl-k">:</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">Y</span>] <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">self</span> <span class="pl-k">=</span> <span class="pl-v">this</span>
+        <span class="pl-k">new</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">Y</span>] {
+            <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-en">I</span>)<span class="pl-k">:</span> <span class="pl-en">Component</span>[<span class="pl-en">I</span>, <span class="pl-en">Y</span>] <span class="pl-k">=</span> <span class="pl-v">self</span> update u map f
+
+            <span class="pl-k">def</span> <span class="pl-en">action</span><span class="pl-k">:</span> <span class="pl-en">Y</span> <span class="pl-k">=</span> f(<span class="pl-v">self</span> action)
+
+            <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-v">self</span>.monitor
+        }
+    }
+}</pre></div>
+
+<h3>
+<a id="controller" class="anchor" href="#controller" aria-hidden="true"><span class="octicon octicon-link"></span></a>Controller</h3>
+
+<p>Controllers convert the tracking error in a system input. As discussed before, the most common controller is the <code>PIDController</code>. Here <code>update</code> calculates the new integral and derivative components of this controller and returns a new instance with these new values, whereas <code>action</code> calculates the value of the control action, which serves as an input for the controlled system. Notice that here the earlier discussed <code>DT</code> factor enters the calculations twice.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">PIDController</span>(<span class="pl-v">kp</span>: <span class="pl-st">Double</span>, <span class="pl-v">ki</span>: <span class="pl-st">Double</span>, <span class="pl-v">kd</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.0</span>, <span class="pl-v">integral</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">deriv</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">prev</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">error</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">PIDController</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">i</span> <span class="pl-k">=</span> integral <span class="pl-k">+</span> <span class="pl-en">DT</span> <span class="pl-k">*</span> error
+        <span class="pl-k">val</span> <span class="pl-en">d</span> <span class="pl-k">=</span> (error <span class="pl-k">-</span> prev) <span class="pl-k">/</span> <span class="pl-en">DT</span>
+
+        <span class="pl-k">new</span> <span class="pl-en">PIDController</span>(kp, ki, kd, i, d, error)
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> prev <span class="pl-k">*</span> kp <span class="pl-k">+</span> integral <span class="pl-k">*</span> ki <span class="pl-k">+</span> deriv <span class="pl-k">*</span> kd
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>PID controller<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>A more advanced implementation can be found in <code>AdvController</code>, which adds two features to <code>PIDController</code>. First it has a filter for smoothing the derivative term. Supplying a positive value <code>0 &lt; s &lt; 1</code> will result in applying a recursive filter on the derivative term. Furthermore a parameter <code>clamp</code> is added, which prevents <em>integrator windups</em>. This means that when the controller's output exceeds a certain limit (defined by <code>clamp</code>), the controller will not update its value during the next round.</p>
+
+<p>Regarding the latter feature, this controller can be used to control a heating element. Here a lower bound can be set on 0° Celsius, since it is usually impossible for a heating element to produce negative heat flow.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">AdvController</span>(<span class="pl-v">kp</span>: <span class="pl-st">Double</span>, <span class="pl-v">ki</span>: <span class="pl-st">Double</span>, <span class="pl-v">kd</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">clamp</span>: (<span class="pl-st">Double</span>, <span class="pl-st">Double</span>) <span class="pl-k">=</span> (<span class="pl-k">-</span><span class="pl-c1">1e10</span>, <span class="pl-c1">1e10</span>), <span class="pl-v">smooth</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">1</span>, <span class="pl-v">integral</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">deriv</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">prev</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>, <span class="pl-v">unclamped</span>: <span class="pl-st">Boolean</span> <span class="pl-k">=</span> <span class="pl-c1">true</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">error</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">AdvController</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">i</span> <span class="pl-k">=</span> <span class="pl-k">if</span> (unclamped) integral <span class="pl-k">+</span> <span class="pl-en">DT</span> <span class="pl-k">*</span> error <span class="pl-k">else</span> integral
+        <span class="pl-k">val</span> <span class="pl-en">d</span> <span class="pl-k">=</span> smooth <span class="pl-k">*</span> (error <span class="pl-k">-</span> prev) <span class="pl-k">/</span> <span class="pl-en">DT</span> <span class="pl-k">+</span> (<span class="pl-c1">1</span> <span class="pl-k">-</span> smooth) <span class="pl-k">*</span> deriv
+
+        <span class="pl-k">val</span> <span class="pl-en">u</span> <span class="pl-k">=</span> kp <span class="pl-k">*</span> error <span class="pl-k">+</span> ki <span class="pl-k">*</span> integral <span class="pl-k">+</span> kd <span class="pl-k">*</span> deriv
+        <span class="pl-k">val</span> <span class="pl-en">un</span> <span class="pl-k">=</span> clamp._1 <span class="pl-k">&lt;</span> u <span class="pl-k">&amp;&amp;</span> u <span class="pl-k">&lt;</span> clamp._2
+
+        <span class="pl-k">new</span> <span class="pl-en">AdvController</span>(kp, ki, kd, clamp, smooth, i, d, error, un)
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> prev <span class="pl-k">*</span> kp <span class="pl-k">+</span> integral <span class="pl-k">*</span> ki <span class="pl-k">+</span> deriv <span class="pl-k">*</span> kd
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Advanced controller<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<h3>
+<a id="filters-and-actuators" class="anchor" href="#filters-and-actuators" aria-hidden="true"><span class="octicon octicon-link"></span></a>Filters and actuators</h3>
+
+<p>Besides controllers, we also might want to make use of other components. These are the actuators and filters. The most obvious one (<code>Identity</code>) just reproduces its input value and emits that as its output.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">Identity</span>[<span class="pl-en">A</span>](<span class="pl-v">value</span>: <span class="pl-en">A</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-en">A</span>, <span class="pl-en">A</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-en">A</span>)<span class="pl-k">:</span> <span class="pl-en">Identity</span>[<span class="pl-en">A</span>] <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Identity</span>(u)
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> value
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Identity<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>Another actuator is the <code>Integrator</code>, which takes the sum of its inputs and returns its current value. Notice that since we are calculating an integral here and that therefore we need to multiply the sum by factor DT to convert from simulated steps to real time.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">Integrator</span>(<span class="pl-v">data</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">Integrator</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Integrator</span>(data <span class="pl-k">+</span> u)
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> <span class="pl-en">DT</span> <span class="pl-k">*</span> data
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Integrator<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>Finally we present two smoothing filters. The first, <code>FixedFilter</code>, calculates the unweighted average of the last <code>n</code> elements.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">FixedFilter</span>(<span class="pl-v">n</span>: <span class="pl-st">Int</span>, <span class="pl-v">data</span>: <span class="pl-en">List</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> <span class="pl-en">List</span>()) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">FixedFilter</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">list</span> <span class="pl-k">=</span> (<span class="pl-k">if</span> (data.length <span class="pl-k">&gt;=</span> n) data drop <span class="pl-c1">1</span> <span class="pl-k">else</span> data) <span class="pl-k">:</span><span class="pl-k">+</span> u
+        <span class="pl-k">new</span> <span class="pl-en">FixedFilter</span>(n, list)
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> data.sum <span class="pl-k">/</span> data.length
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Fixed filter<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>The second filter, <code>RecursiveFilter</code> is an implementation of the exponential smoothing algorithm. This adds the current value <code>u</code> to the previous filter output in order to return the current step's output.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">RecursiveFilter</span>(<span class="pl-v">alpha</span>: <span class="pl-st">Double</span>, <span class="pl-v">y</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Double</span>)<span class="pl-k">:</span> <span class="pl-en">RecursiveFilter</span> <span class="pl-k">=</span> {
+        <span class="pl-k">val</span> <span class="pl-en">res</span> <span class="pl-k">=</span> alpha <span class="pl-k">*</span> u <span class="pl-k">+</span> (<span class="pl-c1">1</span> <span class="pl-k">-</span> alpha) <span class="pl-k">*</span> y
+        <span class="pl-k">new</span> <span class="pl-en">RecursiveFilter</span>(alpha, res)
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> y
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Recursive filter<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<h3>
+<a id="convenience-functions" class="anchor" href="#convenience-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Convenience functions</h3>
+
+<p>Finally we introduce a number of convenience functions with the intention of hiding most of the boilerplate code. First we have a number of basic setpoint functions. These can be used as input for a feedback loop, but can also be composed to get a more complex setpoint function by multiplying the result of such a function with a scalar and/or adding with other functions.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">Setpoint</span> {
+    <span class="pl-k">def</span> <span class="pl-en">impulse</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (math.abs(t <span class="pl-k">-</span> t0) <span class="pl-k">&lt;</span> <span class="pl-en">DT</span>) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">step</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">doubleStep</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">t1</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0 <span class="pl-k">&amp;&amp;</span> t <span class="pl-k">&lt;</span> t1) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">harmonic</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">tp</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0) math.sin(<span class="pl-c1">2</span> <span class="pl-k">*</span> math.<span class="pl-en">Pi</span> <span class="pl-k">*</span> (t <span class="pl-k">-</span> t0) <span class="pl-k">/</span> tp)
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
+
+    <span class="pl-k">def</span> <span class="pl-en">relay</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>, <span class="pl-v">t0</span>: <span class="pl-st">Long</span>, <span class="pl-v">tp</span>: <span class="pl-st">Long</span>) <span class="pl-k">=</span> {
+        <span class="pl-k">if</span> (t <span class="pl-k">&gt;=</span> t0 <span class="pl-k">&amp;&amp;</span> math.ceil(math.sin(<span class="pl-c1">2</span> <span class="pl-k">*</span> math.<span class="pl-en">Pi</span> <span class="pl-k">*</span> (t <span class="pl-k">-</span> t0) <span class="pl-k">/</span> tp)) <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>) <span class="pl-c1">1</span>
+        <span class="pl-k">else</span> <span class="pl-c1">0</span>
+    }
+}</pre></div>
+
+<p>Also we provide the boilerplate code for multiple types of loops. For now we discuss the <code>closedLoop</code> and come back later to other types of loops. This function is modeled after the extended version of a feedback control system, including the actuator and filter.</p>
+
+<figure><img src="images/Feedback%20system%20-%20extended.png" alt="Extended feedback control system"><figcaption>Architecture of an extended feedback loop<span class="source">source: Feedback Control for Computer Systems, p.143<span></figcaption></figure>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">Loops</span> {
+    <span class="pl-k">def</span> <span class="pl-en">closedLoop</span>[<span class="pl-en">A</span>](<span class="pl-v">setPoint</span>: <span class="pl-en">Observable</span>[<span class="pl-en">A</span>], <span class="pl-v">seed</span>: <span class="pl-en">A</span>, <span class="pl-v">components</span>: <span class="pl-en">Component</span>[<span class="pl-en">A</span>, <span class="pl-en">A</span>], <span class="pl-v">inverted</span>: <span class="pl-st">Boolean</span> <span class="pl-k">=</span> <span class="pl-c1">false</span>)(<span class="pl-s">implicit</span> <span class="pl-v">n</span>: <span class="pl-en">Numeric</span>[<span class="pl-en">A</span>]) <span class="pl-k">=</span> {
+        <span class="pl-k">import</span> <span class="pl-v">n.</span><span class="pl-v">_</span>
+        <span class="pl-en">Observable</span>[<span class="pl-en">A</span>](subscriber <span class="pl-k">=&gt;</span> {
+            <span class="pl-k">val</span> <span class="pl-en">y</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(seed)
+            y drop <span class="pl-c1">1</span> subscribe subscriber
+
+            setPoint.zipWith(y)(_ <span class="pl-k">-</span> _)
+                .map { error <span class="pl-k">=&gt;</span> <span class="pl-k">if</span> (inverted) <span class="pl-k">-</span>error <span class="pl-k">else</span> error }
+                .scan(components)(_ update _)
+                .drop(<span class="pl-c1">1</span>)
+                .map(_ action)
+                .subscribe(y)
+        })
+    }
+}</pre></div>
+
+<p>Notice that using the <code>closedLoop</code> function on a control system with controller, actuator, plant (the controlled system) and filter will require using the <code>++</code> operator in order to concatenate these components.</p>
+
+<h3>
+<a id="running-example" class="anchor" href="#running-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running example</h3>
+
+<p>To demonstrate the workings of these basics, let's implement a simple plant <code>Boiler</code> and see how this framework performs:</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">class</span> <span class="pl-en">Boiler</span>(<span class="pl-v">g</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0.01</span>, <span class="pl-v">y</span>: <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">0</span>)(<span class="pl-s">implicit</span> <span class="pl-en">DT</span><span class="pl-k">:</span> <span class="pl-st">Double</span>) <span class="pl-k">extends</span> <span class="pl-e">Component</span>[<span class="pl-st">Double</span>, <span class="pl-st">Double</span>] {
+    <span class="pl-k">def</span> <span class="pl-en">update</span>(<span class="pl-v">u</span>: <span class="pl-st">Double</span>) <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Boiler</span>(g, y <span class="pl-k">+</span> <span class="pl-en">DT</span> <span class="pl-k">*</span> (u <span class="pl-k">-</span> g <span class="pl-k">*</span> y))
+
+    <span class="pl-k">def</span> <span class="pl-en">action</span> <span class="pl-k">=</span> y
+
+    <span class="pl-k">def</span> <span class="pl-en">monitor</span> <span class="pl-k">=</span> <span class="pl-en">Map</span>(<span class="pl-s1"><span class="pl-pds">"</span>Boiler<span class="pl-pds">"</span></span> <span class="pl-k">-</span><span class="pl-k">&gt;</span> action)
+}</pre></div>
+
+<p>Then we can use this plant to create a small example program. We first initialize the <code>DT</code> variable (default to <code>1.0</code>) and construct a <code>setpoint</code> function from one of the convenience functions as well as the time, plant and controller. Finally we put these all in the <code>closedLoop</code> function and print the result.</p>
+
+<div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-s">implicit</span> <span class="pl-k">val</span> <span class="pl-en">DT</span> <span class="pl-k">=</span> <span class="pl-c1">1.0</span>
+    <span class="pl-k">def</span> <span class="pl-en">setpoint</span>(<span class="pl-v">t</span>: <span class="pl-st">Long</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> <span class="pl-c1">10</span> <span class="pl-k">*</span> <span class="pl-en">Setpoint</span>.doubleStep(t, <span class="pl-c1">10</span>, <span class="pl-c1">60</span>)
+
+    <span class="pl-k">val</span> <span class="pl-en">time</span> <span class="pl-k">=</span> (<span class="pl-c1">0L</span> until <span class="pl-c1">150L</span>) toObservable
+    <span class="pl-k">val</span> <span class="pl-en">p</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Boiler</span>
+    <span class="pl-k">val</span> <span class="pl-en">c</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">PIDController</span>(<span class="pl-c1">0.45</span>, <span class="pl-c1">0.01</span>)
+
+    <span class="pl-en">Loops</span>.closedLoop(time map setpoint, <span class="pl-c1">0.0</span>, c <span class="pl-k">++</span> p)
+}</pre></div>
+
+<p>The results of running this example program will yield the following plot:</p>
+
+<figure><img src="images/BoilerPlot.png" alt="Boiler simulation"><figcaption>Simulation of a boiler<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/zipball/master" class="button">
+            <small>Download the code as</small>
+            .zip file
+          </a>
+          <a href="https://github.com/rvanheest/Literature-Study-Feedback-Control/tarball/master" class="button">
+            <small>Download the code as</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><em>Feedback Control for Hackers</em> is<br/>written by <a href="https://github.com/rvanheest">Richard van Heest</a>.</p>
+		  
+		  <h2>Table of Contents</h2>
+		  <ol>
+			<li><a href="./index.html">Introduction</a></li>
+			<li><a href="./FeedbackSystems.html">Feedback systems</a></li>
+			<li><a href="./SystemDynamics.html">System dynamics</a></li>
+			<li><a href="./Controllers.html">Controllers</a></li>
+			<li id="selected"><a href="./Simulation.html">Simulation</a>
+				<ul>
+					<li><a href="#time">Time</a></li>
+					<li><a href="#simulation-framework">Simulation framework</a>
+						<ul>
+							<li><a href="#controller">Controller</a></li>
+							<li><a href="#filters-and-actuators">Filters and actuators</a></li>
+							<li><a href="#convenience-functions">Convenience functions</a></li>
+							<li><a href="#running-example">Running example</a></li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			<li><a href="./CacheHitRate.html">Case study: Cache hit rate</a></li>
+			<li><a href="./ServerScaling.html">Case study: Server scaling</a></li>
+			<li><a href="./Conclusion.html">Conclusion</a></li>
+		  </ol>
+        </aside>
+      </div>
+    </div>
+
+	<script type="text/javascript">
+	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	  try {
+	    var pageTracker = _gat._getTracker("UA-60861631-1");
+	  pageTracker._trackPageview();
+	  } catch(err) {}
+	</script>
+  </body>
+</html>
