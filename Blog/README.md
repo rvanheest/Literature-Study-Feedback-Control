@@ -1023,7 +1023,7 @@ This results in a simulation that is improved a bit with respect to the first si
 
 ![Second server pool simulation](images/server scaling/Server Pool Loop 2.png)
 
-### A better approach
+## A better approach
 At this point we need to take a step back and look at what we are really facing. First of all, it should be clear by now that the control input must be a positive integer. We can only have a whole number of workers; not halves or thirds are allowed. Secondly, until now we have looked at the *magnitude* of the error, rather than the *sign*.
 
 With these two things in mind, let's create a control strategy that is way simpler than the PID controller's strategy:
