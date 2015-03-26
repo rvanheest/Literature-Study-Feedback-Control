@@ -46,11 +46,11 @@
 
 <p>To put this in other words, when the output is higher than the reference value, a correction to the next input is applied, which will lead to a reduction in the output. Also, if the output is too low, the input value will be raised, such that the next output will be closer to the reference value. Schematically this <strong>closed-loop system</strong> is shown below, where the output is looped back and used in the calculation for what the next input will be.</p>
 
-<figure><img src="images/Feedback%20system.png" alt="Feedback system"><figcaption>Architecture of a closed-loop<span class="source">source: Feedback Control for Computer Systems, p.16<span></figcaption></figure>
+<figure><img src="images/Feedback%20system.png" alt="Feedback system"><figcaption><div class="captiontext">Architecture of a closed-loop</div><div class="source">source: Feedback Control for Computer Systems, p.16<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>Compare this with an <strong>open-loop system</strong>, where the output is not taken into account.</p>
 
-<figure><a id="feedforward" class="anchor" href="#feedforward" aria-hidden="true"><span class="octicon octicon-link"></span></a><img src="images/Feedforward%20system.png" alt="Feedforward system"><figcaption>Architecture of an open-loop<span class="source">source: Feedback Control for Computer Systems, p.16<span></figcaption></figure>
+<figure><a id="feedforward" class="anchor" href="#feedforward" aria-hidden="true"><span class="octicon octicon-link"></span></a><img src="images/Feedforward%20system.png" alt="Feedforward system"><figcaption><div class="captiontext">Architecture of an open-loop</div><div class="source">source: Feedback Control for Computer Systems, p.16<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <h2>
 <a id="the-components-of-a-closed-loop-system" class="anchor" href="#the-components-of-a-closed-loop-system" aria-hidden="true"><span class="octicon octicon-link"></span></a>The components of a closed-loop system</h2>
@@ -127,7 +127,7 @@
 
 <p>Running this simulation with different values of <code>k</code> will yield the following (We will come back to the meaning of <code>k</code> in a <a href="./Controllers.html#proportional-control">later stage</a>. For now just consider <code>k</code> to be a value the controller multiplies the cumulative error with.):</p>
 
-<figure><img src="images/Cache%20small%20cumulative.png" alt="Results experiment 1"><figcaption>Cumulative simulation of a cache with a constant setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20small%20cumulative.png" alt="Results experiment 1"><figcaption><div class="captiontext">Cumulative simulation of a cache with a constant setpoint</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>For <code>k = 10</code> we see that it takes more than 30 iterations to get only close to the hit rate. Also <code>k = 40</code> turns out to be a bit slow (but faster than the previous), for which it takes 27 iterations to get to the desired value (although the output is already at 59.3% after 9 iterations). With either one of these settings the controller would be effective in the long run, but will take to much time to react to changes.</p>
 
@@ -144,11 +144,11 @@
 
 <p>We get to a noncumulative version of the simulation by removing the following single line from the previous listing: <code>.scan((sum: Double, e: Double) =&gt; cum + e)</code>. Running the simulation with the same values for <code>k</code> will yield the following chart:</p>
 
-<figure><img src="images/Cache%20small%20noncumulative.png" alt="Results experiment 2"><figcaption>Noncumulative simulation of a cache with a constant setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20small%20noncumulative.png" alt="Results experiment 2"><figcaption><div class="captiontext">Noncumulative simulation of a cache with a constant setpoint</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>These results look far from right. The smaller values for <code>k</code> will converge, although not to the desired value. The larger values however will not converge but will rather oscillate between 0 and <code>setpoint * k / 100</code>. Looking closely to what happens, reveals that this is due to the way the <code>cache</code> function is implemented (it maps negative values to 0). If we would change this function to <code>def cache(size: Double): Double = size / 100</code> (notice that this would not make sense in the context of a cache), we see an overshooting that will explode in the long run. Extrapolating will yield that after 30 iterations we get an output of over 300000!</p>
 
-<figure><img src="images/Cache%20small%20noncumulative%20exploding.png" alt="Results experiment 2 - exploding"><figcaption>Simulation of an exploding feedback control system<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20small%20noncumulative%20exploding.png" alt="Results experiment 2 - exploding"><figcaption><div class="captiontext">Simulation of an exploding feedback control system</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <h3>
 <a id="experiment-3---changing-setpoint" class="anchor" href="#experiment-3---changing-setpoint" aria-hidden="true"><span class="octicon octicon-link"></span></a>Experiment 3 - Changing setpoint</h3>
@@ -164,7 +164,7 @@
 
 <p>For this experiment we use the cumulative implementation again, since this gives us the desired outputs.</p>
 
-<figure><img src="images/Cache%20large%20cumulative.png" alt="Results experiment 3"><figcaption>Cumulative simulation of a cache with a variable setpoint<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20large%20cumulative.png" alt="Results experiment 3"><figcaption><div class="captiontext">Cumulative simulation of a cache with a variable setpoint</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>As expected, the simulations follow the setpoint values with their own characteristics. <code>k = 100</code> again is the most optimal here and reaches the desired value immediately after it is changed. The case of <code>k = 160</code> again overshoots the setpoint and reaches the desired value in that way, whereas <code>k = 40</code> slowly converges by taking smaller steps.</p>
 

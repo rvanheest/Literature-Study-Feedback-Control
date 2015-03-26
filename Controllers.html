@@ -40,7 +40,7 @@
 
 <p>Previously we have seen how a feedback system (see the image below) is constructed by looping the controlled system's output <code>y</code> back into a comparison with a reference value <code>r</code>, and providing the resulting error <code>e</code> to a controller <code>K</code>, which generates the next input <code>u</code> for the controlled system <code>H</code>. In this section we will discuss the role of the controller in a feedback system. Its most obvious role is to do the 'smart' numerical work, but we also need to consider the different types of controllers, which may improve the stability, performance and accuracy of the system as a whole.</p>
 
-<figure><img src="images/Closed-loop%20System.png" alt="Feedback system"><figcaption>Architecture of a closed-loop<span class="source">source: Feedback Control for Computer Systems, p.39<span></figcaption></figure>
+<figure><img src="images/Closed-loop%20System.png" alt="Feedback system"><figcaption><div class="captiontext">Architecture of a closed-loop</div><div class="source">source: Feedback Control for Computer Systems, p.39<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>When designing a feedback system for controlling the size of a cache we need to consider what the input and output of the cache itself are within the feedback loop. Our reference value is a desired hit rate, which is depicted as a value between 0 and 1, as is the cache's output, to which it is compared. From this comparison, we send the error (<code>desired value - output</code>) to the controller, which is a value in the range -1 to 1. The controller then needs to calculate a new size for the cache and therefore needs to convert a ratio into a size.</p>
 
@@ -85,7 +85,7 @@
 
 <p>This results in the diagram below. Here we can clearly see the oscillating behavior of the system, rather than stabilizing it on the desired value.</p>
 
-<figure><img src="images/Cruise%20control%20-%20OnOff.png" alt="On/Off controller on cruise control system"><figcaption>Simulation of a cruise control system using an on/off controller<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cruise%20control%20-%20OnOff.png" alt="On/Off controller on cruise control system"><figcaption><div class="captiontext">Simulation of a cruise control system using an on/off controller</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>To improve this controller a bit, we can introduce a dead zone or hysteresis. The former only sends an `on` signal to the system when a certain threshold is exceeded. The latter (also known as <a href="http://en.wikipedia.org/wiki/Schmitt_trigger">Schmitt trigger</a>) maintains the same corrective action when the tracking error flips from positive to negative, until some threshold is exceeded. The latter is often used in conventional heating systems.</p>
 
@@ -139,7 +139,7 @@
 
 <p>The other simulation (<code>k = 0.5</code>) does reach the actual setpoint, from which it follows that the next tracking error will be zero. This causes the controller to output zero, which is supplied to the <code>SpeedSystem</code>. As discussed before, this causes the speed to drop with 10%, from which the system can start rising the speed again.</p>
 
-<figure><img src="images/Cruise%20control%20-%20proportional.png" alt="Proportional controller on cruise control system"><figcaption>Simulation of a cruise control system using a proportional controller<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cruise%20control%20-%20proportional.png" alt="Proportional controller on cruise control system"><figcaption><div class="captiontext">Simulation of a cruise control system using a proportional controller</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>What happens here in general is that the proportional controller can only produce a nonzero output if it gets a nonzero input. This directly follows from the equation above. As the tracking error diminishes, the controller output will become smaller and eventually will be zero. However, some systems (like the cruise control system or a heated pot on a stove) need a nonzero input in the steady state. If we use a proportional controller in such systems, the consequence will be that some residual error will persist; in other words the system output <code>y</code> will always be less than the desired setpoint <code>r</code>. This phenomenon is known as <em>proportional droop</em>.</p>
 
@@ -197,7 +197,7 @@
 
 <p>By using this code sample we find a correct implementation for the cruise control system. Notice that we still use <code>kp = 0.5</code> and that we only need a very slight integral correction with <code>ki = 0.001</code> to achieve this.</p>
 
-<figure><img src="images/Cruise%20control%20-%20PI.png" alt="PI controller on cruise control system"><figcaption>Simulation of a cruise control system using a PI controller<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cruise%20control%20-%20PI.png" alt="PI controller on cruise control system"><figcaption><div class="captiontext">Simulation of a cruise control system using a PI controller</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <h2>
 <a id="derivative-control" class="anchor" href="#derivative-control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Derivative control</h2>
@@ -216,7 +216,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>The most common use of the derivative controller is in combination with the proportional and integral controllers, forming a three-term <em>PID controller</em>. Here we use all three controllers and sum the outcomes.</p>
 
-<figure><img src="images/PIDController.png" alt="PID controller"><figcaption>Architecture of a PID controller<span class="source">source: Feedback Control for Computer Systems, p.48<span></figcaption></figure>
+<figure><img src="images/PIDController.png" alt="PID controller"><figcaption><div class="captiontext">Architecture of a PID controller</div><div class="source">source: Feedback Control for Computer Systems, p.48<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>We implement this in the same way as we did for the PI controller:</p>
 

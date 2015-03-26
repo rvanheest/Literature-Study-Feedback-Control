@@ -49,17 +49,17 @@
 
 <p>A system has <strong>lag</strong> when it only partially responds to a control input. The response will start immediately, but it will take a while before it reaches the value that was given as the control input. This is also called an <strong>immediate partial response</strong>. An example of this is applying heat to a pot on the stove. As soon as the heat is applied, the temperature in the vessel gradually starts to rise. When the heat is turned off, the temperature will gradually drop back to the environment's temperature.</p>
 
-<figure><img src="images/Heated%20vessel.png" alt="Heating a vessel"><figcaption>Example of lag in a heated vessel<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
+<figure><img src="images/Heated%20vessel.png" alt="Heating a vessel"><figcaption><div class="captiontext">Example of lag in a heated vessel</div><div class="source">source: Feedback Control for Computer Systems, p.29<br/>Courtesy of O'Reilly Media</span></figcaption></figure>
 
 <p><strong>Delay</strong> manifests itself by not responding immediately to the control input. Over some period of time, the control input does not have any effect on the controlled system. Only after that period, the control input has <em>full</em> effect on the system. In the cloud computing example we saw that when the control input asks for 20 more instances, it takes a while before these are available. But when these are available, they are there entirely (not just partially).</p>
 
 <p>In practice we often see a combination of delay and lag. As an example we set up a feedback system for the water level in a tank, where the water input comes from a long pipe feeding into the tank. When we fire the control input, the water starts to flow from the valve at the beginning of the pipe to the tank. However, it will take some time before the water level starts to rise, since the water needs to travel a certain distance (this is the delay). The water that comes in tank will however not cause the tank to be at the desired water level immediately but rather fill up slowly (this is the lag). This process is depicted in the image down below.</p>
 
-<figure><img src="images/Pipe%20in%20tank.png" alt="A tank fed by a pipe"><figcaption>Example of delay in a water tank<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
+<figure><img src="images/Pipe%20in%20tank.png" alt="A tank fed by a pipe"><figcaption><div class="captiontext">Example of delay in a water tank</div><div class="source">source: Feedback Control for Computer Systems, p.29<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>Besides lag or delay, a system can also give an <strong>inverse response</strong>, also referred to as a <strong>non-minimum phase system</strong>. When a control action is applied in a certain direction, the system responds by first going into the other direction, before going along with the control action. This causes a behavior as depicted in the image down below. An example of this is a flexible fishing rod: when it is yanks <em>back</em>, its tip will first move <em>forward</em>.</p>
 
-<figure><img src="images/Fishing%20rod.png" alt="Inverse response"><figcaption>Example of a non-minimum phase in a fishing rod<span class="source">source: Feedback Control for Computer Systems, p.30<span></figcaption></figure>
+<figure><img src="images/Fishing%20rod.png" alt="Inverse response"><figcaption><div class="captiontext">Example of a non-minimum phase in a fishing rod</div><div class="source">source: Feedback Control for Computer Systems, p.30<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <h2>
 <a id="response-components" class="anchor" href="#response-components" aria-hidden="true"><span class="octicon octicon-link"></span></a>Response components</h2>
@@ -70,7 +70,7 @@
 
 <p>As an example, let's look at a <a href="http://en.wikipedia.org/wiki/Simple_harmonic_motion#Mass_on_a_spring">mass on a spring</a>. When we give the other end of the spring a sudden jerk, the mass will begin to oscillate, which will eventually die away (depending on the spring constant), after which we are left with an overall displacement of the mass. Here the final displacement is the goal of our feedback system and thus the steady-state component of the response. The oscillation is a transient component, which fades away after a while.</p>
 
-<figure><img src="images/Mass%20on%20spring.png" alt="Mass on a spring"><figcaption>Example of transient components in a mass on a spring<span class="source">source: Feedback Control for Computer Systems, p.29<span></figcaption></figure>
+<figure><img src="images/Mass%20on%20spring.png" alt="Mass on a spring"><figcaption><div class="captiontext">Example of transient components in a mass on a spring</div><div class="source">source: Feedback Control for Computer Systems, p.29<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <h2>
 <a id="example-cache-with-delay" class="anchor" href="#example-cache-with-delay" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example: Cache with delay</h2>
@@ -118,15 +118,15 @@
 
 <p>A better control gain is <code>k = 50</code>, which still overshoots a little, but stabilizes soon on the requested hit rate. This overshooting is almost gone at <code>k = 30</code> and not even there at <code>k = 20</code>. We see here that the latter even is maybe a bit to careful and takes too small steps.</p>
 
-<figure><img src="images/Cache%20with%20delay%201.png" alt="Cache with delay 1"><figcaption>Cumulative simulation of a cache with a variable setpoint and 1 step of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20with%20delay%201.png" alt="Cache with delay 1"><figcaption><div class="captiontext">Cumulative simulation of a cache with a variable setpoint and 1 step of delay</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>When we use a delay of 2 iterations, we find that the range of suitable values for the control gain shrinks quite a bit: <code>k = 50</code> is not suitable anymore to stabilize the hit rate within 30 iterations. <code>k = 30</code> only barely makes it to stabilize and <code>k = 20</code> also overshoots a bit, but stabilizes right after that. We also see <code>k = 10</code>, which is not sufficient enough to stabilize within 30 iterations.</p>
 
-<figure><img src="images/Cache%20with%20delay%202.png" alt="Cache with delay 2"><figcaption>Cumulative simulation of a cache with a variable setpoint and 2 steps of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20with%20delay%202.png" alt="Cache with delay 2"><figcaption><div class="captiontext">Cumulative simulation of a cache with a variable setpoint and 2 steps of delay</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>A longer delay makes it even worse! When set to 5 iterations, we cannot find a suitable value that stabilizes within 30 iterations. <code>k = 30</code> and <code>k = 20</code> totally overshoot the hit rate, whereas <code>k = 15</code> and <code>k = 10</code> make good attempts in overshooting a bit, but are too slow to catch up.</p>
 
-<figure><img src="images/Cache%20with%20delay%205.png" alt="Cache with delay 5"><figcaption>Cumulative simulation of a cache with a variable setpoint and 5 steps of delay<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/Cache%20with%20delay%205.png" alt="Cache with delay 5"><figcaption><div class="captiontext">Cumulative simulation of a cache with a variable setpoint and 5 steps of delay</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>It is clear that the longer a delay is, the worse it gets on finding a suitable value for the control gain that stabilizes to the setpoint within a reasonable amount of iterations. If possible, a delay should be avoided in the phase of designing a feedback control system.</p>
 

@@ -508,13 +508,18 @@ header h2 {
   color: black;
   border-top: 1px solid black;
   font-size: 12px;
+  overflow: hidden;
+}
+
+#main-content figcaption .captiontext {
+  float: left;
 }
 
 #main-content figcaption .source {
-  float: right;
+  text-align: right;
+  overflow: hidden;
   color: #61AFDA;
   font-size: 10px;
-  margin-top: 2px;
 }
 
 #main-content figcaption .source a {

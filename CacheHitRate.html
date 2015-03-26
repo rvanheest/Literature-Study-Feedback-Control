@@ -53,7 +53,7 @@
 
 <p>Having solved these two issues we can now construct our feedback control system around the actual cache. To convert the Boolean results of the case into hit rates we will use a <a href="./Simulation.html#filters-and-actuators">FixedFilter</a>.</p>
 
-<figure><img src="images/cache/Loop%20model.png" alt="Cache loop model"><figcaption>Feedback architecture for the cache<span class="source">source: Feedback Control for Computer Systems, p.143<span></figcaption></figure>
+<figure><img src="images/cache/Loop%20model.png" alt="Cache loop model"><figcaption><div class="captiontext">Feedback architecture for the cache</div><div class="source">source: Feedback Control for Computer Systems, p.143<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>The cache can now be implemented as follows:</p>
 
@@ -133,7 +133,7 @@
 
 <p>Since we are working with some form of a stochastic process, we need to take into account that the pattern of requests might vary from time to time. Therefore we will simulate multiple scenarios of the static process characteristics with different values for <code>demandWidth</code>:</p>
 
-<figure><img src="images/cache/Static%20process%20characteristics.png" alt="Cache - static process characteristics"><figcaption>Static process characteristics for the cache<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Static%20process%20characteristics.png" alt="Cache - static process characteristics"><figcaption><div class="captiontext">Static process characteristics for the cache</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>From these simulations we can derive that if we want a hit rate of 0.7, we need a cache size of about 40, assuming that a demandWidth of 15 is the most common situation.</p>
 
@@ -157,14 +157,14 @@
 
 <p>Doing so with the implementation of a cache will yield the following data, gathered over the course of 5 iterations and applied with an input change of 40.</p>
 
-<figure><img src="images/cache/Dynamic%20response%20-%20data.png" alt="Dynamic response - experiment data"><figcaption>Dynamic response for the cache<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Dynamic%20response%20-%20data.png" alt="Dynamic response - experiment data"><figcaption><div class="captiontext">Dynamic response for the cache</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <h4>
 <a id="finding-the-first-values" class="anchor" href="#finding-the-first-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Finding the first values</h4>
 
 <p>The analysis of this data can be done in multiple ways. A first option is to draw a tangent through the inflection point of the data and then use the construction below to find the values for $K$, $\tau$ and $T$ which we will use in a later stage.</p>
 
-<figure><img src="images/Tangent%20construction.png" alt="Tangent construction"><figcaption>Analysis of the dynamic response using a tangent<span class="source">source: Feedback Control for Computer Systems, p.84<span></figcaption></figure>
+<figure><img src="images/Tangent%20construction.png" alt="Tangent construction"><figcaption><div class="captiontext">Analysis of the dynamic response using a tangent</div><div class="source">source: Feedback Control for Computer Systems, p.84<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>Although there are complete books written about finding these three values and what their relation is to the parameters of a PID controller, for us it is only necessary to understand what these values mean:</p>
 
@@ -195,9 +195,9 @@ K(1-(1 + \frac{t-\tau}{T})e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\
 
 <p>By fitting either of these models onto the data, we will find the values for $K$, $\tau$ and $T$. Notice that both models give different results, as shown in the fittings of the respective models below:</p>
 
-<figure><img src="images/cache/Dynamic%20response%20-%20f1.png" alt="Dynamic response - analyzed"><figcaption>Model fitting on the dynamic response using model 1<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Dynamic%20response%20-%20f1.png" alt="Dynamic response - analyzed"><figcaption><div class="captiontext">Model fitting on the dynamic response using model 1</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
-<figure><img src="images/cache/Dynamic%20response%20-%20f2.png" alt="Dynamic response - analyzed"><figcaption>Model fitting on the dynamic response using model 2<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Dynamic%20response%20-%20f2.png" alt="Dynamic response - analyzed"><figcaption><div class="captiontext">Model fitting on the dynamic response using model 2</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>In the following we will use the results found by fitting the simple model.</p>
 
@@ -287,19 +287,19 @@ K(1-(1 + \frac{t-\tau}{T})e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\
 
 <p>The first simulation uses the values obtained from the Ziegler-Nichols tuning formulas. The results are quite poor, given the oscillations in the hit rate of about 15 percentage point both positively and negatively. Notice that the change in demand is reflected in the cache size. When the variance of the demand gets bigger, the cache size needs to be bigger as well and when the mean changes, the cache needs to repopulate itself and hence grows bigger first and shrinks back to smaller sizes.</p>
 
-<figure><img src="images/cache/Simulation%20-%20Ziegler-Nichols.png" alt="Ziegler-Nichols simulation"><figcaption>Cache simulation using the results from Ziegler-Nichols<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Simulation%20-%20Ziegler-Nichols.png" alt="Ziegler-Nichols simulation"><figcaption><div class="captiontext">Cache simulation using the results from Ziegler-Nichols</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>Although Ziegler-Nichols' results seemed poor, the results of Cohen-Coon are actually worse. The system is oscillating so much that changes in demand are not even noticeable. From this it becomes clear that parameters for the PID controller are not what we want in this case.</p>
 
-<figure><img src="images/cache/Simulation%20-%20Cohen-Coon.png" alt="Cohen-Coon simulation"><figcaption>Cache simulation using the results from Cohen-Coon<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Simulation%20-%20Cohen-Coon.png" alt="Cohen-Coon simulation"><figcaption><div class="captiontext">Cache simulation using the results from Cohen-Coon</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>Using lower values for the controller the system seems to work something better, as shown by the results of the AMIGO simulation. The hit rate seems to track the setpoint better than before, the number of oscillations is less and their amplitude is smaller. However, it now takes longer for the system to respond to demand differences.</p>
 
-<figure><img src="images/cache/Simulation%20-%20AMIGO.png" alt="AMIGO simulation"><figcaption>Cache simulation using the results from AMIGO<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Simulation%20-%20AMIGO.png" alt="AMIGO simulation"><figcaption><div class="captiontext">Cache simulation using the results from AMIGO</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>To solve this issue, we will keep the integral part at a low value (<code>ki = 2</code>) and set the proportional part of the controller at a value in the order of Ziegler-Nichols and Cohen-Coon (<code>kp = 200</code>). This gives better results: fewer oscillations and a quicker response to demand changes.</p>
 
-<figure><img src="images/cache/Simulation.png" alt="Final simulation"><figcaption>Cache simulation usning the final values for <code>kp</code> and <code>ki</code><span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/cache/Simulation.png" alt="Final simulation"><figcaption><div class="captiontext">Cache simulation usning the final values for <code>kp</code> and <code>ki</code></div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <h2>
 <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>

@@ -216,7 +216,7 @@
 
 <p>Also we provide the boilerplate code for multiple types of loops. For now we discuss the <code>closedLoop</code> and come back later to other types of loops. This function is modeled after the extended version of a feedback control system, including the actuator and filter.</p>
 
-<figure><img src="images/Feedback%20system%20-%20extended.png" alt="Extended feedback control system"><figcaption>Architecture of an extended feedback loop<span class="source">source: Feedback Control for Computer Systems, p.143<span></figcaption></figure>
+<figure><img src="images/Feedback%20system%20-%20extended.png" alt="Extended feedback control system"><figcaption><div class="captiontext">Architecture of an extended feedback loop</div><div class="source">source: Feedback Control for Computer Systems, p.143<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">Loops</span> {
     <span class="pl-k">def</span> <span class="pl-en">closedLoop</span>[<span class="pl-en">A</span>](<span class="pl-v">setPoint</span>: <span class="pl-en">Observable</span>[<span class="pl-en">A</span>], <span class="pl-v">seed</span>: <span class="pl-en">A</span>, <span class="pl-v">components</span>: <span class="pl-en">Component</span>[<span class="pl-en">A</span>, <span class="pl-en">A</span>], <span class="pl-v">inverted</span>: <span class="pl-st">Boolean</span> <span class="pl-k">=</span> <span class="pl-c1">false</span>)(<span class="pl-s">implicit</span> <span class="pl-v">n</span>: <span class="pl-en">Numeric</span>[<span class="pl-en">A</span>]) <span class="pl-k">=</span> {
@@ -265,7 +265,7 @@
 
 <p>The results of running this example program will yield the following plot:</p>
 
-<figure><img src="images/BoilerPlot.png" alt="Boiler simulation"><figcaption>Simulation of a boiler<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/BoilerPlot.png" alt="Boiler simulation"><figcaption><div class="captiontext">Simulation of a boiler</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
         </section>
 

@@ -92,7 +92,7 @@
 
 <p>Just as we did in the previous case study, we will now look at the static process characteristics, which determines what the size and direction of the ultimate change in the process output is when an input of a certain size is applied. Again we simulated multiple scenarios and came to the following figure:</p>
 
-<figure><img src="images/server%20scaling/Static%20process%20characteristics.png" alt="Server scaling - static process characteristics"><figcaption>Static process characteristics for a server pool<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/server%20scaling/Static%20process%20characteristics.png" alt="Server scaling - static process characteristics"><figcaption><div class="captiontext">Static process characteristics for a server pool</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>This shows that the success rate is proportional to the number of worker nodes until there are enough workers to handle all submitted jobs. Also notice that the slope and saturation point are determined by the traffic intensity.</p>
 
@@ -134,7 +134,7 @@
 
 <p>Running this simulation will result in the following chart:</p>
 
-<figure><img src="images/server%20scaling/Server%20Pool%20Loop%201.png" alt="First server pool simulation"><figcaption>Server pool simulation with a setpoint of 0.8 and 0.6 and a variable load<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%201.png" alt="First server pool simulation"><figcaption><div class="captiontext">Server pool simulation with a setpoint of 0.8 and 0.6 and a variable load</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <p>These results show that in the first 100 time units the number of servers oscillates between 8 and 9. Clearly 8 workers is often not enough, whereas 9 is too much. We see the same thing happen between time units 100 until 200, where 6 workers is too few and 7 is too much.</p>
 
@@ -167,7 +167,7 @@
 
 <p>This results in a simulation that is improved a bit with respect to the first simulation, but still gives large oscillations in the number of servers and has completion rates that differ up to 10% of the actual setpoint.</p>
 
-<figure><img src="images/server%20scaling/Server%20Pool%20Loop%202.png" alt="Second server pool simulation"><figcaption>Server pool simulation with a setpoint close to 1.0<span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%202.png" alt="Second server pool simulation"><figcaption><div class="captiontext">Server pool simulation with a setpoint close to 1.0</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <h2>
 <a id="a-better-approach" class="anchor" href="#a-better-approach" aria-hidden="true"><span class="octicon octicon-link"></span></a>A better approach</h2>
@@ -204,11 +204,11 @@
 
 <p>Notice that this is an incremental controller: it does not keep track of the number of leased workers but rather gives instructions on leasing or releasing any machines. Therefore we need to include an <code>Integrator</code> between the controller and the plant.</p>
 
-<figure><img src="images/server%20scaling/Final%20system.png" alt="Final feedback system"><figcaption>Feedback architecture of the server pool<span class="source">source: Feedback Control for Computer Systems, p.171<span></figcaption></figure>
+<figure><img src="images/server%20scaling/Final%20system.png" alt="Final feedback system"><figcaption><div class="captiontext">Feedback architecture of the server pool</div><div class="source">source: Feedback Control for Computer Systems, p.171<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <p>A simulation using this approach is very effective, as shown in the following chart. The number of servers stays constant and periodically checks whether a worker could be released. Between time units 500 and 600 we can nicely see the effect of scheduling more frequent test steps after a successful release. Three times in short period of time the controller tries to lower the number of workers. The first and second time, this is successful, the third time it turns out that this worker is really needed.</p>
 
-<figure><img src="images/server%20scaling/Server%20Pool%20Loop%203.png" alt="Third server pool simulation"><figcaption>Server pool simulation using the <code>SpecialController</code><span class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a><span></figcaption></figure>
+<figure><img src="images/server%20scaling/Server%20Pool%20Loop%203.png" alt="Third server pool simulation"><figcaption><div class="captiontext">Server pool simulation using the <code>SpecialController</code></div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
 <h2>
 <a id="spinning-up-the-server" class="anchor" href="#spinning-up-the-server" aria-hidden="true"><span class="octicon octicon-link"></span></a>Spinning up the server</h2>
@@ -219,7 +219,7 @@
 
 <p>In our case, we can have a set of "<em>warm standbys</em>" that are controlled by a separate feedback loop. Instead of requesting new servers and waiting a couple of minutes for them to be active, we can just get extra instances from the second feedback loop. The latter controls the number of standby instances and is supposed to act in a time scale that is equal to the time it takes to spin up a new instance. With this last choice, we allow the new instances to be again available immediately from the perspective of the second loop.</p>
 
-<figure><img src="images/server%20scaling/System%20with%20spin%20up.png" alt="System design with spin up"><figcaption>Feedback architecture of the server pool with warm standbys</code><span class="source">source: Feedback Control for Computer Systems, p.168<span></figcaption></figure>
+<figure><img src="images/server%20scaling/System%20with%20spin%20up.png" alt="System design with spin up"><figcaption><div class="captiontext">Feedback architecture of the server pool with warm standbys</code></div><div class="source">source: Feedback Control for Computer Systems, p.168<br/>Courtesy of O'Reilly Media</div></figcaption></figure>
 
 <h2>
 <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
