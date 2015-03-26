@@ -530,6 +530,10 @@ header h2 {
   font-size: 12px;
 }
 
+.footnote {
+  font-size: 12px;
+}
+
 aside#sidebar {
   float: right;
   width: 317px;
