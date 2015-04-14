@@ -1,7 +1,6 @@
 package nl.tudelft.rvh.chapter2
 
 import scala.concurrent.duration.DurationInt
-
 import javafx.event.ActionEvent
 import javafx.scene.control.TextField
 import javafx.scene.layout.HBox
@@ -9,7 +8,8 @@ import nl.tudelft.rvh.rxscalafx.Observables
 import nl.tudelft.rvh.ChartTab
 import rx.lang.scala.Observable
 import rx.lang.scala.Subscriber
-import rx.lang.scala.subjects.PublishSubject
+import rx.lang.scala.subjects.BehaviorSubject
+import rx.lang.scala.ObservableExtensions
 
 class CacheSmallCumulative() extends ChartTab("Chapter 2 - Small cumulative", "Cumulative simulation", "time", "hit rate") {
 
@@ -41,37 +41,34 @@ class CacheSmallCumulative() extends ChartTab("Chapter 2 - Small cumulative", "C
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
 		Observable((subscriber: Subscriber[Double]) => {
-			val hitrate = PublishSubject[Double]
+			val hitrate = BehaviorSubject[Double](0.0)
+			hitrate.subscribe(subscriber)
 
 			time.map(setpoint)
 				.zipWith(hitrate)(_ - _)
 				.scan((cum: Double, e: Double) => cum + e)
-				.map { this.k * _ }
+				.map(this.k *)
 				.map(cache)
 				.subscribe(hitrate)
-
-			hitrate.subscribe(subscriber)
-			hitrate.onNext(0.0)
 		})
 	}
 
 	def simulationForGitHub(): Observable[Double] = {
+		val k = 160
 		def setPoint(time: Int): Double = 0.6
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
-		Observable((subscriber: Subscriber[Double]) => {
-			val hitrate = PublishSubject[Double]
+		Observable[Double](subscriber => {
+			val hitrate = BehaviorSubject[Double](0.0)
+			hitrate subscribe subscriber
 
-			Observable.from(0 until 30)
+			(0 until 30).toObservable
 				.map(setPoint)
-				.zipWith(hitrate)(_ - _)
-				.scan((cum: Double, e: Double) => cum + e)
-				.map { this.k * _ }
-				.map(cache)
+				.zipWith(hitrate)(_ - _)					// calculate tracking error
+				.scan((cum: Double, e: Double) => cum + e)	// calculate cumulative tracking error
+				.map(k *)									// next input
+				.map(cache)									// newest output
 				.subscribe(hitrate)
-
-			hitrate.subscribe(subscriber)
-			hitrate.onNext(0.0)
 		})
 	}
 }
