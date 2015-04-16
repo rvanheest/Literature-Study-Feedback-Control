@@ -1,5 +1,14 @@
 package nl.tudelft.rvh.simulation
 
+class SimpleCache(size: Double = 0) extends Component[Double, Double] {
+
+	def update(size: Double) = new SimpleCache(size)
+	
+	def action = math.max(0, math.min(1, size / 100))
+	
+	def monitor = Map("Cache hit rate" -> action, "Cache size" -> size)
+}
+
 class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(u: Double) = new Boiler(g, y + DT * (u - g * y))
