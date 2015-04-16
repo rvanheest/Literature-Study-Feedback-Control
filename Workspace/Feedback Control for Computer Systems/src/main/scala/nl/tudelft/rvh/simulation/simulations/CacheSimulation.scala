@@ -89,7 +89,7 @@ object CacheSimulation {
 			}
 		
 			val sim = simul.publish
-			new ChartData(() => sim.connect, sim map (_("Fixed filter")), sim map (_("Cache size")))
+			new ChartData(() => sim.connect, sim map (_("Fixed filter")), sim.onBackpressureBuffer map (_("Cache size")))
 		}
 
 		def simulationForGitHub(): Observable[Double] = {
