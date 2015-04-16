@@ -26,11 +26,11 @@ class Simulation extends Application {
 		val tabPane = new TabPane
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
 		tabPane.getTabs addAll(
-				/*new SimpleCacheStaticTest, new SimpleCacheStepResponse,*/ new SimpleCacheSimulation)
+				new SimpleCacheSimulation, new SimpleCacheStepResponse, new SimpleCacheStaticTest)
 //				new ServerPoolWithLatencySimulation)
 //				new ServerClosedLoop3, new ServerClosedLoop2, new ServerClosedLoop1, new ServerStaticTest)
 //				new AdStepResponse, new AdStaticTest)
-//				new CacheClosedLoop/*, new CacheStepResponse, new CacheStaticTest*/)
+//				new CacheClosedLoop, new CacheStepResponse, new CacheStaticTest)
 //				new BoilerSimulation)
 		
 		stage setScene new Scene(tabPane, 1024, 768)
