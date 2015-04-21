@@ -49,7 +49,7 @@ class SimpleCacheSimulation(implicit dt: Double = 1.0) extends SimulationTab("Si
 	def simulation: ChartData[AnyVal] = {
 		def simul: Observable[Map[String, AnyVal]] = {
 			val p = new SimpleCache
-			val c = new PIDController(0, 70)
+			val c = new PIDController(5, 70)
 			
 			Loops.closedLoop1(time map setpoint, 0.0, c ++ p)
 		}
