@@ -47,8 +47,7 @@ class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[I
 		}
 		else if (cache.size >= size) {
 			val n = 1 + cache.size - size
-			val vk = cache map { case (i, l) => (l, i) }
-			val newCache = (cache /: vk.map { case (l, _) => l }.toList.sorted.take(n).map(vk(_)))(_ - _)
+			val newCache = (cache /: cache.toList.sortBy(_ _2).map(_ _1).take(n))(_ - _)
 
 			new Cache(newSize.toInt, demand, time, newCache + (item -> time), false)
 		}
