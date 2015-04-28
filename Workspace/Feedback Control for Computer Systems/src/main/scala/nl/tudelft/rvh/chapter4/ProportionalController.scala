@@ -45,7 +45,7 @@ class ProportionalController extends ChartTab("Chapter 4 - Proportional controll
 			
 			time.map(setpoint)
 				.zipWith(speed)(_ - _)
-				.map { this.k * _ }
+				.map(this.k * _)
 				.map(cc.interact)
 				.subscribe(speed)
 		})
@@ -62,8 +62,8 @@ class ProportionalController extends ChartTab("Chapter 4 - Proportional controll
 			Observable.from(0 until 60)
 				.map(setPoint)
 				.zipWith(speed)(_ - _)
-				.map { this.k * _ }
-				.map(cc.interact)
+				.map(this.k * _)
+				.map(cc interact)
 				.subscribe(speed)
 		})
 	}

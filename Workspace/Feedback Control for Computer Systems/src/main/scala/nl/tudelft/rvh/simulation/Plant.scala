@@ -90,7 +90,7 @@ object ServerPoolHelpers {
 	
 	def abstractServerPool(n: Int, queue: Double, server: () => Double)(u: Int) = {
 		val nGoal = math.max(0, u)
-		val completed = math.min((0 until nGoal).map { _ => server() }.sum, queue)
+		val completed = math.min((0 until nGoal).map(_ => server()).sum, queue)
 		val qNew = queue - completed
 		
 		new ServerData(nGoal, qNew, completed)
