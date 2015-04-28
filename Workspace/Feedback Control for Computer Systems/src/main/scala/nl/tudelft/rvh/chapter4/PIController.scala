@@ -48,7 +48,7 @@ class PIController extends ChartTab("Chapter 4 - PI controller", "Cruise control
 		val cc = new SpeedSystem
 		
 		Observable[Double](subscriber => {
-			val speed = BehaviorSubject(cc.speed)
+			val speed = BehaviorSubject(cc speed)
 			speed.subscribe(subscriber)
 			
 			time.map(setpoint)
@@ -56,7 +56,7 @@ class PIController extends ChartTab("Chapter 4 - PI controller", "Cruise control
 				.scan(new PI)(_ work _)
 				.drop(1)
 				.map(_.controlAction(kp, ki))
-				.map(cc.interact)
+				.map(cc interact)
 				.subscribe(speed)
 		})
 	}

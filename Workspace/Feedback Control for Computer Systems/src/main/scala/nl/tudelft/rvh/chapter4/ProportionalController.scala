@@ -40,13 +40,13 @@ class ProportionalController extends ChartTab("Chapter 4 - Proportional controll
 		val cc = new SpeedSystem
 		
 		Observable[Double](subscriber => {
-			val speed = BehaviorSubject(cc.speed)
+			val speed = BehaviorSubject(cc speed)
 			speed.subscribe(subscriber)
 			
 			time.map(setpoint)
 				.zipWith(speed)(_ - _)
 				.map(this.k * _)
-				.map(cc.interact)
+				.map(cc interact)
 				.subscribe(speed)
 		})
 	}
@@ -56,7 +56,7 @@ class ProportionalController extends ChartTab("Chapter 4 - Proportional controll
 		val cc = new SpeedSystem
 		
 		Observable(subscriber => {
-			val speed = BehaviorSubject(cc.speed)
+			val speed = BehaviorSubject(cc speed)
 			speed.subscribe(subscriber)
 			
 			Observable.from(0 until 60)
