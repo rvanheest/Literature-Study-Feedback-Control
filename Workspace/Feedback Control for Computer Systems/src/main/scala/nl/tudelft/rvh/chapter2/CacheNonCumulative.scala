@@ -45,7 +45,7 @@ class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumul
 
 			time.map(setpoint)
 				.zipWith(hitrate)(_ - _)
-				.map { this.k * _ }
+				.map(this.k * _)
 				.map(cache)
 				.subscribe(hitrate)
 
@@ -55,6 +55,7 @@ class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumul
 	}
 
 	def simulationForGitHub(): Observable[Double] = {
+		val k = 160
 		def setPoint(time: Int): Double = if (time < 30) 0.6 else if (time < 60) 0.8 else if (time < 90) 0.1 else 0.4
 		def cache(size: Double): Double = math.max(0, math.min(1, size / 100))
 
@@ -64,7 +65,7 @@ class CacheNonCumulative extends ChartTab("Chapter 2 - Noncumulative", "Noncumul
 			Observable.from(0 until 30)
 				.map(setPoint)
 				.zipWith(hitrate)(_ - _)
-				.map { this.k * _ }
+				.map(k * _)
 				.map(cache)
 				.subscribe(hitrate)
 

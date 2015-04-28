@@ -18,7 +18,7 @@ object Loops {
 		for {
 			i <- steps
 			u <- steps.size.single map { i.toDouble * umax / _ }
-			plant <- repeats map { r => initPlant }
+			plant <- repeats map(_ => initPlant)
 			y <- (ts map (_ => u) scan(plant))(_ update _) drop 1 map (_ action) last
 		} yield (u, y)
 	}

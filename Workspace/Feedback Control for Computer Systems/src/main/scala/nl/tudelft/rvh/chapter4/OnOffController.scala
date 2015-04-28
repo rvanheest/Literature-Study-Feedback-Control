@@ -23,8 +23,8 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 			
 			time.map(setpoint)
 				.zipWith(speed)(_ - _)
-				.map { x => if (x > 0) true else false }
-				.map(cc.interact)
+				.map(_ > 0)
+				.map(cc interact)
 				.subscribe(speed)
 		})
 	}
@@ -40,8 +40,8 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 			Observable.from(0 until 40)
 				.map(setPoint)
 				.zipWith(speed)(_ - _)
-				.map { x => if (x > 0) true else false }
-				.map(cc.interact)
+				.map(_ > 0)
+				.map(cc interact)
 				.subscribe(speed)
 		})
 	}
