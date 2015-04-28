@@ -34,7 +34,7 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 		val cc = new OnOffSpeedSystem
 		
 		Observable(subscriber => {
-			val speed = BehaviorSubject(cc.speed)
+			val speed = BehaviorSubject(cc speed)
 			speed.subscribe(subscriber)
 			
 			Observable.from(0 until 40)
