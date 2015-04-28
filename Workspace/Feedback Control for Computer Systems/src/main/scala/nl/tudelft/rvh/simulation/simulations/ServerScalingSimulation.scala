@@ -122,7 +122,7 @@ object ServerScalingSimulation {
 			}
 
 			val sim = simul.publish
-			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")))
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")) onBackpressureBuffer)
 		}
 	}
 
@@ -152,7 +152,7 @@ object ServerScalingSimulation {
 			}
 
 			val sim = simul.publish
-			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")))
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")) onBackpressureBuffer)
 		}
 	}
 	
@@ -182,7 +182,7 @@ object ServerScalingSimulation {
 			
 			val sim = simul.publish
 			
-			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")), sim map (_("Standby")))
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")) onBackpressureBuffer, sim map (_("Standby")) onBackpressureBuffer)
 		}
 	}
 }

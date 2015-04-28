@@ -1,5 +1,14 @@
 package nl.tudelft.rvh.simulation
 
+class SimpleCache(size: Double = 0) extends Component[Double, Double] {
+
+	def update(size: Double) = new SimpleCache(size)
+	
+	def action = math.max(0, math.min(1, size / 100))
+	
+	def monitor = Map("Cache hit rate" -> action, "Cache size" -> size)
+}
+
 class Boiler(g: Double = 0.01, y: Double = 0)(implicit DT: Double) extends Component[Double, Double] {
 
 	def update(u: Double) = new Boiler(g, y + DT * (u - g * y))
@@ -38,8 +47,7 @@ class Cache(size: Int, demand: Long => Int, internalTime: Long = 0, cache: Map[I
 		}
 		else if (cache.size >= size) {
 			val n = 1 + cache.size - size
-			val vk = cache map { case (i, l) => (l, i) }
-			val newCache = (cache /: vk.map { case (l, _) => l }.toList.sorted.take(n).map(vk(_)))(_ - _)
+			val newCache = (cache /: cache.toList.sortBy(_ _2).map(_ _1).take(n))(_ - _)
 
 			new Cache(newSize.toInt, demand, time, newCache + (item -> time), false)
 		}
