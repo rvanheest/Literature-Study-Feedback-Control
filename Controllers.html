@@ -68,17 +68,17 @@
         <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">20</span>) <span class="pl-c1">10</span>
         <span class="pl-k">else</span> <span class="pl-c1">20</span>
     }
-    <span class="pl-k">val</span> <span class="pl-en">ss</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
+    <span class="pl-k">val</span> <span class="pl-en">cc</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
 
     <span class="pl-en">Observable</span>(subscriber <span class="pl-k">=&gt;</span> {
-        <span class="pl-k">val</span> <span class="pl-en">speed</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(ss.speed)
+        <span class="pl-k">val</span> <span class="pl-en">speed</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(cc speed)
         speed.subscribe(subscriber)
 
         <span class="pl-en">Observable</span>.from(<span class="pl-c1">0</span> until <span class="pl-c1">40</span>)
             .map(setPoint)
             .zipWith(speed)(_ <span class="pl-k">-</span> _)
-            .map { x <span class="pl-k">=&gt;</span> <span class="pl-k">if</span> (x <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>) <span class="pl-c1">true</span> <span class="pl-k">else</span> <span class="pl-c1">false</span> }
-            .map(ss.interact)
+            .map(_ <span class="pl-k">&gt;</span> <span class="pl-c1">0</span>)
+            .map(cc interact)
             .subscribe(speed)
     })
 }</pre></div>
@@ -87,7 +87,7 @@
 
 <figure><img src="images/Cruise%20control%20-%20OnOff.png" alt="On/Off controller on cruise control system"><figcaption><div class="captiontext">Simulation of a cruise control system using an on/off controller</div><div class="source">source: <a href="https://github.com/rvanheest">Richard van Heest</a></div></figcaption></figure>
 
-<p>To improve this controller a bit, we can introduce a dead zone or hysteresis. The former only sends an `on` signal to the system when a certain threshold is exceeded. The latter (also known as <a href="http://en.wikipedia.org/wiki/Schmitt_trigger">Schmitt trigger</a>) maintains the same corrective action when the tracking error flips from positive to negative, until some threshold is exceeded. The latter is often used in conventional heating systems.</p>
+<p>To improve this controller a bit, we can introduce a dead zone or hysteresis. The former only sends an <code>on</code> signal to the system when a certain threshold is exceeded. The latter (also known as <a href="http://en.wikipedia.org/wiki/Schmitt_trigger">Schmitt trigger</a>) maintains the same corrective action when the tracking error flips from positive to negative, until some threshold is exceeded. The latter is often used in conventional heating systems.</p>
 
 <h2>
 <a id="proportional-control" class="anchor" href="#proportional-control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Proportional control</h2>
@@ -120,17 +120,17 @@
         <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">40</span>) <span class="pl-c1">5</span>
         <span class="pl-k">else</span> <span class="pl-c1">20</span>
     }
-    <span class="pl-k">val</span> <span class="pl-en">ss</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
+    <span class="pl-k">val</span> <span class="pl-en">cc</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
 
     <span class="pl-en">Observable</span>(subscriber <span class="pl-k">=&gt;</span> {
-        <span class="pl-k">val</span> <span class="pl-en">speed</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(ss.speed)
+        <span class="pl-k">val</span> <span class="pl-en">speed</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(cc speed)
         speed.subscribe(subscriber)
 
         <span class="pl-en">Observable</span>.from(<span class="pl-c1">0</span> until <span class="pl-c1">60</span>)
             .map(setPoint)
             .zipWith(speed)(_ <span class="pl-k">-</span> _)
-            .map { k <span class="pl-k">*</span> _ }
-            .map(ss.interact)
+            .map(k <span class="pl-k">*</span> _)
+            .map(cc interact)
             .subscribe(speed)
     })
 }</pre></div>
@@ -156,7 +156,7 @@
 
 <p>In our examples this controller is implemented as a <code>scan</code> operation, followed by a <code>map</code> and can be found in previous experiments like the <a href="./FeedbackSystems.html#experiment-1---cumulative-controller">cumulative cache experiment</a>:</p>
 
-<div class="highlight highlight-scala"><pre>trackingError.scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e).map { k <span class="pl-k">*</span> _ }</pre></div>
+<div class="highlight highlight-scala"><pre>trackingError.scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e).map(k <span class="pl-k">*</span> _)</pre></div>
 
 <p>Most often, this controller is used in combination with the proportional controller in order to fix the earlier discovered problems with the nonzero input in the steady state phase. The integral term in this so-called <em>PI controller</em> takes care of this by providing a constant offset. When the proportional term is zero (due to the tracking error being zero), the integral term will not turn zero, since it takes the historical errors into account as well.</p>
 
@@ -178,10 +178,10 @@
         <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">40</span>) <span class="pl-c1">5</span>
         <span class="pl-k">else</span> <span class="pl-c1">20</span>
     }
-    <span class="pl-k">val</span> <span class="pl-en">ss</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
+    <span class="pl-k">val</span> <span class="pl-en">cc</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">SpeedSystem</span>
 
     <span class="pl-en">Observable</span>(subscriber <span class="pl-k">=&gt;</span> {
-        <span class="pl-k">val</span> <span class="pl-en">speed</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(ss.speed)
+        <span class="pl-k">val</span> <span class="pl-en">speed</span> <span class="pl-k">=</span> <span class="pl-en">BehaviorSubject</span>(cc speed)
         speed.subscribe(subscriber)
 
         <span class="pl-en">Observable</span>.from(<span class="pl-c1">0</span> until <span class="pl-c1">60</span>)
@@ -190,7 +190,7 @@
             .scan(<span class="pl-k">new</span> <span class="pl-en">PI)</span>(_ work _)
             .drop(<span class="pl-c1">1</span>)
             .map(_.controlAction(kp, ki))
-            .map(ss.interact)
+            .map(cc interact)
             .subscribe(speed)
     })
 }</pre></div>
@@ -232,7 +232,7 @@ Besides that the input signal of the controller can have a high-frequency noise.
 
 <p>Notice that the function <code>work</code> takes a parameter <code>DT</code> with default value <code>DT = 1</code>. This value is used in calculating the derivative to account for multiple iterations within one time unit. If time is measured in seconds and there are 100 control actions, then <code>DT = 0.01</code>. Since our simulations currently do not depend on the time unit, we can assume that we do 1 control action per time unit, from which it follows that <code>DT = 1</code>.</p>
 
-<p>Also notice that with introducing this controller, the PI controller is needed anymore, since it is equivalent to a PID controller with <code>kd = 0.0</code>.</p>
+<p>Also notice that with introducing this controller, the PI controller is redundant, since it is equivalent to a PID controller with <code>kd = 0.0</code>.</p>
 
 <h2>
 <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>

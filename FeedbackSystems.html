@@ -116,7 +116,7 @@
             .map(setPoint)
             .zipWith(hitrate)(_ <span class="pl-k">-</span> _)                    <span class="pl-c">// calculate tracking error</span>
             .scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e)  <span class="pl-c">// calculate cumulative tracking error</span>
-            .map { k <span class="pl-k">*</span> _ }                              <span class="pl-c">// next input</span>
+            .map(k <span class="pl-k">*</span> _)                                 <span class="pl-c">// next input</span>
             .map(cache)                                 <span class="pl-c">// newest output</span>
             .subscribe(hitrate)
 

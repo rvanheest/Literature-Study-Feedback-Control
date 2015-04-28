@@ -78,6 +78,8 @@
 <p>To illustrate what a delay will do to a feedback system in practice, we will extend the <a href="./FeedbackSystems.html#experiment-3---changing-setpoint">cache example</a> by adding a delay to the system. In order to do so, we need to change the output stream (<code>val hitrate</code>) from being a <a href="https://github.com/ReactiveX/RxJava/wiki/Subject#publishsubject"><code>PublishSubject</code></a> into a <a href="https://github.com/ReactiveX/RxJava/wiki/Subject#behaviorsubject"><code>BehaviorSubject</code></a> and develop an <a href="https://coderwall.com/p/4clu3a/extension-methods-in-scala">extension method</a> that will cause the delay.</p>
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">def</span> <span class="pl-en">simulation</span>()<span class="pl-k">:</span> <span class="pl-en">Observable</span>[<span class="pl-st">Double</span>] <span class="pl-k">=</span> {
+    <span class="pl-k">val</span> <span class="pl-en">k</span> <span class="pl-k">=</span> <span class="pl-c1">30</span>
+    <span class="pl-k">val</span> <span class="pl-en">delay</span> <span class="pl-k">=</span> <span class="pl-c1">2</span>
     <span class="pl-k">def</span> <span class="pl-en">setPoint</span>(<span class="pl-v">time</span>: <span class="pl-st">Int</span>)<span class="pl-k">:</span> <span class="pl-st">Double</span> <span class="pl-k">=</span> {
         <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">30</span>) <span class="pl-c1">0.6</span>
         <span class="pl-k">else</span> <span class="pl-k">if</span> (time <span class="pl-k">&lt;</span> <span class="pl-c1">60</span>) <span class="pl-c1">0.8</span>
@@ -93,7 +95,7 @@
             .map(setPoint)
             .zipWith(hitrate)(_ <span class="pl-k">-</span> _)
             .scan((<span class="pl-v">sum</span>: <span class="pl-st">Double</span>, <span class="pl-v">e</span>: <span class="pl-st">Double</span>) <span class="pl-k">=&gt;</span> sum <span class="pl-k">+</span> e)
-            .map { k <span class="pl-k">*</span> _ }
+            .map(k <span class="pl-k">*</span> _)
             .map(cache)
             .delay(delay, <span class="pl-c1">0.0</span>)
             .subscribe(hitrate)
@@ -106,7 +108,7 @@
 
 <div class="highlight highlight-scala"><pre><span class="pl-k">object</span> <span class="pl-en">DelayExtension</span> {
     <span class="pl-k">class</span> <span class="pl-en">DelayObservable</span>[<span class="pl-en">T</span>](<span class="pl-v">obs</span>: <span class="pl-en">Observable</span>[<span class="pl-en">T</span>]) {
-        <span class="pl-k">def</span> <span class="pl-en">delay</span>(<span class="pl-v">steps</span>: <span class="pl-st">Int</span>, <span class="pl-v">initVal</span>: <span class="pl-en">T</span>) <span class="pl-k">=</span> (<span class="pl-en">Observable</span>.from(<span class="pl-en">List</span>.fill(steps)(initVal)) <span class="pl-k">++</span> obs).slidingBuffer(steps, <span class="pl-c1">1</span>).map(_.head)
+        <span class="pl-k">def</span> <span class="pl-en">delay</span>(<span class="pl-v">steps</span>: <span class="pl-st">Int</span>, <span class="pl-v">initVal</span>: <span class="pl-en">T</span>) <span class="pl-k">=</span> (<span class="pl-en">List</span>.fill(steps)(initVal).toObservable <span class="pl-k">++</span> obs) slidingBuffer (steps, <span class="pl-c1">1</span>) map (_ head)
     }
 
     <span class="pl-s">implicit</span> <span class="pl-k">def</span> <span class="pl-en">delayObservable</span>[<span class="pl-en">T</span>](<span class="pl-v">obs</span>: <span class="pl-en">Observable</span>[<span class="pl-en">T</span>]) <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">DelayObservable</span>(obs)

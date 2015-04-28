@@ -85,7 +85,7 @@ def simulation(): Observable[Double] = {
 			.map(setPoint)
 			.zipWith(hitrate)(_ - _)					// calculate tracking error
 			.scan((sum: Double, e: Double) => sum + e)	// calculate cumulative tracking error
-			.map { k * _ }								// calculate next input
+			.map(k * _)									// calculate next input
 			.map(cache)									// calculate newest output
 			.subscribe(hitrate)
 
@@ -176,6 +176,8 @@ To illustrate what a delay will do to a feedback system in practice, we will ext
 
 ```scala
 def simulation(): Observable[Double] = {
+	val k = 50
+	val delay = 2
 	def setPoint(time: Int): Double = {
 		if (time < 30) 0.6
 		else if (time < 60) 0.8
@@ -191,7 +193,7 @@ def simulation(): Observable[Double] = {
 			.map(setPoint)
 			.zipWith(hitrate)(_ - _)
 			.scan((sum: Double, e: Double) => sum + e)
-			.map { k * _ }
+			.map(k * _)
 			.map(cache)
 			.delay(delay, 0.0)
 			.subscribe(hitrate)
@@ -206,7 +208,7 @@ As discussed before, delay manifests itself by not responding immediately to the
 ```scala
 object DelayExtension {
 	class DelayObservable[T](obs: Observable[T]) {
-		def delay(steps: Int, initVal: T) = (Observable.from(List.fill(steps)(initVal)) ++ obs).slidingBuffer(steps, 1).map(_.head)
+		def delay(steps: Int, initVal: T) = (List.fill(steps)(initVal).toObservable ++ obs) slidingBuffer (steps, 1) map (_ head)
 	}
 	
 	implicit def delayObservable[T](obs: Observable[T]) = new DelayObservable(obs)
@@ -268,17 +270,17 @@ def simulation(): Observable[Int] = {
 		else if (time < 20) 10
 		else 20
 	}
-	val ss = new SpeedSystem
+	val cc = new SpeedSystem
 
 	Observable(subscriber => {
-		val speed = BehaviorSubject(ss.speed)
+		val speed = BehaviorSubject(cc speed)
 		speed.subscribe(subscriber)
 		
 		Observable.from(0 until 40)
 			.map(setPoint)
 			.zipWith(speed)(_ - _)
-			.map { x => if (x > 0) true else false }
-			.map(ss.interact)
+			.map(_ > 0)
+			.map(cc interact)
 			.subscribe(speed)
 	})
 }
@@ -322,17 +324,17 @@ def simulation(): Observable[Double] = {
 		else if (time < 40) 5
 		else 20
 	}
-	val ss = new SpeedSystem
+	val cc = new SpeedSystem
 	
 	Observable(subscriber => {
-		val speed = BehaviorSubject(ss.speed)
+		val speed = BehaviorSubject(cc speed)
 		speed.subscribe(subscriber)
 		
 		Observable.from(0 until 60)
 			.map(setPoint)
 			.zipWith(speed)(_ - _)
-			.map { k * _ }
-			.map(ss.interact)
+			.map(k * _)
+			.map(cc interact)
 			.subscribe(speed)
 	})
 }
@@ -354,7 +356,7 @@ To solve problems caused by proportional droop, we introduce a new type of contr
 In our examples this controller is implemented as a `scan` operation, followed by a `map` and can be found in previous experiments like the [cumulative cache experiment](#experiment-1---cumulative-controller):
 
 ```scala
-trackingError.scan((sum: Double, e: Double) => sum + e).map { k * _ }
+trackingError.scan((sum: Double, e: Double) => sum + e).map(k * _)
 ```
 
 Most often, this controller is used in combination with the proportional controller in order to fix the earlier discovered problems with the nonzero input in the steady state phase. The integral term in this so-called *PI controller* takes care of this by providing a constant offset. When the proportional term is zero (due to the tracking error being zero), the integral term will not turn zero, since it takes the historical errors into account as well.
@@ -380,10 +382,10 @@ def simulation(): Observable[Double] = {
 		else if (time < 40) 5
 		else 20
 	}
-	val ss = new SpeedSystem
+	val cc = new SpeedSystem
 	
 	Observable(subscriber => {
-		val speed = BehaviorSubject(ss.speed)
+		val speed = BehaviorSubject(cc speed)
 		speed.subscribe(subscriber)
 		
 		Observable.from(0 until 60)
@@ -392,7 +394,7 @@ def simulation(): Observable[Double] = {
 			.scan(new PI)(_ work _)
 			.drop(1)
 			.map(_.controlAction(kp, ki))
-			.map(ss.interact)
+			.map(cc interact)
 			.subscribe(speed)
 	})
 }
@@ -433,7 +435,7 @@ class PID(val prop: Double = 0, val integral: Double = 0, val deriv: Double = 0,
 
 Notice that the function `work` takes a parameter `DT` with default value `DT = 1`. This value is used in calculating the derivative to account for multiple iterations within one time unit. If time is measured in seconds and there are 100 control actions, then `DT = 0.01`. Since our simulations currently do not depend on the time unit, we can assume that we do 1 control action per time unit, from which it follows that `DT = 1`.
 
-Also notice that with introducing this controller, the PI controller is needed anymore, since it is equivalent to a PID controller with `kd = 0.0`.
+Also notice that with introducing this controller, the PI controller is redundant, since it is equivalent to a PID controller with `kd = 0.0`.
 
 ## Summary
 In this section a number of controllers have been discussed. The most primitive one is the **on/off controller**. This can only signal the controlled system to turn on or off. Its results are quite poor and often cause oscillating behavior.
@@ -767,7 +769,7 @@ def staticTest[A](initPlant: Component[Double, A], umax: Int, steps: Observable[
 	for {
 		i <- steps
 		u <- steps.size.single map { i.toDouble * umax / _ }
-		plant <- repeats map { r => initPlant }
+		plant <- repeats map(_ => initPlant)
 		y <- (ts map (_ => u) scan(plant))(_ update _) drop 1 map (_ action) last
 	} yield (u, y)
 }
@@ -930,7 +932,7 @@ class ServerPool(n: Int, server: () => Double, load: () => Double, res: Double =
 		}
 		else {
 			val nNew = math.max(0, u)
-			val completed = math.min((0 until nNew).map { _ => server() }.sum, l)
+			val completed = math.min((0 until nNew).map(_ => server()).sum, l)
 			new ServerPool(nNew, server, load, completed / l)
 		}
 	}

@@ -77,7 +77,7 @@
         }
         <span class="pl-k">else</span> {
             <span class="pl-k">val</span> <span class="pl-en">nNew</span> <span class="pl-k">=</span> math.max(<span class="pl-c1">0</span>, u)
-            <span class="pl-k">val</span> <span class="pl-en">completed</span> <span class="pl-k">=</span> math.min((<span class="pl-c1">0</span> until nNew).map { _ <span class="pl-k">=&gt;</span> server() }.sum, l)
+            <span class="pl-k">val</span> <span class="pl-en">completed</span> <span class="pl-k">=</span> math.min((<span class="pl-c1">0</span> until nNew).map(_ <span class="pl-k">=&gt;</span> server()).sum, l)
             <span class="pl-k">new</span> <span class="pl-en">ServerPool</span>(nNew, server, load, completed <span class="pl-k">/</span> l)
         }
     }
@@ -96,7 +96,7 @@
 
 <p>This shows that the success rate is proportional to the number of worker nodes until there are enough workers to handle all submitted jobs. Also notice that the slope and saturation point are determined by the traffic intensity.</p>
 
-<p>Performing a dynamic response test is not necessary, since we can already conclude that there are no partial responses. When <code>n</code> worker nodes are requested, we will get them all (possibly after some delay); not a portion at first and the rest later! Although this may seem good news at first, we have to realize the consequences of not having partial responses. After all, we need to find values for a controller to act in the control loop which only can be found by measuring a delay τ and a time constant T. However, in this case there is no delay, causing the tuning formulas end up in dividing by zero! Therefore we need to find another method to get to these controller values.</p>
+<p>Performing a dynamic response test is not necessary, since we can already conclude that there are no partial responses. When <code>n</code> worker nodes are requested, we will get them all (possibly after some delay); not a portion at first and the rest later! Although this may seem good news at first, we have to realize the consequences of not having partial responses. After all, we need to find values for a controller to act in the control loop which only can be found by measuring a delay $\tau$ and a time constant $T$. However, in this case there is no delay, causing the tuning formulas end up in dividing by zero! Therefore we need to find another method to get to these controller values.</p>
 
 <p>Luckily we can combine the three types of tuning formulas and come up with the following set of formulas:</p>
 

@@ -126,7 +126,7 @@
     <span class="pl-k">for</span> {
         i <span class="pl-k">&lt;</span><span class="pl-k">-</span> steps
         u <span class="pl-k">&lt;</span><span class="pl-k">-</span> steps.size.single map { i.toDouble <span class="pl-k">*</span> umax <span class="pl-k">/</span> _ }
-        plant <span class="pl-k">&lt;</span><span class="pl-k">-</span> repeats map { r <span class="pl-k">=&gt;</span> initPlant }
+        plant <span class="pl-k">&lt;</span><span class="pl-k">-</span> repeats map(_ <span class="pl-k">=&gt;</span> initPlant)
         y <span class="pl-k">&lt;</span><span class="pl-k">-</span> (ts map (_ <span class="pl-k">=&gt;</span> u) scan(plant))(_ update _) drop <span class="pl-c1">1</span> map (_ action) last
     } <span class="pl-k">yield</span> (u, y)
 }</pre></div>
@@ -186,7 +186,7 @@ K(1-e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\
 0 & \text{otherwise}
 \end{matrix}\right.</p>
 
-<p>A little more complex model solves an issue with this simple model: it has no vanishing slope as t gets closer to τ.</p>
+<p>A little more complex model solves an issue with this simple model: it has no vanishing slope as t gets closer to $\tau$.</p>
 
 <p lang="latex">f_2(t) = \left\{\begin{matrix}
 K(1-(1 + \frac{t-\tau}{T})e^{-\frac{t-\tau}{T}}) & \text{for } t > \tau \\ 
