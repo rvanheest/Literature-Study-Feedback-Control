@@ -26,8 +26,8 @@ class BufferClosed extends ChartTab("Chapter 1 - closed", "Closed simulation of 
 			time.map(setpoint)
 				.zipWith(queueLength)(_ - _)
 				.scan((0.0, 0.0))((c, e) => (e, e + c._2))
-				.map(t => control(t._1, t._2))
-				.map(buffer.work(_))
+				.map((control(_, _)) tupled)
+				.map(buffer work)
 				.subscribe(queueLength)
 		}).onBackpressureBuffer drop 1
 	}

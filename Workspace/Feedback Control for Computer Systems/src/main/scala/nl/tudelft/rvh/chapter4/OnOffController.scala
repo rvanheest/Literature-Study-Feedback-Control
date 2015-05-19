@@ -1,5 +1,6 @@
 package nl.tudelft.rvh.chapter4
 
+import rx.lang.scala.ObservableExtensions
 import scala.concurrent.duration.DurationInt
 
 import nl.tudelft.rvh.ChartTab
@@ -37,7 +38,7 @@ class OnOffController extends ChartTab("Chapter 4 - On/Off controller", "Cruise 
 			val speed = BehaviorSubject(cc speed)
 			speed.subscribe(subscriber)
 			
-			Observable.from(0 until 40)
+			(0 until 40).toObservable
 				.map(setPoint)
 				.zipWith(speed)(_ - _)
 				.map(_ > 0)
