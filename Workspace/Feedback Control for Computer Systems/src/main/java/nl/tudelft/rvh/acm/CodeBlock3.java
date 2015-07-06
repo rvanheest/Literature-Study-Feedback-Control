@@ -6,19 +6,17 @@ public class CodeBlock3 {
 		simulation();
 	}
 
-	// TODO in article
-	// - replace code sample 3 with code below
 	public static void simulation() {
 		OnOffSpeedSystem ss = new OnOffSpeedSystem();
 		int speed = ss.speed;
-		
+
 		System.out.println(0 + " " + speed);
 		for (int time = 1; time < 60; time++) {
 			double setpoint = setpoint(time);
 			double error = setpoint - speed;
 			boolean setting = error > 0;
 			speed = ss.interact(setting);
-			
+
 			System.out.println(time + " " + speed);
 		}
 	}

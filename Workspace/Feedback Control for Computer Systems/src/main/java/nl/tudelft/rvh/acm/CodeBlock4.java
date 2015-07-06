@@ -6,8 +6,6 @@ public class CodeBlock4 {
 		simulation();
 	}
 
-	// TODO in article
-	// - replace code sample 4 with code below
 	public static void simulation() {
 		double k = 0.7;
 		SpeedSystem ss = new SpeedSystem();
@@ -33,8 +31,9 @@ public class CodeBlock4 {
 	static class SpeedSystem {
 		private double speed = 10.0;
 		public double interact(double power) {
-			if (power <= 0) return this.speed = Math.round(0.90 * this.speed * 10) / 10.0;
-			else return this.speed = Math.round((this.speed + power) * 10) / 10.0;
+			if (power <= 0) this.speed = Math.round(0.90 * this.speed * 10) / 10.0;
+			else this.speed = Math.round((this.speed + power) * 10) / 10.0;
+			return this.speed;
 		}
 	}
 }

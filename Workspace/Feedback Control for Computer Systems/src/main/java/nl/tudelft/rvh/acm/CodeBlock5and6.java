@@ -6,22 +6,20 @@ public class CodeBlock5and6 {
 		simulation();
 	}
 
-	// TODO in article
-	// - replace code sample 5 with code below
 	public static void simulation() {
 		double kp = 0.7;
 		double ki = 0.003;
 		SpeedSystem ss = new SpeedSystem();
 		PI controller = new PI(kp, ki);
 		double speed = ss.speed;
-		
+
 		System.out.println(0 + " " + speed);
 		for (int time = 1; time < 60; time++) {
 			double setpoint = setpoint(time);
 			double error = setpoint - speed;
 			double power = controller.interact(error, 1);
 			speed = ss.interact(power);
-			
+
 			System.out.println(time + " " + speed);
 		}
 	}
@@ -52,8 +50,6 @@ public class CodeBlock5and6 {
 		}
 	}
 
-	// TODO in article
-	// - replace code sample 6 with code below
 	static class PID {
 		private double integral, previous = 0.0;
 		private final double kp, ki, kd;
@@ -63,9 +59,10 @@ public class CodeBlock5and6 {
 			this.kd = kd;
 		}
 		public double interact(double error, double DT) {
+			this.integral += (DT * error);
 			double deriv = (error - this.previous) / DT;
 			this.previous = error;
-			return error * this.kp + (this.integral += (DT * error)) * this.ki + deriv * this.kd;
+			return error * this.kp + this.integral * this.ki + deriv * this.kd;
 		}
 	}
 }
