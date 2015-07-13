@@ -8,15 +8,15 @@ public class CodeBlock4 {
 
 	public static void simulation() {
 		double k = 0.7;
-		SpeedSystem ss = new SpeedSystem();
-		double speed = ss.speed;
+		FlowControlSystem flow = new FlowControlSystem();
+		double speed = flow.speed;
 		
 		System.out.println(0 + " " + speed);
 		for (int time = 1; time < 60; time++) {
 			double setpoint = setpoint(time);
 			double error = setpoint - speed;
 			double power = error * k;
-			speed = ss.interact(power);
+			speed = flow.interact(power);
 			
 			System.out.println(time + " " + speed);
 		}
@@ -28,7 +28,7 @@ public class CodeBlock4 {
 		else return 20;
 	}
 
-	static class SpeedSystem {
+	static class FlowControlSystem {
 		private double speed = 10.0;
 		public double interact(double power) {
 			if (power <= 0) this.speed = Math.round(0.90 * this.speed * 10) / 10.0;

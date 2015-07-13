@@ -9,16 +9,16 @@ public class CodeBlock5and6 {
 	public static void simulation() {
 		double kp = 0.7;
 		double ki = 0.003;
-		SpeedSystem ss = new SpeedSystem();
+		FlowControlSystem flow = new FlowControlSystem();
 		PI controller = new PI(kp, ki);
-		double speed = ss.speed;
+		double speed = flow.speed;
 
 		System.out.println(0 + " " + speed);
 		for (int time = 1; time < 60; time++) {
 			double setpoint = setpoint(time);
 			double error = setpoint - speed;
 			double power = controller.interact(error, 1);
-			speed = ss.interact(power);
+			speed = flow.interact(power);
 
 			System.out.println(time + " " + speed);
 		}
@@ -30,7 +30,7 @@ public class CodeBlock5and6 {
 		else return 20;
 	}
 
-	static class SpeedSystem {
+	static class FlowControlSystem {
 		private double speed = 10.0;
 		public double interact(double power) {
 			if (power <= 0) return this.speed = Math.round(0.90 * this.speed * 10) / 10.0;
