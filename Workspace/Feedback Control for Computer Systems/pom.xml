@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>nl.tudelft.richardvanheest</groupId>
-	<artifactId>IN4306-Literature-Study-Feedback-Control-for-Computer-Systems</artifactId>
+	<groupId>nl.tudelft.rvh</groupId>
+	<artifactId>Literature-Study-Feedback-Control-for-Computer-Systems</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
@@ -22,7 +22,7 @@
 		<developer>
 			<id>richard</id>
 			<name>Richard van Heest</name>
-			<email>richardvanheest@solcon.nl</email>
+			<email>richard.v.heest@gmail.com</email>
 			<url>http://www.linkedin.com/pub/richard-van-heest/3a/453/a46</url>
 			<roles>
 				<role>Developer</role>
