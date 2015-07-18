@@ -18,6 +18,7 @@ import nl.tudelft.rvh.simulation.SpecialController
 import rx.lang.scala.Observable
 import rx.lang.scala.ObservableExtensions
 import rx.lang.scala.schedulers.ComputationScheduler
+import nl.tudelft.rvh.simulation.MyServerPool
 
 object ServerScalingSimulation {
 
@@ -151,6 +152,36 @@ object ServerScalingSimulation {
 				Loops.closedLoop1(time map setpoint, 0.0, c ++ a ++ p)
 			}
 
+			val sim = simul.publish
+			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")) onBackpressureBuffer)
+		}
+	}
+
+	class MyServerClosedLoop(implicit dt: Double = 1.0) extends SimulationTab("My Server Pool Loop", "Time", "Completion rate", "Number of servers")(dt) {
+		
+		var globalTime = 0
+		
+		def load_queue() = {
+			globalTime += 1
+			
+			if (globalTime < 500) Randomizers.gaussian(1000, 5)
+			else if (globalTime < 800) Randomizers.gaussian(800, 5)
+			else Randomizers.gaussian(1200, 5)
+		}
+		
+		override def time: Observable[Long] = (0L until 1200L).toObservable observeOn ComputationScheduler()
+		
+		def setpoint(time: Long): Double = 1.0
+		
+		def simulation: ChartData[AnyVal] = {
+			def simul(): Observable[Map[String, AnyVal]] = {
+				val c = new SpecialController(100, 10)
+				val a = new Integrator map math.round map (_ toInt)
+				val p = new MyServerPool(0)(consume_queue, load_queue)
+				
+				Loops.closedLoop1(time map setpoint, 0.0, c ++ a ++ p)
+			}
+			
 			val sim = simul.publish
 			new ChartData(() => sim.connect, sim map (_("Completion rate")), sim map (_("Servers")) onBackpressureBuffer)
 		}

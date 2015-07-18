@@ -19,6 +19,7 @@ import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.ServerStati
 import nl.tudelft.rvh.simulation.simulations.SimpleCacheSimulation
 import nl.tudelft.rvh.simulation.simulations.SimpleCacheStaticTest
 import nl.tudelft.rvh.simulation.simulations.SimpleCacheStepResponse
+import nl.tudelft.rvh.simulation.simulations.ServerScalingSimulation.MyServerClosedLoop
 
 class Simulation extends Application {
 
@@ -26,7 +27,8 @@ class Simulation extends Application {
 		val tabPane = new TabPane
 		tabPane setTabClosingPolicy TabClosingPolicy.UNAVAILABLE
 		tabPane.getTabs addAll(
-				new SimpleCacheSimulation, new SimpleCacheStepResponse, new SimpleCacheStaticTest)
+				new MyServerClosedLoop)
+//				new SimpleCacheSimulation, new SimpleCacheStepResponse, new SimpleCacheStaticTest)
 //				new ServerPoolWithLatencySimulation)
 //				new ServerClosedLoop3, new ServerClosedLoop2, new ServerClosedLoop1, new ServerStaticTest)
 //				new AdStepResponse, new AdStaticTest)

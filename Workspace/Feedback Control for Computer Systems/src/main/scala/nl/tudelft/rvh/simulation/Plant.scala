@@ -159,3 +159,23 @@ class ServerPoolWithLatency(n: Int, server: () => Double, load: () => Double, la
 
 	def monitor = Map("Completion rate" -> res, "Servers" -> n, "Standby" -> pending.size)
 }
+
+// we control the completion rate by changing the number of workers
+class MyServerPool(workerCount: Int, queuedWork: Double = 0.0, allocRate: Double = 0.0)(workDone: () => Double, loadIn: () => Double) extends Component[Int, Double] {
+	def update(newWorkerCount: Int): Component[Int, Double] = {
+		val load = queuedWork + loadIn()
+		
+		if (load == 0) new MyServerPool(workerCount, 0, 1)(workDone, loadIn)
+		else {
+			val numberOfWorkers = math.max(0, newWorkerCount)
+			val completed = math.min(load, (0 until numberOfWorkers).map(_ => workDone()).sum)
+			val remainingWork = load - completed
+			
+			new MyServerPool(numberOfWorkers, remainingWork, completed / load)(workDone, loadIn)
+		}
+	}
+
+	def action: Double = allocRate
+
+	def monitor = Map("Completion rate" -> allocRate, "Servers" -> workerCount)
+}
